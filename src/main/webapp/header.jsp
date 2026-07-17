@@ -197,11 +197,17 @@
           Apply Scholarship
         </a>
       </li>
+       <li>
+        <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") ? "active" : "" %>">
+          Sholarship List
+        </a>
+      </li>
       <li>
         <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
           Organization Master
         </a>
       </li>
+     
     </ul>
   </div>
 </nav>

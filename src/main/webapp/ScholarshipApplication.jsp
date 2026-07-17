@@ -505,7 +505,7 @@
 
       <!-- Submit Section -->
       <div class="form-actions">
-        <input type="submit" value="Submit Application">
+        <input type="submit" value="Save Basic Details">
       </div>
 
     </form>
