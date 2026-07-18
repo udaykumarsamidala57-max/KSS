@@ -25,26 +25,31 @@ public class ScholarshipViewServlet extends HttpServlet {
         try {
             String idStr = request.getParameter("id");
 
-            // Safeguard against missing or malformed IDs
+            // Safeguard against missing, empty, or malformed ID query parameters
             if (idStr == null || idStr.trim().isEmpty()) {
-                response.sendRedirect("ScholarshipListServelt"); // Note: Matches your exact typo spelling
+                response.sendRedirect("ScholarshipListServelt");
                 return;
             }
 
             int id = Integer.parseInt(idStr);
             scholarshipViewDAO dao = new scholarshipViewDAO();
+            
+            // Fetches the bean natively containing the text, numeric, and binary file byte arrays
             ScholarshipBean bean = dao.getScholarshipById(id);
 
-            // Always forward to the view JSP; the JSP's (bean == null) checks handle the UI logic natively
+            // Bind the bean payload to the request scope attributes
             request.setAttribute("bean", bean);
+            
+            // Forward execution down to the presentation layer view
             request.getRequestDispatcher("scholarshipView.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            // Gracefully fall back if the ID is not an integer string
+            // Gracefully handle situations where non-numeric parameters are injected into the URI
             response.sendRedirect("ScholarshipListServelt");
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new ServletException("Error retrieving scholarship details", e);
+            // Standardize deep stack tracing to local servlet container tracking logs
+            getServletContext().log("Exception encountered inside ScholarshipViewServlet processing request parameters", e);
+            throw new ServletException("Core application error processing scholarship file system retrieval pipeline.", e);
         }
     }
 

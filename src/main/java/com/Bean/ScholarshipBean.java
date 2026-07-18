@@ -34,13 +34,14 @@ public class ScholarshipBean implements Serializable {
     private String bankName;
     private String branchName;
 
-    private String previousAyMarksCard;
-    private String kssApplication;
-    private String feeStructure;
-    private String feeReceipts;
-    private String parentAadharCopy;
-    private String studentAadharCopy;
-    private String bankPassbookFirstPage;
+    // Document properties updated to binary byte arrays
+    private byte[] previousAyMarksCard;
+    private byte[] kssApplication;
+    private byte[] feeStructure;
+    private byte[] feeReceipts;
+    private byte[] parentAadharCopy;
+    private byte[] studentAadharCopy;
+    private byte[] bankPassbookFirstPage;
 
     public ScholarshipBean() {
     }
@@ -221,59 +222,60 @@ public class ScholarshipBean implements Serializable {
         this.branchName = branchName;
     }
 
-    public String getPreviousAyMarksCard() {
+    // Getters and Setters modified for byte[]
+    public byte[] getPreviousAyMarksCard() {
         return previousAyMarksCard;
     }
 
-    public void setPreviousAyMarksCard(String previousAyMarksCard) {
+    public void setPreviousAyMarksCard(byte[] previousAyMarksCard) {
         this.previousAyMarksCard = previousAyMarksCard;
     }
 
-    public String getKssApplication() {
+    public byte[] getKssApplication() {
         return kssApplication;
     }
 
-    public void setKssApplication(String kssApplication) {
+    public void setKssApplication(byte[] kssApplication) {
         this.kssApplication = kssApplication;
     }
 
-    public String getFeeStructure() {
+    public byte[] getFeeStructure() {
         return feeStructure;
     }
 
-    public void setFeeStructure(String feeStructure) {
+    public void setFeeStructure(byte[] feeStructure) {
         this.feeStructure = feeStructure;
     }
 
-    public String getFeeReceipts() {
+    public byte[] getFeeReceipts() {
         return feeReceipts;
     }
 
-    public void setFeeReceipts(String feeReceipts) {
+    public void setFeeReceipts(byte[] feeReceipts) {
         this.feeReceipts = feeReceipts;
     }
 
-    public String getParentAadharCopy() {
+    public byte[] getParentAadharCopy() {
         return parentAadharCopy;
     }
 
-    public void setParentAadharCopy(String parentAadharCopy) {
+    public void setParentAadharCopy(byte[] parentAadharCopy) {
         this.parentAadharCopy = parentAadharCopy;
     }
 
-    public String getStudentAadharCopy() {
+    public byte[] getStudentAadharCopy() {
         return studentAadharCopy;
     }
 
-    public void setStudentAadharCopy(String studentAadharCopy) {
+    public void setStudentAadharCopy(byte[] studentAadharCopy) {
         this.studentAadharCopy = studentAadharCopy;
     }
 
-    public String getBankPassbookFirstPage() {
+    public byte[] getBankPassbookFirstPage() {
         return bankPassbookFirstPage;
     }
 
-    public void setBankPassbookFirstPage(String bankPassbookFirstPage) {
+    public void setBankPassbookFirstPage(byte[] bankPassbookFirstPage) {
         this.bankPassbookFirstPage = bankPassbookFirstPage;
     }
 }

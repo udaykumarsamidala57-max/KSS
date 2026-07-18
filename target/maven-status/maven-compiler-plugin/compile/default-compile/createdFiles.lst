@@ -7,4 +7,5 @@ com\DAO\scholarshipViewDAO.class
 com\Bean\ScholarshipBean.class
 com\Controller\SholarshipServelt.class
 com\DAO\scholarshipListDAO.class
+com\Controller\ScholarshipDocumentDownloadServlet.class
 com\Bean\DBUtil.class

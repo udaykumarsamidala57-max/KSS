@@ -124,6 +124,7 @@ tr:nth-child(even){
 
 .status-badge.view:hover {
     background-color: #c5e0b4;
+    cursor: pointer;
 }
 
 .status-badge.none {
@@ -277,8 +278,8 @@ if(bean == null){
                 <th>Previous AY Marks Card</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getPreviousAyMarksCard() != null && !bean.getPreviousAyMarksCard().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getPreviousAyMarksCard()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getPreviousAyMarksCard() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=previousAyMarksCard" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
@@ -291,8 +292,8 @@ if(bean == null){
                 <th>KSS Application</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getKssApplication() != null && !bean.getKssApplication().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getKssApplication()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getKssApplication() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=kssApplication" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
@@ -305,8 +306,8 @@ if(bean == null){
                 <th>Fee Structure</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getFeeStructure() != null && !bean.getFeeStructure().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getFeeStructure()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getFeeStructure() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=feeStructure" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
@@ -319,8 +320,8 @@ if(bean == null){
                 <th>Fee Receipts</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getFeeReceipts() != null && !bean.getFeeReceipts().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getFeeReceipts()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getFeeReceipts() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=feeReceipts" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
@@ -333,8 +334,8 @@ if(bean == null){
                 <th>Parent Aadhaar Copy</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getParentAadharCopy() != null && !bean.getParentAadharCopy().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getParentAadharCopy()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getParentAadharCopy() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=parentAadharCopy" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
@@ -347,8 +348,8 @@ if(bean == null){
                 <th>Student Aadhaar Copy</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getStudentAadharCopy() != null && !bean.getStudentAadharCopy().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getStudentAadharCopy()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getStudentAadharCopy() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=studentAadharCopy" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
@@ -361,8 +362,8 @@ if(bean == null){
                 <th>Bank Passbook First Page</th>
                 <td>
                     <div class="file-container">
-                        <% if(bean.getBankPassbookFirstPage() != null && !bean.getBankPassbookFirstPage().trim().equals("")){ %>
-                            <a href="uploads/scholarship/<%=bean.getBankPassbookFirstPage()%>" target="_blank" class="status-badge view">✓ View File</a>
+                        <% if(bean.getBankPassbookFirstPage() != null) { %>
+                            <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=bankPassbookFirstPage" target="_blank" class="status-badge view">✓ View Document</a>
                         <% } else { %>
                             <span class="status-badge none">⚠ No file uploaded yet</span>
                         <% } %>
