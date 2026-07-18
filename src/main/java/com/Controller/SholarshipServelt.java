@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.Bean.ScholarshipBean;
 import com.DAO.SholrarshipDAO;
 
-@WebServlet("/SholarshipServelt")
+@WebServlet("/ScholarshipServlet")
 public class SholarshipServelt extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -68,7 +68,7 @@ public class SholarshipServelt extends HttpServlet {
         boolean status = dao.saveScholarship(bean);
 
         if (status) {
-            response.sendRedirect("success.jsp");
+            response.sendRedirect("ScholarshipListServelt");
         } else {
             response.sendRedirect("scholarship.jsp?msg=failed");
         }

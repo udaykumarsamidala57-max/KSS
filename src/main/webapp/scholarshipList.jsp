@@ -118,6 +118,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     vertical-align: middle;
   }
 
+  /* ID Pinning to Left */
   .data-table td:first-child, 
   .data-table th:first-child {
     position: sticky;
@@ -132,11 +133,27 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     z-index: 3;
   }
 
+  /* Action Column Pinning to Right */
+  .data-table td:last-child,
+  .data-table th:last-child {
+    position: sticky;
+    right: 0;
+    background-color: #ffffff;
+    z-index: 1;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
+  }
+
+  .data-table th:last-child {
+    background-color: var(--primary-color);
+    z-index: 3;
+  }
+
   .data-table tr:nth-child(even) td { 
     background-color: #fafbfc; 
   }
   
-  .data-table tr:nth-child(even) td:first-child { 
+  .data-table tr:nth-child(even) td:first-child,
+  .data-table tr:nth-child(even) td:last-child { 
     background-color: #fafbfc; 
   }
 
@@ -144,7 +161,8 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     background-color: #f7e8ec; 
   }
 
-  .data-table tr:hover td:first-child { 
+  .data-table tr:hover td:first-child,
+  .data-table tr:hover td:last-child { 
     background-color: #f7e8ec; 
   }
 
@@ -221,7 +239,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-height: 0; /* Important for flex child scrolling */
+    min-height: 0;
     margin: 0;
   }
 
@@ -264,7 +282,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   .modal-body {
     padding: 24px;
     overflow-y: auto;
-    flex: 1 1 auto; /* Allows form contents to scroll while leaving header/footer fixed */
+    flex: 1 1 auto;
   }
 
   .modal-section-title {
@@ -338,7 +356,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    flex-shrink: 0; /* Ensures the footer never shrinks or scrolls away */
+    flex-shrink: 0;
     position: sticky;
     bottom: 0;
     z-index: 10;
@@ -403,7 +421,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     <table class="data-table">
       <thead>
         <tr>
-          <th style="text-align: center;">Action</th>
           <th>ID</th>
           <th>Organization</th>
           <th>Emp No</th>
@@ -418,14 +435,13 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
           <th>Child Order</th>
           <th>College Name</th>
           <th>Course</th>
-          <th>Present Year</th>
-          <th>Prev AY %</th>
-          <th>Current Fee</th>
-          <th>Passbook Name</th>
-          <th>Bank Account No</th>
-          <th>IFSC Code</th>
-          <th>Bank Name</th>
-          <th>Branch Name</th>
+
+          
+         
+        
+         
+          
+          <th style="text-align: center;">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -434,38 +450,6 @@ if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
 %>
         <tr>
-          <td class="action-cell">
-            <button type="button" class="btn-action btn-edit" onclick="openEditModal(
-              '<%=bean.getId()%>',
-              '<%=escapeJs(bean.getOrgName())%>',
-              '<%=escapeJs(bean.getEmpNo())%>',
-              '<%=escapeJs(bean.getEmpName())%>',
-              '<%=escapeJs(bean.getDesignation())%>',
-              '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
-              '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
-              '<%=escapeJs(bean.getChildrenName())%>',
-              '<%=escapeJs(bean.getDob())%>',
-              '<%=escapeJs(bean.getGender())%>',
-              '<%=escapeJs(bean.getRelationship())%>',
-              '<%=escapeJs(bean.getChildOrder())%>',
-              '<%=escapeJs(bean.getCollegeName())%>',
-              '<%=escapeJs(bean.getCourse())%>',
-              '<%=escapeJs(bean.getPresentYear())%>',
-              '<%=bean.getPreviousAyPercentage()%>',
-              '<%=bean.getFeeAmountCurrentAy()%>',
-              '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
-              '<%=escapeJs(bean.getBankAccountNo())%>',
-              '<%=escapeJs(bean.getIfscCode())%>',
-              '<%=escapeJs(bean.getBankName())%>',
-              '<%=escapeJs(bean.getBranchName())%>'
-            )">Edit</button>
-
-            <a class="btn-action btn-delete" 
-               href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
-               onclick="return confirm('Are you sure you want to delete this record?');">
-               Delete
-            </a>
-          </td>
           <td><%=bean.getId()%></td>
           <td><%=bean.getOrgName() != null ? bean.getOrgName() : ""%></td>
           <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
@@ -480,15 +464,53 @@ if(list != null && !list.isEmpty()){
           <td><%=bean.getChildOrder() != null ? bean.getChildOrder() : ""%></td>
           <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
           <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
-          <td><%=bean.getPresentYear() != null ? bean.getPresentYear() : ""%></td>
-          <td><%=bean.getPreviousAyPercentage()%>%</td>
-          <td> <%=bean.getFeeAmountCurrentAy()%></td>
-          <td><%=bean.getEmployeeNamePassbook() != null ? bean.getEmployeeNamePassbook() : ""%></td>
-          <td><%=bean.getBankAccountNo() != null ? bean.getBankAccountNo() : ""%></td>
-          <td><%=bean.getIfscCode() != null ? bean.getIfscCode() : ""%></td>
-          <td><%=bean.getBankName() != null ? bean.getBankName() : ""%></td>
-          <td><%=bean.getBranchName() != null ? bean.getBranchName() : ""%></td>
+       
+        
+        <td class="action-cell">
+
+    <a href="ScholarshipViewServlet?id=<%=bean.getId()%>"
+       class="btn-action"
+       style="background:#17a2b8;color:#fff;">
+        View
+    </a>
+
+    <button type="button" class="btn-action btn-edit"
+        onclick="openEditModal(
+        '<%=bean.getId()%>',
+        '<%=escapeJs(bean.getOrgName())%>',
+        '<%=escapeJs(bean.getEmpNo())%>',
+        '<%=escapeJs(bean.getEmpName())%>',
+        '<%=escapeJs(bean.getDesignation())%>',
+        '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
+        '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
+        '<%=escapeJs(bean.getChildrenName())%>',
+        '<%=escapeJs(bean.getDob())%>',
+        '<%=escapeJs(bean.getGender())%>',
+        '<%=escapeJs(bean.getRelationship())%>',
+        '<%=escapeJs(bean.getChildOrder())%>',
+        '<%=escapeJs(bean.getCollegeName())%>',
+        '<%=escapeJs(bean.getCourse())%>',
+        '<%=escapeJs(bean.getPresentYear())%>',
+        '<%=bean.getPreviousAyPercentage()%>',
+        '<%=bean.getFeeAmountCurrentAy()%>',
+        '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
+        '<%=escapeJs(bean.getBankAccountNo())%>',
+        '<%=escapeJs(bean.getIfscCode())%>',
+        '<%=escapeJs(bean.getBankName())%>',
+        '<%=escapeJs(bean.getBranchName())%>'
+        )">
+        Edit
+    </button>
+
+    <a class="btn-action btn-delete"
+       href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
+       onclick="return confirm('Are you sure you want to delete this record?');">
+        Delete
+    </a>
+
+          </td>
         </tr>
+        
 <%
     }
 } else {
