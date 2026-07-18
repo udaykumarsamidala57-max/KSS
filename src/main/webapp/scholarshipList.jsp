@@ -29,18 +29,18 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #f4f6f8;
     margin: 0;
-    padding: 0;
+    padding: 24px 12px;
     color: var(--text-main);
   }
 
   .container {
-    width: 98%;
+    width: 100%;
     max-width: 1600px;
-    margin: 20px auto;
+    margin: 0 auto 20px auto;
     background: #ffffff;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e4e8;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border-color);
     overflow: hidden;
   }
 
@@ -48,40 +48,42 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 24px;
-    background-color: var(--accent-bg);
-    border-bottom: 1px solid var(--border-color);
+    padding: 20px 24px;
+    background-color: var(--primary-color);
+    border-bottom: 1px solid var(--primary-hover);
+    color: #ffffff;
   }
 
   .page-title-bar h2 {
     margin: 0;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
-    color: var(--primary-color);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    color: #ffffff;
   }
 
   .btn-add {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    padding: 8px 18px;
+    background-color: #ffffff;
+    color: var(--primary-color);
+    padding: 8px 16px;
     text-decoration: none;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: background-color 0.2s ease;
     display: inline-block;
+    border: 1px solid transparent;
   }
 
   .btn-add:hover {
-    background-color: var(--primary-hover);
+    background-color: var(--accent-bg);
   }
 
   .table-responsive {
-    padding: 20px;
+    padding: 24px;
     overflow-x: auto;
   }
 
@@ -89,8 +91,11 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 12px;
+    font-size: 13px;
     white-space: nowrap;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
   }
 
   .data-table th {
@@ -100,20 +105,30 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.5px;
-    padding: 12px 10px;
+    padding: 12px 14px;
     text-align: left;
     border-bottom: 2px solid var(--primary-hover);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
     position: sticky;
     top: 0;
     z-index: 2;
   }
 
   .data-table td {
-    padding: 10px;
-    border-bottom: 1px solid #eef1f4;
-    border-right: 1px solid #f0f0f0;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
     color: var(--text-main);
     vertical-align: middle;
+  }
+  
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .data-table td:last-child, 
+  .data-table th:last-child {
+    border-right: none;
   }
 
   .data-table td:first-child, 
@@ -122,7 +137,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     left: 0;
     background-color: #ffffff;
     z-index: 1;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.03);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
   }
 
   .data-table th:first-child {
@@ -136,7 +151,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     right: 0;
     background-color: #ffffff;
     z-index: 1;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.03);
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.02);
   }
 
   .data-table th:last-child {
@@ -154,12 +169,12 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   }
 
   .data-table tr:hover td { 
-    background-color: #f7e8ec; 
+    background-color: var(--accent-bg); 
   }
 
   .data-table tr:hover td:first-child,
   .data-table tr:hover td:last-child { 
-    background-color: #f7e8ec; 
+    background-color: var(--accent-bg); 
   }
 
   .action-cell {
@@ -171,37 +186,48 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
   .btn-action {
     text-decoration: none;
-    font-weight: 600;
-    font-size: 11px;
-    padding: 5px 10px;
+    font-weight: 500;
+    font-size: 12px;
+    padding: 5px 12px;
     border-radius: 4px;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color);
     cursor: pointer;
+    background-color: #ffffff;
     transition: all 0.15s ease;
+    display: inline-block;
+  }
+
+  .btn-view {
+    color: #17a2b8;
+    border-color: #bee5eb;
+  }
+  
+  .btn-view:hover {
+    background-color: #e2f0d9;
+    border-color: #17a2b8;
   }
 
   .btn-edit {
-    color: var(--primary-color);
+    color: var(--text-main);
     border-color: var(--border-color);
-    background-color: #ffffff;
   }
 
   .btn-edit:hover {
-    background-color: var(--accent-bg);
-    border-color: var(--primary-color);
+    background-color: #f4f6f8;
+    border-color: #999;
   }
 
   .btn-delete {
-    color: #d93025;
+    color: #c0392b;
     border-color: #f5c6cb;
-    background-color: #ffffff;
   }
 
   .btn-delete:hover {
-    background-color: #f8d7da;
-    border-color: #d93025;
+    background-color: #fce8e6;
+    border-color: #c0392b;
   }
 
+  /* MODAL MODIFICATIONS TO MATCH PICTURE DIALOG INPUTS */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -209,8 +235,8 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(1px);
     z-index: 1000;
     justify-content: center;
     align-items: center;
@@ -218,15 +244,16 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
   .modal-card {
     background: #ffffff;
-    width: 90%;
-    max-width: 900px;
-    max-height: 88vh;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 92%;
+    max-width: 950px;
+    max-height: 90vh;
+    border-radius: 6px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    animation: slideDown 0.2s ease-out;
+    animation: fadeIn 0.15s ease-out;
   }
 
   .modal-card form {
@@ -237,15 +264,15 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     margin: 0;
   }
 
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   .modal-header {
     background: var(--primary-color);
     color: #ffffff;
-    padding: 14px 24px;
+    padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -254,10 +281,10 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
   .modal-header h3 {
     margin: 0;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
   }
 
   .modal-close {
@@ -268,7 +295,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     line-height: 1;
     cursor: pointer;
     opacity: 0.8;
-    transition: opacity 0.2s;
   }
 
   .modal-close:hover { opacity: 1; }
@@ -282,11 +308,11 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   .modal-section-title {
     background-color: var(--accent-bg);
     color: var(--primary-color);
-    padding: 6px 12px;
-    font-size: 11px;
+    padding: 8px 14px;
+    font-size: 12px;
     font-weight: 700;
     border-left: 4px solid var(--primary-color);
-    margin: 20px 0 14px 0;
+    margin: 24px 0 16px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-radius: 0 4px 4px 0;
@@ -298,8 +324,8 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
   .modal-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 12px 16px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px 20px;
   }
 
   .modal-grid > .modal-group.full-width {
@@ -312,29 +338,29 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   }
 
   .modal-group label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
-    color: #555;
-    margin-bottom: 4px;
+    color: var(--text-main);
+    margin-bottom: 6px;
   }
 
   .modal-group input,
   .modal-group select {
     width: 100%;
-    padding: 6px 10px;
-    font-size: 12px;
-    height: 34px;
-    border: 1px solid #cccccc;
+    padding: 8px 12px;
+    font-size: 13px;
+    height: 38px;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     outline: none;
     box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--text-main);
+    transition: border-color 0.2s;
   }
 
   .modal-group input:focus,
   .modal-group select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(122, 31, 53, 0.12);
   }
 
   .modal-group input[readonly] {
@@ -344,47 +370,45 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   }
 
   .modal-footer {
-    padding: 14px 24px;
-    background-color: #f8f9fa;
-    border-top: 1px solid #e9ecef;
+    padding: 16px 24px;
+    background-color: #fafbfc;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
   }
 
   .btn-save {
     background-color: var(--primary-color);
     color: #ffffff;
     border: none;
-    padding: 8px 24px;
+    padding: 10px 24px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     border-radius: 4px;
     cursor: pointer;
+    letter-spacing: 0.5px;
     transition: background-color 0.2s;
   }
 
   .btn-save:hover { background-color: var(--primary-hover); }
 
   .btn-cancel {
-    background-color: #e9ecef;
-    color: #495057;
-    border: 1px solid #ced4da;
-    padding: 8px 18px;
+    background-color: #ffffff;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 10px 20px;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    letter-spacing: 0.5px;
   }
 
-  .btn-cancel:hover { background-color: #dee2e6; }
+  .btn-cancel:hover { background-color: #f4f6f8; }
 </style>
 </head>
 
@@ -404,7 +428,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <div class="container">
 
   <div class="page-title-bar">
-    <h2>Scholarship Applications List</h2>
+    <h2>Scholarship Applications Master List</h2>
     <a href="scholarshipForm.jsp" class="btn-add">+ Add New Application</a>
   </div>
 
@@ -426,7 +450,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
           <th>Child Order</th>
           <th>College Name</th>
           <th>Course</th>
-          <th style="text-align: center;">Action</th>
+          <th style="text-align: center;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -438,7 +462,7 @@ if(list != null && !list.isEmpty()){
           <td><%=bean.getId()%></td>
           <td><%=bean.getOrgName() != null ? bean.getOrgName() : ""%></td>
           <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
-          <td><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></td>
+          <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
           <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>
           <td><%=bean.getSpouseWorkingSMIORE() != null ? bean.getSpouseWorkingSMIORE() : ""%></td>
           <td><%=bean.getSpouseWorkingGroupCompanies() != null ? bean.getSpouseWorkingGroupCompanies() : ""%></td>
@@ -451,11 +475,7 @@ if(list != null && !list.isEmpty()){
           <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
        
           <td class="action-cell">
-            <a href="ScholarshipViewServlet?id=<%=bean.getId()%>"
-               class="btn-action"
-               style="background:#17a2b8;color:#fff;">
-                View
-            </a>
+            <a href="ScholarshipViewServlet?id=<%=bean.getId()%>" class="btn-action btn-view">View</a>
 
             <button type="button" class="btn-action btn-edit"
                 onclick="openEditModal(
@@ -497,7 +517,7 @@ if(list != null && !list.isEmpty()){
 } else {
 %>
         <tr>
-          <td colspan="15" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
+          <td colspan="15" style="text-align: center; color: var(--text-muted); padding: 40px;">No Applications Found</td>
         </tr>
 <%
 }
@@ -526,17 +546,17 @@ if(list != null && !list.isEmpty()){
         <div class="modal-section-title">1. Employee Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
-            <label for="edit_orgName">Organization Name</label>
+            <label for="edit_orgName">Organization Name *</label>
             <input type="text" id="edit_orgName" name="orgName" required>
           </div>
 
           <div class="modal-group">
-            <label for="edit_empNo">Employee No</label>
+            <label for="edit_empNo">Employee No *</label>
             <input type="text" id="edit_empNo" name="empNo" required>
           </div>
 
           <div class="modal-group">
-            <label for="edit_empName">Employee Name</label>
+            <label for="edit_empName">Employee Name *</label>
             <input type="text" id="edit_empName" name="empName" required>
           </div>
 
@@ -546,7 +566,7 @@ if(list != null && !list.isEmpty()){
           </div>
 
           <div class="modal-group">
-            <label for="edit_spouseWorkingSMIORE">Spouse Working in SMIORE?</label>
+            <label for="edit_spouseWorkingSMIORE">Spouse Working in SMIORE? *</label>
             <select id="edit_spouseWorkingSMIORE" name="spouseWorkingSMIORE">
               <option value="No">No</option>
               <option value="Yes">Yes</option>
@@ -554,7 +574,7 @@ if(list != null && !list.isEmpty()){
           </div>
 
           <div class="modal-group">
-            <label for="edit_spouseWorkingGroupCompanies">Spouse Working in Group Co.?</label>
+            <label for="edit_spouseWorkingGroupCompanies">Spouse Working in Group Co.? *</label>
             <select id="edit_spouseWorkingGroupCompanies" name="spouseWorkingGroupCompanies">
               <option value="No">No</option>
               <option value="Yes">Yes</option>
