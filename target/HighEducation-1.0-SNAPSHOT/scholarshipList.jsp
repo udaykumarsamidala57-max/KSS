@@ -44,7 +44,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     overflow: hidden;
   }
 
-  /* Header Bar */
   .page-title-bar {
     display: flex;
     justify-content: space-between;
@@ -81,7 +80,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     background-color: var(--primary-hover);
   }
 
-  /* Responsive Table Container */
   .table-responsive {
     padding: 20px;
     overflow-x: auto;
@@ -118,7 +116,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     vertical-align: middle;
   }
 
-  /* ID Pinning to Left */
   .data-table td:first-child, 
   .data-table th:first-child {
     position: sticky;
@@ -133,7 +130,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     z-index: 3;
   }
 
-  /* Action Column Pinning to Right */
   .data-table td:last-child,
   .data-table th:last-child {
     position: sticky;
@@ -166,7 +162,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     background-color: #f7e8ec; 
   }
 
-  /* Action Buttons */
   .action-cell {
     display: flex;
     gap: 6px;
@@ -207,7 +202,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     border-color: #d93025;
   }
 
-  /* Inline Mini Indicators */
   .status-pill {
     display: inline-block;
     padding: 2px 6px;
@@ -227,7 +221,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     border: 1px solid #ffd966;
   }
 
-  /* Modal Popup Styles */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -417,7 +410,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <body>
 
 <%!
-  // Helper method to safely escape quotes for JS inline functions
   public String escapeJs(String str) {
       if (str == null) return "";
       return str.replace("\\", "\\\\")
@@ -430,13 +422,11 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
 <div class="container">
 
-  <!-- PAGE HEADER & ADD BUTTON BAR -->
   <div class="page-title-bar">
     <h2>Scholarship Applications List</h2>
     <a href="scholarshipForm.jsp" class="btn-add">+ Add New Application</a>
   </div>
 
-  <!-- TABLE SECTION -->
   <div class="table-responsive">
     <table class="data-table">
       <thead>
@@ -463,7 +453,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <%
 if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
-        // Calculate document counter logic
         int totalDocs = 7;
         int uploadedCount = 0;
         if(bean.getPreviousAyMarksCard() != null) uploadedCount++;
@@ -490,7 +479,6 @@ if(list != null && !list.isEmpty()){
           <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
           <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
           
-          <!-- New Document Upload Status Summary Counter -->
           <td style="text-align: center;">
              <% if(uploadedCount == totalDocs) { %>
                  <span class="status-pill complete">✓ All Files Uploaded (<%=uploadedCount%>/<%=totalDocs%>)</span>
@@ -548,7 +536,7 @@ if(list != null && !list.isEmpty()){
 } else {
 %>
         <tr>
-          <td colspan="24" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
+          <td colspan="16" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
         </tr>
 <%
 }
@@ -568,13 +556,13 @@ if(list != null && !list.isEmpty()){
       <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
     </div>
 
+    <!-- action targeting the list servlet context -->
     <form action="ScholarshipListServelt" method="post">
       <input type="hidden" name="action" value="update">
       <input type="hidden" id="edit_id" name="id">
 
       <div class="modal-body">
         
-        <!-- Section 1: Employee Details -->
         <div class="modal-section-title">1. Employee Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
@@ -614,7 +602,6 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <!-- Section 2: Child / Student Details -->
         <div class="modal-section-title">2. Child / Student Details</div>
         <div class="modal-grid">
           <div class="modal-group">
@@ -657,7 +644,6 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <!-- Section 3: Academic Details -->
         <div class="modal-section-title">3. Academic Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
@@ -686,7 +672,6 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <!-- Section 4: Bank Details -->
         <div class="modal-section-title">4. Bank Account Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
@@ -726,7 +711,6 @@ if(list != null && !list.isEmpty()){
   </div>
 </div>
 
-<!-- JAVASCRIPT -->
 <script>
   function openEditModal(
     id, orgName, empNo, empName, designation, spouseSMIORE, spouseGroup,

@@ -13,22 +13,15 @@ public class scholarshipListDAO {
 
     // Get All Records
     public List<ScholarshipBean> getAllScholarships() {
-
         List<ScholarshipBean> list = new ArrayList<>();
-
         try {
-
             Connection con = DBUtil.getConnection();
-
             PreparedStatement ps = con.prepareStatement(
                     "SELECT * FROM kss_student_scholarship ORDER BY id DESC");
-
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
                 ScholarshipBean bean = new ScholarshipBean();
-
                 bean.setId(rs.getInt("id"));
                 bean.setOrgName(rs.getString("org_name"));
                 bean.setEmpNo(rs.getString("emp_no"));
@@ -59,36 +52,26 @@ public class scholarshipListDAO {
 
                 list.add(bean);
             }
-
             rs.close();
             ps.close();
             con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return list;
     }
 
     // Get Record By ID
     public ScholarshipBean getScholarshipById(int id) {
-
         ScholarshipBean bean = new ScholarshipBean();
-
         try {
-
             Connection con = DBUtil.getConnection();
-
             PreparedStatement ps = con.prepareStatement(
                     "SELECT * FROM kss_student_scholarship WHERE id=?");
-
             ps.setInt(1, id);
-
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
                 bean.setId(rs.getInt("id"));
                 bean.setOrgName(rs.getString("org_name"));
                 bean.setEmpNo(rs.getString("emp_no"));
@@ -117,51 +100,28 @@ public class scholarshipListDAO {
                 bean.setBankName(rs.getString("bank_name"));
                 bean.setBranchName(rs.getString("branch_name"));
             }
-
             rs.close();
             ps.close();
             con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return bean;
     }
 
-    // Update
+    // Update Existing Record
     public boolean updateScholarship(ScholarshipBean bean) {
-
         boolean status = false;
-
         try {
-
             Connection con = DBUtil.getConnection();
-
             PreparedStatement ps = con.prepareStatement(
-
                     "UPDATE kss_student_scholarship SET "
-                    + "org_name=?,"
-                    + "emp_no=?,"
-                    + "emp_name=?,"
-                    + "designation=?,"
-                    + "children_name=?,"
-                    + "dob=?,"
-                    + "gender=?,"
-                    + "relationship=?,"
-                    + "child_order=?,"
-                    + "spouse_working_smiore=?,"
-                    + "spouse_working_group_companies=?,"
-                    + "college_name=?,"
-                    + "course=?,"
-                    + "present_year=?,"
-                    + "previous_ay_percentage=?,"
-                    + "fee_amount_current_ay=?,"
-                    + "employee_name_passbook=?,"
-                    + "bank_account_no=?,"
-                    + "ifsc_code=?,"
-                    + "bank_name=?,"
-                    + "branch_name=? "
+                    + "org_name=?, emp_no=?, emp_name=?, designation=?, "
+                    + "children_name=?, dob=?, gender=?, relationship=?, child_order=?, "
+                    + "spouse_working_smiore=?, spouse_working_group_companies=?, "
+                    + "college_name=?, course=?, present_year=?, "
+                    + "previous_ay_percentage=?, fee_amount_current_ay=?, "
+                    + "employee_name_passbook=?, bank_account_no=?, ifsc_code=?, bank_name=?, branch_name=? "
                     + "WHERE id=?");
 
             ps.setString(1, bean.getOrgName());
@@ -191,37 +151,28 @@ public class scholarshipListDAO {
 
             ps.close();
             con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return status;
     }
 
-    // Delete
+    // Delete Record
     public boolean deleteScholarship(int id) {
-
         boolean status = false;
-
         try {
-
             Connection con = DBUtil.getConnection();
-
             PreparedStatement ps = con.prepareStatement(
                     "DELETE FROM kss_student_scholarship WHERE id=?");
-
             ps.setInt(1, id);
 
             status = ps.executeUpdate() > 0;
 
             ps.close();
             con.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return status;
     }
 }

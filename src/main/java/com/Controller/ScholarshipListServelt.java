@@ -30,93 +30,110 @@ public class ScholarshipListServelt extends HttpServlet {
 			action = "list";
 		}
 
-		switch (action) {
+		try {
+			switch (action) {
 
-		case "delete":
+			case "delete":
+				String deleteIdParam = request.getParameter("id");
+				if (deleteIdParam != null && !deleteIdParam.trim().isEmpty()) {
+					int deleteId = Integer.parseInt(deleteIdParam);
+					dao.deleteScholarship(deleteId);
+				}
+				response.sendRedirect("ScholarshipListServelt");
+				break;
 
-			int deleteId = Integer.parseInt(request.getParameter("id"));
+			case "edit":
+				String editIdParam = request.getParameter("id");
+				if (editIdParam != null && !editIdParam.trim().isEmpty()) {
+					int editId = Integer.parseInt(editIdParam);
+					ScholarshipBean bean = dao.getScholarshipById(editId);
+					request.setAttribute("bean", bean);
+				}
+				
+				// Forwarding back to list page to let the modal pop up with data if desired
+				RequestDispatcher edit = request.getRequestDispatcher("/ScholarshipApplication.jsp");
+				edit.forward(request, response);
+				break;
 
-			dao.deleteScholarship(deleteId);
-
-			response.sendRedirect("ScholarshipListServelt");
-			break;
-
-		case "edit":
-
-			int editId = Integer.parseInt(request.getParameter("id"));
-
-			ScholarshipBean bean = dao.getScholarshipById(editId);
-
-			request.setAttribute("bean", bean);
-
-			RequestDispatcher edit = request.getRequestDispatcher("/ScholarshipApplication.jsp");
-
-			edit.forward(request, response);
-
-			break;
-
-		default:
-
-			List<ScholarshipBean> list = dao.getAllScholarships();
-
-			request.setAttribute("list", list);
-
-			RequestDispatcher listPage = request.getRequestDispatcher("/scholarshipList.jsp");
-
-			listPage.forward(request, response);
-
-			break;
+			default:
+				List<ScholarshipBean> list = dao.getAllScholarships();
+				request.setAttribute("list", list);
+				RequestDispatcher listPage = request.getRequestDispatcher("/scholarshipList.jsp");
+				listPage.forward(request, response);
+				break;
+			}
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			response.sendRedirect("ScholarshipListServelt"); // Fallback on parsing errors
 		}
-
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		ScholarshipBean bean = new ScholarshipBean();
+		// Handle structural updates safely
+		String action = request.getParameter("action");
+		
+		if ("update".equals(action) || action == null) {
+			try {
+				ScholarshipBean bean = new ScholarshipBean();
 
-		bean.setId(Integer.parseInt(request.getParameter("id")));
-		bean.setOrgName(request.getParameter("orgName"));
-		bean.setEmpNo(request.getParameter("empNo"));
-		bean.setEmpName(request.getParameter("empName"));
-		bean.setDesignation(request.getParameter("designation"));
+				String idParam = request.getParameter("id");
+				if (idParam != null && !idParam.trim().isEmpty()) {
+					bean.setId(Integer.parseInt(idParam));
+				} else {
+					// Fallback redirect if ID is missing or broken
+					response.sendRedirect("ScholarshipListServelt");
+					return;
+				}
 
-		bean.setChildrenName(request.getParameter("childrenName"));
-		bean.setDob(request.getParameter("dob"));
-		bean.setGender(request.getParameter("gender"));
-		bean.setRelationship(request.getParameter("relationship"));
-		bean.setChildOrder(request.getParameter("childOrder"));
+				bean.setOrgName(request.getParameter("orgName"));
+				bean.setEmpNo(request.getParameter("empNo"));
+				bean.setEmpName(request.getParameter("empName"));
+				bean.setDesignation(request.getParameter("designation"));
 
-		bean.setSpouseWorkingSMIORE(request.getParameter("spouseWorkingSMIORE"));
-		bean.setSpouseWorkingGroupCompanies(request.getParameter("spouseWorkingGroupCompanies"));
+				bean.setChildrenName(request.getParameter("childrenName"));
+				bean.setDob(request.getParameter("dob"));
+				bean.setGender(request.getParameter("gender"));
+				bean.setRelationship(request.getParameter("relationship"));
+				bean.setChildOrder(request.getParameter("childOrder"));
 
-		bean.setCollegeName(request.getParameter("collegeName"));
-		bean.setCourse(request.getParameter("course"));
-		bean.setPresentYear(request.getParameter("presentYear"));
+				bean.setSpouseWorkingSMIORE(request.getParameter("spouseWorkingSMIORE"));
+				bean.setSpouseWorkingGroupCompanies(request.getParameter("spouseWorkingGroupCompanies"));
 
-		String percentage = request.getParameter("previousAyPercentage");
+				bean.setCollegeName(request.getParameter("collegeName"));
+				bean.setCourse(request.getParameter("course"));
+				bean.setPresentYear(request.getParameter("presentYear"));
 
-		if (percentage != null && !percentage.trim().isEmpty()) {
-			bean.setPreviousAyPercentage(Double.parseDouble(percentage));
+				String percentage = request.getParameter("previousAyPercentage");
+				if (percentage != null && !percentage.trim().isEmpty()) {
+					bean.setPreviousAyPercentage(Double.parseDouble(percentage));
+				} else {
+					bean.setPreviousAyPercentage(0.0);
+				}
+
+				String fee = request.getParameter("feeAmountCurrentAy");
+				if (fee != null && !fee.trim().isEmpty()) {
+					bean.setFeeAmountCurrentAy(Double.parseDouble(fee));
+				} else {
+					bean.setFeeAmountCurrentAy(0.0);
+				}
+
+				bean.setEmployeeNamePassbook(request.getParameter("employeeNamePassbook"));
+				bean.setBankAccountNo(request.getParameter("bankAccountNo"));
+				bean.setIfscCode(request.getParameter("ifscCode"));
+				bean.setBankName(request.getParameter("bankName"));
+				bean.setBranchName(request.getParameter("branchName"));
+
+				dao.updateScholarship(bean);
+				
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				// Log error context if structural data conversions break down
+			}
 		}
-
-		String fee = request.getParameter("feeAmountCurrentAy");
-
-		if (fee != null && !fee.trim().isEmpty()) {
-			bean.setFeeAmountCurrentAy(Double.parseDouble(fee));
-		}
-
-		bean.setEmployeeNamePassbook(request.getParameter("employeeNamePassbook"));
-		bean.setBankAccountNo(request.getParameter("bankAccountNo"));
-		bean.setIfscCode(request.getParameter("ifscCode"));
-		bean.setBankName(request.getParameter("bankName"));
-		bean.setBranchName(request.getParameter("branchName"));
-
-		dao.updateScholarship(bean);
 
 		response.sendRedirect("ScholarshipListServelt");
-
 	}
-
 }

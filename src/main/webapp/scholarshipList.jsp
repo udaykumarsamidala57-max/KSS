@@ -44,7 +44,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     overflow: hidden;
   }
 
-  /* Header Bar */
   .page-title-bar {
     display: flex;
     justify-content: space-between;
@@ -81,7 +80,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     background-color: var(--primary-hover);
   }
 
-  /* Responsive Table Container */
   .table-responsive {
     padding: 20px;
     overflow-x: auto;
@@ -118,7 +116,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     vertical-align: middle;
   }
 
-  /* ID Pinning to Left */
   .data-table td:first-child, 
   .data-table th:first-child {
     position: sticky;
@@ -133,7 +130,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     z-index: 3;
   }
 
-  /* Action Column Pinning to Right */
   .data-table td:last-child,
   .data-table th:last-child {
     position: sticky;
@@ -166,7 +162,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     background-color: #f7e8ec; 
   }
 
-  /* Action Buttons */
   .action-cell {
     display: flex;
     gap: 6px;
@@ -207,27 +202,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     border-color: #d93025;
   }
 
-  /* Inline Mini Indicators */
-  .status-pill {
-    display: inline-block;
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: bold;
-    border-radius: 3px;
-    text-align: center;
-  }
-  .status-pill.complete {
-    background-color: #e2f0d9;
-    color: #385723;
-    border: 1px solid #a9d18e;
-  }
-  .status-pill.pending {
-    background-color: #fff2cc;
-    color: #7f6000;
-    border: 1px solid #ffd966;
-  }
-
-  /* Modal Popup Styles */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -328,13 +302,13 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     gap: 12px 16px;
   }
 
+  .modal-grid > .modal-group.full-width {
+    grid-column: 1 / -1;
+  }
+
   .modal-group {
     display: flex;
     flex-direction: column;
-  }
-
-  .modal-group.full-width {
-    grid-column: 1 / -1;
   }
 
   .modal-group label {
@@ -417,7 +391,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <body>
 
 <%!
-  // Helper method to safely escape quotes for JS inline functions
   public String escapeJs(String str) {
       if (str == null) return "";
       return str.replace("\\", "\\\\")
@@ -430,13 +403,11 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
 <div class="container">
 
-  <!-- PAGE HEADER & ADD BUTTON BAR -->
   <div class="page-title-bar">
     <h2>Scholarship Applications List</h2>
     <a href="scholarshipForm.jsp" class="btn-add">+ Add New Application</a>
   </div>
 
-  <!-- TABLE SECTION -->
   <div class="table-responsive">
     <table class="data-table">
       <thead>
@@ -455,7 +426,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
           <th>Child Order</th>
           <th>College Name</th>
           <th>Course</th>
-          <th style="text-align: center;">Documents Status</th>
           <th style="text-align: center;">Action</th>
         </tr>
       </thead>
@@ -463,16 +433,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <%
 if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
-        // Calculate document counter logic
-        int totalDocs = 7;
-        int uploadedCount = 0;
-        if(bean.getPreviousAyMarksCard() != null) uploadedCount++;
-        if(bean.getKssApplication() != null) uploadedCount++;
-        if(bean.getFeeStructure() != null) uploadedCount++;
-        if(bean.getFeeReceipts() != null) uploadedCount++;
-        if(bean.getParentAadharCopy() != null) uploadedCount++;
-        if(bean.getStudentAadharCopy() != null) uploadedCount++;
-        if(bean.getBankPassbookFirstPage() != null) uploadedCount++;
 %>
         <tr>
           <td><%=bean.getId()%></td>
@@ -489,17 +449,6 @@ if(list != null && !list.isEmpty()){
           <td><%=bean.getChildOrder() != null ? bean.getChildOrder() : ""%></td>
           <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
           <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
-          
-          <!-- New Document Upload Status Summary Counter -->
-          <td style="text-align: center;">
-             <% if(uploadedCount == totalDocs) { %>
-                 <span class="status-pill complete">✓ All Files Uploaded (<%=uploadedCount%>/<%=totalDocs%>)</span>
-             <% } else if(uploadedCount > 0) { %>
-                 <span class="status-pill pending">⚠ Partial (<%=uploadedCount%>/<%=totalDocs%>)</span>
-             <% } else { %>
-                 <span class="status-pill pending" style="background-color:#fce8e6; color:#a51d24; border-color:#f5c2c1;">✗ None Uploaded</span>
-             <% } %>
-          </td>
        
           <td class="action-cell">
             <a href="ScholarshipViewServlet?id=<%=bean.getId()%>"
@@ -548,7 +497,7 @@ if(list != null && !list.isEmpty()){
 } else {
 %>
         <tr>
-          <td colspan="24" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
+          <td colspan="15" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
         </tr>
 <%
 }
@@ -574,7 +523,6 @@ if(list != null && !list.isEmpty()){
 
       <div class="modal-body">
         
-        <!-- Section 1: Employee Details -->
         <div class="modal-section-title">1. Employee Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
@@ -614,7 +562,6 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <!-- Section 2: Child / Student Details -->
         <div class="modal-section-title">2. Child / Student Details</div>
         <div class="modal-grid">
           <div class="modal-group">
@@ -657,7 +604,6 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <!-- Section 3: Academic Details -->
         <div class="modal-section-title">3. Academic Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
@@ -686,7 +632,6 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <!-- Section 4: Bank Details -->
         <div class="modal-section-title">4. Bank Account Details</div>
         <div class="modal-grid">
           <div class="modal-group full-width">
@@ -726,7 +671,6 @@ if(list != null && !list.isEmpty()){
   </div>
 </div>
 
-<!-- JAVASCRIPT -->
 <script>
   function openEditModal(
     id, orgName, empNo, empName, designation, spouseSMIORE, spouseGroup,
