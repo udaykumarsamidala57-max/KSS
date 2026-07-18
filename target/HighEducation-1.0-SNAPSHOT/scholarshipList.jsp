@@ -207,6 +207,26 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     border-color: #d93025;
   }
 
+  /* Inline Mini Indicators */
+  .status-pill {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 3px;
+    text-align: center;
+  }
+  .status-pill.complete {
+    background-color: #e2f0d9;
+    color: #385723;
+    border: 1px solid #a9d18e;
+  }
+  .status-pill.pending {
+    background-color: #fff2cc;
+    color: #7f6000;
+    border: 1px solid #ffd966;
+  }
+
   /* Modal Popup Styles */
   .modal-overlay {
     display: none;
@@ -435,12 +455,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
           <th>Child Order</th>
           <th>College Name</th>
           <th>Course</th>
-
-          
-         
-        
-         
-          
+          <th style="text-align: center;">Documents Status</th>
           <th style="text-align: center;">Action</th>
         </tr>
       </thead>
@@ -448,6 +463,16 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <%
 if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
+        // Calculate document counter logic
+        int totalDocs = 7;
+        int uploadedCount = 0;
+        if(bean.getPreviousAyMarksCard() != null) uploadedCount++;
+        if(bean.getKssApplication() != null) uploadedCount++;
+        if(bean.getFeeStructure() != null) uploadedCount++;
+        if(bean.getFeeReceipts() != null) uploadedCount++;
+        if(bean.getParentAadharCopy() != null) uploadedCount++;
+        if(bean.getStudentAadharCopy() != null) uploadedCount++;
+        if(bean.getBankPassbookFirstPage() != null) uploadedCount++;
 %>
         <tr>
           <td><%=bean.getId()%></td>
@@ -464,59 +489,66 @@ if(list != null && !list.isEmpty()){
           <td><%=bean.getChildOrder() != null ? bean.getChildOrder() : ""%></td>
           <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
           <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
+          
+          <!-- New Document Upload Status Summary Counter -->
+          <td style="text-align: center;">
+             <% if(uploadedCount == totalDocs) { %>
+                 <span class="status-pill complete">✓ All Files Uploaded (<%=uploadedCount%>/<%=totalDocs%>)</span>
+             <% } else if(uploadedCount > 0) { %>
+                 <span class="status-pill pending">⚠ Partial (<%=uploadedCount%>/<%=totalDocs%>)</span>
+             <% } else { %>
+                 <span class="status-pill pending" style="background-color:#fce8e6; color:#a51d24; border-color:#f5c2c1;">✗ None Uploaded</span>
+             <% } %>
+          </td>
        
-        
-        <td class="action-cell">
+          <td class="action-cell">
+            <a href="ScholarshipViewServlet?id=<%=bean.getId()%>"
+               class="btn-action"
+               style="background:#17a2b8;color:#fff;">
+                View
+            </a>
 
-    <a href="ScholarshipViewServlet?id=<%=bean.getId()%>"
-       class="btn-action"
-       style="background:#17a2b8;color:#fff;">
-        View
-    </a>
+            <button type="button" class="btn-action btn-edit"
+                onclick="openEditModal(
+                '<%=bean.getId()%>',
+                '<%=escapeJs(bean.getOrgName())%>',
+                '<%=escapeJs(bean.getEmpNo())%>',
+                '<%=escapeJs(bean.getEmpName())%>',
+                '<%=escapeJs(bean.getDesignation())%>',
+                '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
+                '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
+                '<%=escapeJs(bean.getChildrenName())%>',
+                '<%=escapeJs(bean.getDob())%>',
+                '<%=escapeJs(bean.getGender())%>',
+                '<%=escapeJs(bean.getRelationship())%>',
+                '<%=escapeJs(bean.getChildOrder())%>',
+                '<%=escapeJs(bean.getCollegeName())%>',
+                '<%=escapeJs(bean.getCourse())%>',
+                '<%=escapeJs(bean.getPresentYear())%>',
+                '<%=bean.getPreviousAyPercentage()%>',
+                '<%=bean.getFeeAmountCurrentAy()%>',
+                '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
+                '<%=escapeJs(bean.getBankAccountNo())%>',
+                '<%=escapeJs(bean.getIfscCode())%>',
+                '<%=escapeJs(bean.getBankName())%>',
+                '<%=escapeJs(bean.getBranchName())%>'
+                )">
+                Edit
+            </button>
 
-    <button type="button" class="btn-action btn-edit"
-        onclick="openEditModal(
-        '<%=bean.getId()%>',
-        '<%=escapeJs(bean.getOrgName())%>',
-        '<%=escapeJs(bean.getEmpNo())%>',
-        '<%=escapeJs(bean.getEmpName())%>',
-        '<%=escapeJs(bean.getDesignation())%>',
-        '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
-        '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
-        '<%=escapeJs(bean.getChildrenName())%>',
-        '<%=escapeJs(bean.getDob())%>',
-        '<%=escapeJs(bean.getGender())%>',
-        '<%=escapeJs(bean.getRelationship())%>',
-        '<%=escapeJs(bean.getChildOrder())%>',
-        '<%=escapeJs(bean.getCollegeName())%>',
-        '<%=escapeJs(bean.getCourse())%>',
-        '<%=escapeJs(bean.getPresentYear())%>',
-        '<%=bean.getPreviousAyPercentage()%>',
-        '<%=bean.getFeeAmountCurrentAy()%>',
-        '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
-        '<%=escapeJs(bean.getBankAccountNo())%>',
-        '<%=escapeJs(bean.getIfscCode())%>',
-        '<%=escapeJs(bean.getBankName())%>',
-        '<%=escapeJs(bean.getBranchName())%>'
-        )">
-        Edit
-    </button>
-
-    <a class="btn-action btn-delete"
-       href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
-       onclick="return confirm('Are you sure you want to delete this record?');">
-        Delete
-    </a>
-
+            <a class="btn-action btn-delete"
+               href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
+               onclick="return confirm('Are you sure you want to delete this record?');">
+                Delete
+            </a>
           </td>
         </tr>
-        
 <%
     }
 } else {
 %>
         <tr>
-          <td colspan="23" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
+          <td colspan="24" style="text-align: center; color: var(--text-muted); padding: 30px;">No Applications Found</td>
         </tr>
 <%
 }
