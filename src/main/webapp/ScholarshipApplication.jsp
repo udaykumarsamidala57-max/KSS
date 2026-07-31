@@ -561,7 +561,7 @@ try {
         </div>
 
         <!-- Section 4: Bank Account Details -->
-        <div class="slds-section-title">4. Bank Account Details</div>
+        <div class="slds-section-title">4. Employee Bank Account Details</div>
         <div class="form-grid">
           <div class="form-group full-width">
             <label>Name as per Bank Passbook</label>

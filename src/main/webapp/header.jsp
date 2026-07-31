@@ -55,7 +55,7 @@
   }
 
   .kss-navbar-scope .navbar-brand {
-    text-decoration: none;
+    text-decoration: Lucida Handwriting Bold;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -79,6 +79,7 @@
   }
 
   .kss-navbar-scope .brand-title {
+  font-family:Lucida Handwriting;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.6px;
