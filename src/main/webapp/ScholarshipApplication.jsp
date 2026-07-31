@@ -6,6 +6,7 @@
         response.sendRedirect("login.jsp");
         return;
     }
+    String roles = (String) sess.getAttribute("role");
 %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
@@ -406,33 +407,53 @@
             <label>Organization Name <span class="required">*</span></label>
             <select name="orgName" required>
               <option value="">-- Select Organization --</option>
-              <%
-                  Connection con = null;
-                  PreparedStatement ps = null;
-                  ResultSet rs = null;
+             <%
+Connection con = null;
+PreparedStatement ps = null;
+ResultSet rs = null;
 
-                  try {
-                      con = DBUtil.getConnection();
-                      ps = con.prepareStatement(
-                          "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
-                      rs = ps.executeQuery();
+try {
 
-                      while(rs.next()){
-              %>
-              <option value="<%=rs.getString("org_name")%>">
-                  <%=rs.getString("org_name")%>
-              </option>
-              <%
-                      }
-                  } catch(Exception e){
-                      out.println("<option>Error Loading Organizations</option>");
-                  } finally{
-                      if(rs!=null) rs.close();
-                      if(ps!=null) ps.close();
-                      if(con!=null) con.close();
-                  }
-              %>
-            </select>
+    con = DBUtil.getConnection();
+
+    if ("Global".equalsIgnoreCase(roles)) {
+
+        ps = con.prepareStatement(
+            "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
+
+    } else {
+
+        ps = con.prepareStatement(
+            "SELECT org_name FROM organization_master WHERE status='Active' AND org_name=? ORDER BY org_name");
+
+        ps.setString(1, roles);
+    }
+
+    rs = ps.executeQuery();
+
+    while (rs.next()) {
+%>
+
+<option value="<%= rs.getString("org_name") %>">
+    <%= rs.getString("org_name") %>
+</option>
+
+<%
+    }
+
+} catch (Exception e) {
+
+    e.printStackTrace();
+    out.println("<option>Error Loading Organizations</option>");
+
+} finally {
+
+    if (rs != null) rs.close();
+    if (ps != null) ps.close();
+    if (con != null) con.close();
+}
+%>
+</select>
           </div>
 
           <div class="form-group">

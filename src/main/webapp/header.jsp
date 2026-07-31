@@ -406,7 +406,7 @@
         <span class="brand-title">Karnataka Seva Sangha</span>
         <span class="brand-subtitle">Higher Education Scholarship Portal</span>
       </div>
-      <span class="brand-badge">Admin</span>
+
     </a>
     
     <%

@@ -12,12 +12,32 @@ import com.Bean.ScholarshipBean;
 public class scholarshipListDAO {
 
     // Get All Records
-    public List<ScholarshipBean> getAllScholarships() {
+	public List<ScholarshipBean> getAllScholarships(String role, String department, String username) {
         List<ScholarshipBean> list = new ArrayList<>();
+    
         try {
             Connection con = DBUtil.getConnection();
-            PreparedStatement ps = con.prepareStatement(
+
+            PreparedStatement ps;
+
+            if ("Global".equalsIgnoreCase(role)) {
+
+                ps = con.prepareStatement(
                     "SELECT * FROM kss_student_scholarship ORDER BY id DESC");
+
+            } else if ("HR".equalsIgnoreCase(role)) {
+
+                ps = con.prepareStatement(
+                    "SELECT * FROM kss_student_scholarship WHERE department=? ORDER BY id DESC");
+                ps.setString(1, department);
+
+            } else {
+
+                ps = con.prepareStatement(
+                    "SELECT * FROM kss_student_scholarship WHERE org_name=? ORDER BY id DESC");
+                ps.setString(1, role);
+            }
+
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
