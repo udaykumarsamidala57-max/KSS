@@ -12,7 +12,10 @@ import javax.servlet.http.HttpSession;
 import com.Bean.ScholarshipBean;
 import com.DAO.SholrarshipDAO;
 
-@WebServlet("/ScholarshipServlet")
+@WebServlet({
+    "/ScholarshipServlet",
+    "/"
+})
 public class SholarshipServelt extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
