@@ -1,15 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
-    
     HttpSession sesso = request.getSession(false);
     if (sesso == null || sesso.getAttribute("username") == null) {
         response.sendRedirect("login.jsp");
         return;
-        
-        
     }
-    
-    %>
+    String userss = (String) sesso.getAttribute("username");
+    String roless = (String) sesso.getAttribute("role");
+    String deptss = (String) sesso.getAttribute("department");
+%>
 <style>
   /* Scoped Variables & Isolated CSS to prevent leaking into main page body */
   :root {
@@ -44,14 +43,15 @@
   }
 
   .kss-navbar-scope .navbar-container {
-    max-width: 1200px; /* Increased slightly to handle structured navigation cleanly */
+    max-width: 1400px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 24px;
+    padding: 10px 24px;
     min-height: 60px;
     background: transparent;
+    gap: 16px;
   }
 
   .kss-navbar-scope .navbar-brand {
@@ -63,6 +63,7 @@
     transition: opacity 0.2s ease;
     background: transparent;
     border: none;
+    flex-shrink: 0;
   }
 
   .kss-navbar-scope .navbar-brand:hover {
@@ -126,7 +127,7 @@
   .kss-navbar-scope .navbar-menu > li {
     margin: 0;
     padding: 0;
-    position: relative; /* Context positioning for drop-down */
+    position: relative;
     list-style-type: none;
     background: transparent;
   }
@@ -181,7 +182,6 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   }
 
-  /* Align right-hand dropdown elements safely within container grids */
   .kss-navbar-scope .navbar-menu > li:last-child .dropdown-menu {
     left: auto;
     right: 0;
@@ -215,13 +215,116 @@
     box-shadow: none;
   }
 
-  /* Trigger Dropdown Visibility on Hover */
   .kss-navbar-scope .navbar-menu > li:hover .dropdown-menu {
     display: block;
   }
 
+  /* Right-Aligned User Profile & Logout Controls */
+  .kss-navbar-scope .user-profile-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+  }
+
+  .kss-navbar-scope .user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .kss-navbar-scope .user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+
+  .kss-navbar-scope .user-role {
+    font-size: 10px;
+    font-weight: 500;
+    color: #fce8ec;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+  }
+
+  .kss-navbar-scope .logout-btn {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .kss-navbar-scope .logout-btn:hover {
+    background-color: #c0392b;
+    border-color: #a93226;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* Fixed Bottom Footer Styling */
+  .kss-footer-scope {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(180deg, var(--nav-primary) 0%, var(--nav-primary-dark) 100%);
+    color: #ffffff;
+    border-top: 3px solid #a83d56;
+    padding: 12px 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .kss-footer-scope .footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #fce8ec;
+  }
+
+  .kss-footer-scope .developer-credit {
+    font-weight: 600;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.15);
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.5px;
+  }
+
+  /* Add padding to page body to ensure content isn't covered by fixed footer */
+  body {
+    padding-bottom: 60px;
+  }
+
   /* Responsive Breakpoints */
-  @media (max-width: 992px) {
+  @media (max-width: 1100px) {
+    body {
+      padding-bottom: 90px;
+    }
+
     .kss-navbar-scope.navbar {
       margin-bottom: 16px;
     }
@@ -248,7 +351,20 @@
       flex-wrap: wrap;
     }
 
-    /* Fallback behaviour layout logic for small mobile screen sizing structures */
+    .kss-navbar-scope .user-profile-section {
+      border-left: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-left: 0;
+      padding-top: 10px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .kss-navbar-scope .user-details {
+      align-items: center;
+      text-align: center;
+    }
+
     .kss-navbar-scope .dropdown-menu {
       position: static;
       display: none;
@@ -273,6 +389,12 @@
       background-color: rgba(255, 255, 255, 0.12);
       color: #ffffff !important;
     }
+
+    .kss-footer-scope .footer-container {
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+    }
   }
 </style>
 
@@ -290,7 +412,7 @@
     <%
       String currentURI = request.getRequestURI();
       
-      // Compute helper states to keep core folder links highlit if drop items are selected
+      // Compute helper states to keep core folder links highlighted if drop items are selected
       boolean isApprovalActive = currentURI.contains("approveDocuments.jsp") || 
                                  currentURI.contains("approveScholarship.jsp") || 
                                  currentURI.contains("approvalAction.jsp");
@@ -329,12 +451,12 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="" class="<%= currentURI.contains("") ? "active" : "" %>">
+            <a href="approveDocuments.jsp" class="<%= currentURI.contains("approveDocuments.jsp") ? "active" : "" %>">
               Approve Documents
             </a>
           </li>
           <li>
-            <a href="" class="<%= currentURI.contains("") ? "active" : "" %>">
+            <a href="approveScholarship.jsp" class="<%= currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
               Approve Scholarship
             </a>
           </li>
@@ -348,22 +470,48 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="" class="<%= currentURI.contains("") ? "active" : "" %>">
+            <a href="approvedList.jsp" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
               Approved List
             </a>
           </li>
           <li>
-            <a href="" class="<%= currentURI.contains("") ? "active" : "" %>">
+            <a href="rejectedList.jsp" class="<%= currentURI.contains("rejectedList.jsp") ? "active" : "" %>">
               Rejected List
             </a>
           </li>
           <li>
-            <a href="" class="<%= currentURI.contains("") ? "active" : "" %>">
+            <a href="reimbursement.jsp" class="<%= currentURI.contains("reimbursement.jsp") ? "active" : "" %>">
               Reimbursement
             </a>
           </li>
         </ul>
       </li>
     </ul>
+
+    <!-- Right Side: User Details & Logout Button -->
+    <div class="user-profile-section">
+      <div class="user-details">
+        <span class="user-name"><%= userss != null ? userss : "User" %></span>
+        <% if (roless != null && !roless.trim().isEmpty()) { %>
+          <span class="user-role"><%= roless %></span>
+        <% } %>
+      </div>
+      <a href="Logout.jsp" class="logout-btn" title="Sign out of system">
+        Logout &#x279F;
+      </a>
+    </div>
+
   </div>
 </nav>
+
+<!-- FOOTER COMPONENT -->
+<footer class="kss-footer-scope">
+  <div class="footer-container">
+    <div>
+      &copy; <%= java.time.Year.now().getValue() %> Karnataka Seva Sangha. All rights reserved.
+    </div>
+    <div>
+      Developed by <span class="developer-credit">SSS IT</span>
+    </div>
+  </div>
+</footer>

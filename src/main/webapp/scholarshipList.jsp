@@ -1,7 +1,6 @@
 <%@page import="java.util.List"%>
 <%@page import="com.Bean.ScholarshipBean"%>
 <%
-    
     HttpSession sess = request.getSession(false);
     if (sess == null || sess.getAttribute("username") == null) {
         response.sendRedirect("login.jsp");
@@ -10,7 +9,7 @@
     String users = (String) sess.getAttribute("username");
     String roles = (String) sess.getAttribute("role");
     String depts = (String) sess.getAttribute("department");
-    %>
+%>
 <%
 List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list");
 %>
@@ -20,171 +19,223 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scholarship Applications - Master List</title>
+<title>Scholarship Applications - Salesforce Master View</title>
 
 <!-- INCLUDE SHARED HEADER & MENU -->
 <%@ include file="header.jsp" %>
 
 <style>
+  /* Salesforce Lightning Design System (SLDS) Theme Variables */
   :root {
-    --primary-color: #7a1f35;
-    --primary-hover: #5e1627;
-    --accent-bg: #fdf6f7;
-    --border-color: #e2cece;
-    --text-main: #2b2b2b;
-    --text-muted: #666666;
+    --slds-brand: #0176d3;
+    --slds-brand-hover: #014486;
+    --slds-bg-page: #f3f5f8;
+    --slds-card-bg: #ffffff;
+    --slds-border: #dddbda;
+    --slds-border-dark: #c9c7c5;
+    --slds-text-primary: #080707;
+    --slds-text-secondary: #444444;
+    --slds-text-label: #514f4d;
+    --slds-table-header-bg: #fafaf9;
+    --slds-table-hover: #f3f3f3;
+    --slds-radius: 4px;
+    --slds-focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0176d3;
   }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f4f6f8;
+    background-color: var(--slds-bg-page);
     margin: 0;
-    padding: 24px 12px;
-    color: var(--text-main);
+    padding: 16px 20px 80px 20px;
+    color: var(--slds-text-primary);
   }
 
-  .container {
-    width: 100%;
+  .slds-container {
     max-width: 1600px;
-    margin: 0 auto 20px auto;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-    border: 1px solid var(--border-color);
-    overflow: hidden;
+    margin: 0 auto;
   }
 
-  .page-title-bar {
+  /* Salesforce Page Header / Title Component */
+  .slds-page-header {
+    background-color: var(--slds-card-bg);
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
+    padding: 16px 24px;
+    margin-bottom: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    background-color: var(--primary-color);
-    border-bottom: 1px solid var(--primary-hover);
-    color: #ffffff;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
   }
 
-  .page-title-bar h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #ffffff;
+  .slds-header-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
-  .btn-add {
-    background-color: #ffffff;
-    color: var(--primary-color);
-    padding: 8px 16px;
-    text-decoration: none;
+ 
+
+  .slds-header-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slds-header-subtitle {
     font-size: 11px;
-    font-weight: 700;
-    border-radius: 4px;
+    font-weight: 600;
     text-transform: uppercase;
+    color: var(--slds-text-secondary);
     letter-spacing: 0.5px;
-    transition: background-color 0.2s ease;
-    display: inline-block;
-    border: 1px solid transparent;
   }
 
-  .btn-add:hover {
-    background-color: var(--accent-bg);
+  .slds-header-title {
+    margin: 2px 0 0 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--slds-text-primary);
+    line-height: 1.2;
+  }
+
+  /* Salesforce Standard Buttons */
+  .slds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    height: 32px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--slds-radius);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid transparent;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+
+  .slds-btn-brand {
+    background-color: var(--slds-brand);
+    color: #ffffff;
+    border-color: var(--slds-brand);
+  }
+
+  .slds-btn-brand:hover {
+    background-color: var(--slds-brand-hover);
+    border-color: var(--slds-brand-hover);
+    color: #ffffff;
+  }
+
+  .slds-btn-neutral {
+    background-color: #ffffff;
+    color: var(--slds-brand);
+    border-color: var(--slds-border);
+  }
+
+  .slds-btn-neutral:hover {
+    background-color: #f4f6f9;
+    border-color: var(--slds-border-dark);
+    color: var(--slds-brand-hover);
+  }
+
+  .slds-btn-danger {
+    background-color: #ffffff;
+    color: #ea001e;
+    border-color: var(--slds-border);
+  }
+
+  .slds-btn-danger:hover {
+    background-color: #fef1f2;
+    border-color: #ea001e;
+  }
+
+  /* Salesforce Card & Datatable Wrapper */
+  .slds-card {
+    background: var(--slds-card-bg);
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+    overflow: hidden;
   }
 
   .table-responsive {
-    padding: 24px;
+    width: 100%;
     overflow-x: auto;
   }
 
-  .data-table {
+  .slds-data-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
     white-space: nowrap;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    overflow: hidden;
   }
 
-  .data-table th {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    font-weight: 600;
+  .slds-data-table th {
+    background-color: var(--slds-table-header-bg);
+    color: var(--slds-text-label);
+    font-weight: 700;
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.5px;
-    padding: 12px 14px;
+    padding: 10px 14px;
     text-align: left;
-    border-bottom: 2px solid var(--primary-hover);
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid var(--slds-border);
+    border-right: 1px solid var(--slds-border);
     position: sticky;
     top: 0;
     z-index: 2;
   }
 
-  .data-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    color: var(--text-main);
+  .slds-data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--slds-border);
+    border-right: 1px solid var(--slds-border);
+    color: var(--slds-text-primary);
     vertical-align: middle;
   }
-  
-  .data-table tr:last-child td {
+
+  .slds-data-table tr:last-child td {
     border-bottom: none;
   }
 
-  .data-table td:last-child, 
-  .data-table th:last-child {
+  .slds-data-table td:last-child, 
+  .slds-data-table th:last-child {
     border-right: none;
   }
 
-  .data-table td:first-child, 
-  .data-table th:first-child {
+  /* Sticky First and Last Columns */
+  .slds-data-table td:first-child, 
+  .slds-data-table th:first-child {
     position: sticky;
     left: 0;
-    background-color: #ffffff;
+    background-color: var(--slds-card-bg);
     z-index: 1;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.04);
   }
 
-  .data-table th:first-child {
-    background-color: var(--primary-color);
+  .slds-data-table th:first-child {
+    background-color: var(--slds-table-header-bg);
     z-index: 3;
   }
 
-  .data-table td:last-child,
-  .data-table th:last-child {
+  .slds-data-table td:last-child,
+  .slds-data-table th:last-child {
     position: sticky;
     right: 0;
-    background-color: #ffffff;
+    background-color: var(--slds-card-bg);
     z-index: 1;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.02);
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.04);
   }
 
-  .data-table th:last-child {
-    background-color: var(--primary-color);
+  .slds-data-table th:last-child {
+    background-color: var(--slds-table-header-bg);
     z-index: 3;
   }
 
-  .data-table tr:nth-child(even) td { 
-    background-color: #fafbfc; 
-  }
-  
-  .data-table tr:nth-child(even) td:first-child,
-  .data-table tr:nth-child(even) td:last-child { 
-    background-color: #fafbfc; 
-  }
-
-  .data-table tr:hover td { 
-    background-color: var(--accent-bg); 
-  }
-
-  .data-table tr:hover td:first-child,
-  .data-table tr:hover td:last-child { 
-    background-color: var(--accent-bg); 
+  .slds-data-table tr:hover td { 
+    background-color: var(--slds-table-hover) !important; 
   }
 
   .action-cell {
@@ -194,79 +245,40 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     align-items: center;
   }
 
-  .btn-action {
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 12px;
-    padding: 5px 12px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    cursor: pointer;
-    background-color: #ffffff;
-    transition: all 0.15s ease;
-    display: inline-block;
-  }
-
-  .btn-view {
-    color: #17a2b8;
-    border-color: #bee5eb;
-  }
-  
-  .btn-view:hover {
-    background-color: #e2f0d9;
-    border-color: #17a2b8;
-  }
-
-  .btn-edit {
-    color: var(--text-main);
-    border-color: var(--border-color);
-  }
-
-  .btn-edit:hover {
-    background-color: #f4f6f8;
-    border-color: #999;
-  }
-
-  .btn-delete {
-    color: #c0392b;
-    border-color: #f5c6cb;
-  }
-
-  .btn-delete:hover {
-    background-color: #fce8e6;
-    border-color: #c0392b;
-  }
-
-  /* MODAL MODIFICATIONS TO MATCH PICTURE DIALOG INPUTS */
-  .modal-overlay {
+  /* Salesforce Style Modal Panel */
+  .slds-modal-overlay {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(1px);
+    background-color: rgba(8, 7, 7, 0.6);
+    backdrop-filter: blur(2px);
     z-index: 1000;
     justify-content: center;
     align-items: center;
   }
 
-  .modal-card {
+  .slds-modal-card {
     background: #ffffff;
-    width: 92%;
-    max-width: 950px;
-    max-height: 90vh;
-    border-radius: 6px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--border-color);
+    width: 90%;
+    max-width: 920px;
+    max-height: 88vh;
+    border-radius: var(--slds-radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    animation: fadeIn 0.15s ease-out;
+    animation: modalSlide 0.2s ease-out;
   }
 
-  .modal-card form {
+  @keyframes modalSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slds-modal-card form {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -274,14 +286,9 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     margin: 0;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .modal-header {
-    background: var(--primary-color);
-    color: #ffffff;
+  .slds-modal-header {
+    background-color: #fafaf9;
+    border-bottom: 1px solid var(--slds-border);
     padding: 16px 24px;
     display: flex;
     justify-content: space-between;
@@ -289,136 +296,111 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     flex-shrink: 0;
   }
 
-  .modal-header h3 {
+  .slds-modal-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
+    color: var(--slds-text-primary);
   }
 
-  .modal-close {
+  .slds-modal-close {
     background: none;
     border: none;
-    color: #ffffff;
-    font-size: 24px;
+    color: var(--slds-text-secondary);
+    font-size: 22px;
     line-height: 1;
     cursor: pointer;
-    opacity: 0.8;
+    border-radius: 4px;
+    padding: 2px 8px;
   }
 
-  .modal-close:hover { opacity: 1; }
+  .slds-modal-close:hover {
+    background-color: var(--slds-border);
+    color: var(--slds-text-primary);
+  }
 
-  .modal-body {
-    padding: 24px;
+  .slds-modal-body {
+    padding: 20px 24px;
     overflow-y: auto;
     flex: 1 1 auto;
+    background-color: #ffffff;
   }
 
-  .modal-section-title {
-    background-color: var(--accent-bg);
-    color: var(--primary-color);
-    padding: 8px 14px;
+  .slds-section-title {
+    background-color: #f3f5f8;
+    color: var(--slds-text-primary);
+    padding: 8px 12px;
     font-size: 12px;
     font-weight: 700;
-    border-left: 4px solid var(--primary-color);
-    margin: 24px 0 16px 0;
+    border-left: 3px solid var(--slds-brand);
+    margin: 20px 0 16px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 2px 2px 0;
   }
 
-  .modal-section-title:first-of-type {
+  .slds-section-title:first-of-type {
     margin-top: 0;
   }
 
-  .modal-grid {
+  .slds-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 16px 20px;
   }
 
-  .modal-grid > .modal-group.full-width {
+  .slds-grid > .slds-form-element.full-width {
     grid-column: 1 / -1;
   }
 
-  .modal-group {
+  .slds-form-element {
     display: flex;
     flex-direction: column;
   }
 
-  .modal-group label {
-    font-size: 13px;
+  .slds-form-element label {
+    font-size: 12px;
     font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 6px;
+    color: var(--slds-text-label);
+    margin-bottom: 4px;
   }
 
-  .modal-group input,
-  .modal-group select {
+  .slds-form-element input,
+  .slds-form-element select {
     width: 100%;
-    padding: 8px 12px;
+    padding: 6px 12px;
     font-size: 13px;
-    height: 38px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    height: 36px;
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
     outline: none;
     box-sizing: border-box;
-    color: var(--text-main);
-    transition: border-color 0.2s;
+    color: var(--slds-text-primary);
+    background-color: #ffffff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .modal-group input:focus,
-  .modal-group select:focus {
-    border-color: var(--primary-color);
+  .slds-form-element input:focus,
+  .slds-form-element select:focus {
+    border-color: var(--slds-brand);
+    box-shadow: 0 0 0 1px var(--slds-brand);
   }
 
-  .modal-group input[readonly] {
-    background-color: #f4f6f8;
-    color: var(--text-muted);
+  .slds-form-element input[readonly] {
+    background-color: #f3f5f8;
+    color: var(--slds-text-secondary);
     cursor: not-allowed;
   }
 
-  .modal-footer {
-    padding: 16px 24px;
-    background-color: #fafbfc;
-    border-top: 1px solid var(--border-color);
+  .slds-modal-footer {
+    padding: 14px 24px;
+    background-color: #fafaf9;
+    border-top: 1px solid var(--slds-border);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
     flex-shrink: 0;
   }
-
-  .btn-save {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    border: none;
-    padding: 10px 24px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: background-color 0.2s;
-  }
-
-  .btn-save:hover { background-color: var(--primary-hover); }
-
-  .btn-cancel {
-    background-color: #ffffff;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    padding: 10px 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-  }
-
-  .btn-cancel:hover { background-color: #f4f6f8; }
 </style>
 </head>
 
@@ -435,147 +417,159 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   }
 %>
 
-<div class="container">
+<div class="slds-container">
 
-  <div class="page-title-bar">
-    <h2>Scholarship Applications Master List</h2>
-    <a href="ScholarshipApplication.jsp" class="btn-add">+ Add New Application</a>
+  <!-- SALESFORCE PAGE HEADER BAR -->
+  <div class="slds-page-header">
+    <div class="slds-header-title-wrapper">
+     
+      <div class="slds-header-details">
+      
+        <h1 class="slds-header-title">Applications Master List</h1>
+      </div>
+    </div>
+    <div>
+      <a href="ScholarshipApplication.jsp" class="slds-btn slds-btn-brand">+ New Application</a>
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Organization</th>
-          <th>Emp No</th>
-          <th>Emp Name</th>
-          <th>Designation</th>
-          <th>Spouse SMIORE</th>
-          <th>Spouse Group</th>
-          <th>Child Name</th>
-          <th>DOB</th>
-          <th>Gender</th>
-          <th>Relation</th>
-          <th>Child Order</th>
-          <th>College Name</th>
-          <th>Course</th>
-          <th style="text-align: center;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
+  <!-- DATA TABLE CARD CONTAINER -->
+  <div class="slds-card">
+    <div class="table-responsive">
+      <table class="slds-data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Organization</th>
+            <th>Emp No</th>
+            <th>Emp Name</th>
+            <th>Designation</th>
+            <th>Spouse SMIORE</th>
+            <th>Spouse Group</th>
+            <th>Child Name</th>
+            <th>DOB</th>
+            <th>Gender</th>
+            <th>Relation</th>
+            <th>Child Order</th>
+            <th>College Name</th>
+            <th>Course</th>
+            <th style="text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
 <%
 if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
 %>
-        <tr>
-          <td><%=bean.getId()%></td>
-          <td><%=bean.getOrgName() != null ? bean.getOrgName() : ""%></td>
-          <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
-          <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
-          <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>
-          <td><%=bean.getSpouseWorkingSMIORE() != null ? bean.getSpouseWorkingSMIORE() : ""%></td>
-          <td><%=bean.getSpouseWorkingGroupCompanies() != null ? bean.getSpouseWorkingGroupCompanies() : ""%></td>
-          <td><%=bean.getChildrenName() != null ? bean.getChildrenName() : ""%></td>
-          <td><%=bean.getDob() != null ? bean.getDob() : ""%></td>
-          <td><%=bean.getGender() != null ? bean.getGender() : ""%></td>
-          <td><%=bean.getRelationship() != null ? bean.getRelationship() : ""%></td>
-          <td><%=bean.getChildOrder() != null ? bean.getChildOrder() : ""%></td>
-          <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
-          <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
-       
-          <td class="action-cell">
-            <a href="ScholarshipViewServlet?id=<%=bean.getId()%>" class="btn-action btn-view">View</a>
+          <tr>
+            <td><%=bean.getId()%></td>
+            <td><%=bean.getOrgName() != null ? bean.getOrgName() : ""%></td>
+            <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
+            <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
+            <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>
+            <td><%=bean.getSpouseWorkingSMIORE() != null ? bean.getSpouseWorkingSMIORE() : ""%></td>
+            <td><%=bean.getSpouseWorkingGroupCompanies() != null ? bean.getSpouseWorkingGroupCompanies() : ""%></td>
+            <td><%=bean.getChildrenName() != null ? bean.getChildrenName() : ""%></td>
+            <td><%=bean.getDob() != null ? bean.getDob() : ""%></td>
+            <td><%=bean.getGender() != null ? bean.getGender() : ""%></td>
+            <td><%=bean.getRelationship() != null ? bean.getRelationship() : ""%></td>
+            <td><%=bean.getChildOrder() != null ? bean.getChildOrder() : ""%></td>
+            <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
+            <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
+         
+            <td class="action-cell">
+              <a href="ScholarshipViewServlet?id=<%=bean.getId()%>" class="slds-btn slds-btn-neutral" style="height:26px; padding:0 10px; font-size:11px;">View</a>
 
-            <button type="button" class="btn-action btn-edit"
-                onclick="openEditModal(
-                '<%=bean.getId()%>',
-                '<%=escapeJs(bean.getOrgName())%>',
-                '<%=escapeJs(bean.getEmpNo())%>',
-                '<%=escapeJs(bean.getEmpName())%>',
-                '<%=escapeJs(bean.getDesignation())%>',
-                '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
-                '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
-                '<%=escapeJs(bean.getChildrenName())%>',
-                '<%=escapeJs(bean.getDob())%>',
-                '<%=escapeJs(bean.getGender())%>',
-                '<%=escapeJs(bean.getRelationship())%>',
-                '<%=escapeJs(bean.getChildOrder())%>',
-                '<%=escapeJs(bean.getCollegeName())%>',
-                '<%=escapeJs(bean.getCourse())%>',
-                '<%=escapeJs(bean.getPresentYear())%>',
-                '<%=bean.getPreviousAyPercentage()%>',
-                '<%=bean.getFeeAmountCurrentAy()%>',
-                '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
-                '<%=escapeJs(bean.getBankAccountNo())%>',
-                '<%=escapeJs(bean.getIfscCode())%>',
-                '<%=escapeJs(bean.getBankName())%>',
-                '<%=escapeJs(bean.getBranchName())%>'
-                )">
-                Edit
-            </button>
+              <button type="button" class="slds-btn slds-btn-neutral" style="height:26px; padding:0 10px; font-size:11px;"
+                  onclick="openEditModal(
+                  '<%=bean.getId()%>',
+                  '<%=escapeJs(bean.getOrgName())%>',
+                  '<%=escapeJs(bean.getEmpNo())%>',
+                  '<%=escapeJs(bean.getEmpName())%>',
+                  '<%=escapeJs(bean.getDesignation())%>',
+                  '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
+                  '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
+                  '<%=escapeJs(bean.getChildrenName())%>',
+                  '<%=escapeJs(bean.getDob())%>',
+                  '<%=escapeJs(bean.getGender())%>',
+                  '<%=escapeJs(bean.getRelationship())%>',
+                  '<%=escapeJs(bean.getChildOrder())%>',
+                  '<%=escapeJs(bean.getCollegeName())%>',
+                  '<%=escapeJs(bean.getCourse())%>',
+                  '<%=escapeJs(bean.getPresentYear())%>',
+                  '<%=bean.getPreviousAyPercentage()%>',
+                  '<%=bean.getFeeAmountCurrentAy()%>',
+                  '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
+                  '<%=escapeJs(bean.getBankAccountNo())%>',
+                  '<%=escapeJs(bean.getIfscCode())%>',
+                  '<%=escapeJs(bean.getBankName())%>',
+                  '<%=escapeJs(bean.getBranchName())%>'
+                  )">
+                  Edit
+              </button>
 
-            <a class="btn-action btn-delete"
-               href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
-               onclick="return confirm('Are you sure you want to delete this record?');">
-                Delete
-            </a>
-          </td>
-        </tr>
+              <a class="slds-btn slds-btn-danger" style="height:26px; padding:0 10px; font-size:11px;"
+                 href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
+                 onclick="return confirm('Are you sure you want to delete this record?');">
+                  Delete
+              </a>
+            </td>
+          </tr>
 <%
     }
 } else {
 %>
-        <tr>
-          <td colspan="15" style="text-align: center; color: var(--text-muted); padding: 40px;">No Applications Found</td>
-        </tr>
+          <tr>
+            <td colspan="15" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
+          </tr>
 <%
 }
 %>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>
 
-<!-- EDIT POPUP MODAL -->
-<div id="editModal" class="modal-overlay">
-  <div class="modal-card">
+<!-- SALESFORCE MODAL POPUP -->
+<div id="editModal" class="slds-modal-overlay">
+  <div class="slds-modal-card">
     
-    <div class="modal-header">
+    <div class="slds-modal-header">
       <h3>Edit Scholarship Application</h3>
-      <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+      <button type="button" class="slds-modal-close" onclick="closeEditModal()">&times;</button>
     </div>
 
     <form action="ScholarshipListServelt" method="post">
       <input type="hidden" name="action" value="update">
       <input type="hidden" id="edit_id" name="id">
 
-      <div class="modal-body">
+      <div class="slds-modal-body">
         
-        <div class="modal-section-title">1. Employee Details</div>
-        <div class="modal-grid">
-          <div class="modal-group full-width">
+        <div class="slds-section-title">1. Employee Details</div>
+        <div class="slds-grid">
+          <div class="slds-form-element full-width">
             <label for="edit_orgName">Organization Name *</label>
             <input type="text" id="edit_orgName" name="orgName" required>
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_empNo">Employee No *</label>
             <input type="text" id="edit_empNo" name="empNo" required>
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_empName">Employee Name *</label>
             <input type="text" id="edit_empName" name="empName" required>
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_designation">Designation</label>
             <input type="text" id="edit_designation" name="designation">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_spouseWorkingSMIORE">Spouse Working in SMIORE? *</label>
             <select id="edit_spouseWorkingSMIORE" name="spouseWorkingSMIORE">
               <option value="No">No</option>
@@ -583,7 +577,7 @@ if(list != null && !list.isEmpty()){
             </select>
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_spouseWorkingGroupCompanies">Spouse Working in Group Co.? *</label>
             <select id="edit_spouseWorkingGroupCompanies" name="spouseWorkingGroupCompanies">
               <option value="No">No</option>
@@ -592,24 +586,24 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <div class="modal-section-title">2. Child / Student Details</div>
-        <div class="modal-grid">
-          <div class="modal-group">
+        <div class="slds-section-title">2. Child / Student Details</div>
+        <div class="slds-grid">
+          <div class="slds-form-element">
             <label for="edit_childrenName">Child's Name</label>
             <input type="text" id="edit_childrenName" name="childrenName">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_dob">Date of Birth</label>
             <input type="date" id="edit_dob" name="dob" onchange="calculateModalAge()">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_age">Calculated Age</label>
             <input type="text" id="edit_age" readonly>
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_gender">Gender</label>
             <select id="edit_gender" name="gender">
               <option value="">Select Gender</option>
@@ -619,12 +613,12 @@ if(list != null && !list.isEmpty()){
             </select>
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_relationship">Relationship</label>
             <input type="text" id="edit_relationship" name="relationship">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_childOrder">Child Order</label>
             <select id="edit_childOrder" name="childOrder">
               <option value="">Select Child Order</option>
@@ -634,57 +628,57 @@ if(list != null && !list.isEmpty()){
           </div>
         </div>
 
-        <div class="modal-section-title">3. Academic Details</div>
-        <div class="modal-grid">
-          <div class="modal-group full-width">
+        <div class="slds-section-title">3. Academic Details</div>
+        <div class="slds-grid">
+          <div class="slds-form-element full-width">
             <label for="edit_collegeName">College Name</label>
             <input type="text" id="edit_collegeName" name="collegeName">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_course">Course Name</label>
             <input type="text" id="edit_course" name="course">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_presentYear">Present Year</label>
             <input type="text" id="edit_presentYear" name="presentYear">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_previousAyPercentage">Prev AY Percentage (%)</label>
             <input type="number" step="0.01" id="edit_previousAyPercentage" name="previousAyPercentage">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_feeAmountCurrentAy">Fee Amount for Current AY</label>
             <input type="number" step="0.01" id="edit_feeAmountCurrentAy" name="feeAmountCurrentAy">
           </div>
         </div>
 
-        <div class="modal-section-title">4. Bank Account Details</div>
-        <div class="modal-grid">
-          <div class="modal-group full-width">
+        <div class="slds-section-title">4. Bank Account Details</div>
+        <div class="slds-grid">
+          <div class="slds-form-element full-width">
             <label for="edit_employeeNamePassbook">Name as per Passbook</label>
             <input type="text" id="edit_employeeNamePassbook" name="employeeNamePassbook">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_bankAccountNo">Bank Account Number</label>
             <input type="text" id="edit_bankAccountNo" name="bankAccountNo">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_ifscCode">IFSC Code</label>
             <input type="text" id="edit_ifscCode" name="ifscCode">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_bankName">Bank Name</label>
             <input type="text" id="edit_bankName" name="bankName">
           </div>
 
-          <div class="modal-group">
+          <div class="slds-form-element">
             <label for="edit_branchName">Branch Name</label>
             <input type="text" id="edit_branchName" name="branchName">
           </div>
@@ -692,9 +686,9 @@ if(list != null && !list.isEmpty()){
 
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-        <button type="submit" class="btn-save">Update Application</button>
+      <div class="slds-modal-footer">
+        <button type="button" class="slds-btn slds-btn-neutral" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="slds-btn slds-btn-brand">Save Application</button>
       </div>
     </form>
 
