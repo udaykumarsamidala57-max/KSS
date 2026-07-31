@@ -1,6 +1,13 @@
 <%@page import="java.util.List"%>
 <%@page import="com.Bean.ScholarshipBean"%>
-
+<%
+    
+    HttpSession sess = request.getSession(false);
+    if (sess == null || sess.getAttribute("username") == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+    %>
 <%
 List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list");
 %>
@@ -429,7 +436,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
   <div class="page-title-bar">
     <h2>Scholarship Applications Master List</h2>
-    <a href="scholarshipForm.jsp" class="btn-add">+ Add New Application</a>
+    <a href="ScholarshipApplication.jsp" class="btn-add">+ Add New Application</a>
   </div>
 
   <div class="table-responsive">

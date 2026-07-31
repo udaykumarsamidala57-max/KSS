@@ -269,7 +269,7 @@
 <!-- TOP NAVIGATION BAR -->
 <nav class="kss-navbar-scope navbar">
   <div class="navbar-container">
-    <a href="index.jsp" class="navbar-brand">
+    <a href="ScholarshipApplication.jsp" class="navbar-brand">
       <div class="brand-text-group">
         <span class="brand-title">Karnataka Seva Sangha</span>
         <span class="brand-subtitle">Higher Education Scholarship Portal</span>

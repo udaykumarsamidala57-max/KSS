@@ -1,6 +1,13 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="com.Bean.DBUtil" %>
-
+<%
+    
+    HttpSession sess = request.getSession(false);
+    if (sess == null || sess.getAttribute("username") == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+    %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
