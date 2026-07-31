@@ -1,7 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ page import="com.Bean.ScholarshipBean"%>
-
+<%
+    
+    HttpSession sess = request.getSession(false);
+    if (sess == null || sess.getAttribute("username") == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+    %>
 <%
 ScholarshipBean bean = (ScholarshipBean) request.getAttribute("bean");
 %>

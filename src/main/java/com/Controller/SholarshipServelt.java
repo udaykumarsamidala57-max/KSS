@@ -14,7 +14,7 @@ import com.DAO.SholrarshipDAO;
 
 @WebServlet({
     "/ScholarshipServlet",
-    "/"
+    
 })
 public class SholarshipServelt extends HttpServlet {
 
