@@ -1,13 +1,12 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="com.Bean.DBUtil" %>
 <%
-    
     HttpSession sess = request.getSession(false);
     if (sess == null || sess.getAttribute("username") == null) {
         response.sendRedirect("login.jsp");
         return;
     }
-    %>
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -118,29 +117,44 @@
     background-color: #f7e8ec;
   }
 
+  /* Interactive Status Link & Badge Styling */
+  .doc-link {
+    text-decoration: none;
+    display: inline-block;
+  }
+
   .status-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 4px 8px;
-    font-size: 10px;
-    font-weight: bold;
-    border-radius: 3px;
-    min-width: 85px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    min-width: 90px;
     text-align: center;
+    transition: all 0.2s ease-in-out;
   }
 
   .tick {
     background-color: #e2f0d9;
-    color: #385723;
+    color: #2e5b1e;
     border: 1px solid #a9d18e;
+    cursor: pointer;
+  }
+
+  .tick:hover {
+    background-color: #d4e8c4;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
   }
 
   .cross {
     background-color: #fce8e6;
     color: #a51d24;
     border: 1px solid #f5c2c1;
+    cursor: default;
   }
 
   .emp-badge {
@@ -164,7 +178,7 @@
   
   <div class="header-bar">
     <h2>Student Scholarship Document Status</h2>
-    
+    <p>Click on any uploaded document badge to view or download the attachment.</p>
   </div>
 
   <div class="table-responsive">
@@ -192,59 +206,115 @@ ResultSet rs = null;
 
 try {
     con = DBUtil.getConnection();
-    ps = con.prepareStatement("SELECT * FROM kss_student_scholarship ORDER BY emp_no");
+    
+    // Performance optimized SQL query checking length without fetching heavy BLOB payloads
+    String sql = "SELECT id, emp_no, emp_name, children_name, " +
+                 "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+                 "OCTET_LENGTH(kss_application) AS len_kss, " +
+                 "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+                 "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+                 "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+                 "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+                 "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+                 "FROM kss_student_scholarship ORDER BY emp_no";
+
+    ps = con.prepareStatement(sql);
     rs = ps.executeQuery();
 
     boolean hasData = false;
     while(rs.next()){
         hasData = true;
+        int recId = rs.getInt("id");
+        
+        boolean hasMarks = rs.getLong("len_marks") > 0;
+        boolean hasKss = rs.getLong("len_kss") > 0;
+        boolean hasFeeStruct = rs.getLong("len_fee_struct") > 0;
+        boolean hasFeeRec = rs.getLong("len_fee_rec") > 0;
+        boolean hasParentId = rs.getLong("len_parent_id") > 0;
+        boolean hasStudentId = rs.getLong("len_student_id") > 0;
+        boolean hasBank = rs.getLong("len_bank") > 0;
 %>
         <tr>
-          <td><%=rs.getInt("id")%></td>
+          <td><%=recId%></td>
           <td><span class="emp-badge"><%=rs.getString("emp_no") != null ? rs.getString("emp_no") : ""%></span></td>
           <td><%=rs.getString("emp_name") != null ? rs.getString("emp_name") : ""%></td>
           <td><%=rs.getString("children_name") != null ? rs.getString("children_name") : ""%></td>
 
+          <!-- Marks Card -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("previous_ay_marks_card")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("previous_ay_marks_card")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasMarks) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=previousAyMarksCard" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
 
+          <!-- KSS Application -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("kss_application")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("kss_application")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasKss) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=kssApplication" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
 
+          <!-- Fee Structure -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("fee_structure")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("fee_structure")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasFeeStruct) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=feeStructure" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
 
+          <!-- Fee Receipts -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("fee_receipts")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("fee_receipts")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasFeeRec) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=feeReceipts" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
 
+          <!-- Parent Aadhar Copy -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("parent_aadhar_copy")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("parent_aadhar_copy")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasParentId) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=parentAadharCopy" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
 
+          <!-- Student Aadhar Copy -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("student_aadhar_copy")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("student_aadhar_copy")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasStudentId) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=studentAadharCopy" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
 
+          <!-- Bank Passbook -->
           <td class="center-align">
-            <span class="status-badge <%=rs.getBytes("bank_passbook_first_page")!=null?"tick":"cross"%>">
-              <%=rs.getBytes("bank_passbook_first_page")!=null?"&#10004; Uploaded":"&#10008; Missing"%>
-            </span>
+            <% if(hasBank) { %>
+              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=bankPassbookFirstPage" target="_blank" class="doc-link" title="View Document">
+                <span class="status-badge tick">&#10004; View</span>
+              </a>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
           </td>
         </tr>
 <%

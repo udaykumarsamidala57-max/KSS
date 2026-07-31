@@ -7,6 +7,9 @@
         response.sendRedirect("login.jsp");
         return;
     }
+    String users = (String) sess.getAttribute("username");
+    String roles = (String) sess.getAttribute("role");
+    String depts = (String) sess.getAttribute("department");
     %>
 <%
 List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list");
