@@ -236,7 +236,7 @@
   }
 
   .org-title {
-    font-family: 'Inter', sans-serif;
+     font-family:Lucida Handwriting;
     font-size: 20px;
     font-weight: 800;
     letter-spacing: 0.5px;
