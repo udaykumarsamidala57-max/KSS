@@ -26,7 +26,6 @@
     if ("download".equals(mode) && idParam != null && !idParam.trim().isEmpty()) {
         String field = request.getParameter("field");
         
-        // Whitelist allowed BLOB columns to prevent SQL injection
         String targetColumn = null;
         if ("previous_ay_marks_card".equals(field)) targetColumn = "previous_ay_marks_card";
         else if ("kss_application".equals(field)) targetColumn = "kss_application";
@@ -59,7 +58,7 @@
                         os.write(blobData);
                         os.flush();
                         os.close();
-                        return; // Halt JSP rendering after writing binary payload
+                        return;
                     }
                 }
             } catch (Exception e) {
@@ -77,7 +76,6 @@
     // -------------------------------------------------------------------------
     boolean recordFound = false;
     
-    // Application Fields
     int id = 0;
     String orgName = "", empNo = "", empName = "", designation = "";
     String childrenName = "", dob = "", gender = "", relationship = "", childOrder = "";
@@ -86,10 +84,8 @@
     double previousAyPercentage = 0.0;
     double feeAmountCurrentAy = 0.0;
     
-    // Bank Details
     String employeeNamePassbook = "", bankAccountNo = "", ifscCode = "", bankName = "", branchName = "";
 
-    // BLOB Existence Verification
     boolean hasPreviousAyMarksCard = false;
     boolean hasKssApplication = false;
     boolean hasFeeStructure = false;
@@ -174,17 +170,17 @@
 <title>Scholarship Application - Karnatak Seva Sangha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --bg-main: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --bg-main: #f1f5f9;
     --card-bg: #ffffff;
     --border-color: #000000;
     --accent-blue: #0f172a;
-    --accent-hover: #334155;
+    --accent-hover: #1e293b;
   }
 
   * {
@@ -202,11 +198,11 @@
   }
 
   .container {
-    max-width: 860px;
+    max-width: 880px;
     margin: 0 auto;
   }
 
-  /* Screen Control Bar */
+  /* Screen Action Toolbar */
   .action-bar {
     display: flex;
     justify-content: space-between;
@@ -220,44 +216,58 @@
     color: var(--text-primary);
   }
 
-  /* Printable Sheet Styling */
+  /* Printable Sheet (Standard A4 Proportions) */
   .printable-sheet {
     background: var(--card-bg);
     border: 1.5px solid var(--border-color);
     padding: 28px 32px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    min-height: 297mm; /* Full A4 Height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
   }
 
-  .header-section {
-    text-align: center;
+  /* Header Layout */
+  .header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     border-bottom: 2px double var(--border-color);
-    padding-bottom: 12px;
+    padding-bottom: 14px;
     margin-bottom: 14px;
   }
 
+  .header-details {
+    flex: 1;
+    text-align: left;
+    padding-right: 18px;
+  }
+
   .org-title {
-     font-family:Lucida Handwriting;
-    font-size: 20px;
+   font-family:Lucida Handwriting;
+    font-size: 21px;
     font-weight: 800;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     color: #000000;
+    line-height: 1.15;
   }
 
   .org-subtitle {
     font-size: 11px;
     font-weight: 500;
-    color: #333333;
-    margin-top: 3px;
-    line-height: 1.3;
+    color: #222222;
+    margin-top: 4px;
+    line-height: 1.4;
   }
 
   .doc-title {
     font-size: 14px;
-    font-weight: 700;
-    margin-top: 8px;
+    font-weight: 800;
+    margin-top: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     color: #000000;
   }
 
@@ -268,11 +278,53 @@
     color: #444444;
   }
 
-  /* Boxed Section Containers */
+  /* Formal Header Photo Slot Layout with Explicit Gap */
+  .header-photos-flex {
+    display: flex;
+    gap: 16px; /* Generous gap between Student & Employee photo slots */
+    align-items: flex-start;
+  }
+
+  .photo-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .photo-box-space {
+    width: 95px;
+    height: 115px; /* Passport aspect ratio 35mm x 45mm equivalent */
+    border: 1.25px dashed #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 8.5px;
+    font-weight: 600;
+    color: #555555;
+    background: #fafafa;
+    padding: 6px;
+    line-height: 1.3;
+  }
+
+  .photo-caption {
+    width: 100%;
+    background: #000000;
+    color: #ffffff;
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 2.5px 0;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+  }
+
+  /* Boxed Content Sections */
   .boxed-section {
     border: 1px solid var(--border-color);
-    padding: 10px 14px;
-    margin-bottom: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
     background: #ffffff;
   }
 
@@ -299,7 +351,7 @@
   .form-row {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
 
   .form-row:last-child {
@@ -323,7 +375,7 @@
     flex: 1;
     border: 1px solid #000000;
     min-height: 22px;
-    padding: 2px 8px;
+    padding: 3px 8px;
     font-size: 10.5px;
     font-weight: 600;
     background: #ffffff;
@@ -332,11 +384,11 @@
     align-items: center;
   }
 
-  /* Checklist Section */
+  /* Checklist & Enclosure Styling */
   .checklist-list {
     list-style: none;
     font-size: 10.5px;
-    line-height: 1.6;
+    line-height: 1.65;
     color: #111111;
   }
 
@@ -345,7 +397,7 @@
   }
 
   .signature-area {
-    margin-top: 16px;
+    margin-top: 20px;
     display: flex;
     justify-content: flex-end;
   }
@@ -359,11 +411,19 @@
     font-weight: 700;
   }
 
-  /* Certificate Section Clean Alignment */
+  /* Certificate Section (Fills remaining A4 Vertical Height) */
+  .cert-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: 0;
+  }
+
   .cert-heading {
     text-align: center;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 12px;
@@ -373,13 +433,13 @@
   .cert-text-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
 
   .cert-line-row {
     display: flex;
     align-items: flex-end;
-    font-size: 10.5px;
+    font-size: 11px;
     white-space: nowrap;
   }
 
@@ -391,22 +451,22 @@
   .fill-line {
     flex: 1;
     border-bottom: 1px solid var(--border-color);
-    padding: 0 8px 1px 8px;
+    padding: 0 8px 2px 8px;
     font-weight: 700;
-    font-size: 10.5px;
-    min-height: 16px;
+    font-size: 11px;
+    min-height: 18px;
   }
 
   .cert-footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-top: 30px;
-    font-size: 10.5px;
+    margin-top: 36px;
+    font-size: 11px;
     font-weight: 700;
   }
 
-  /* Document Upload Section Style */
+  /* Document Upload Section Style (Screen Only) */
   .upload-card {
     background: var(--card-bg);
     border: 1px solid #e2e8f0;
@@ -440,7 +500,7 @@
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .doc-card-title {
@@ -482,7 +542,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: 18px;
   }
 
   .btn {
@@ -524,11 +584,11 @@
   }
 
   /* -------------------------------------------------------------------------
-     PRINT STYLING - ABSOLUTE SINGLE PAGE A4 FIT
+     PRINT STYLING - PERFECT FULL-PAGE A4 ADAPTATION
      ------------------------------------------------------------------------- */
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 10mm 10mm;
   }
 
   @media print {
@@ -544,7 +604,6 @@
       background-color: #ffffff !important;
       padding: 0 !important;
       margin: 0 !important;
-      font-size: 10pt;
     }
 
     .no-print, .non-printable, .btn-actions, .action-bar {
@@ -554,21 +613,24 @@
     .container {
       max-width: 100% !important;
       width: 100% !important;
+      height: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
     }
 
     .printable-sheet {
       border: 1.5pt solid #000 !important;
-      padding: 12pt !important;
-      height: 100% !important;
+      padding: 14pt !important;
+      box-shadow: none !important;
+      min-height: 100vh !important;
+      height: 100vh !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
       box-sizing: border-box !important;
     }
 
-    .header-section {
+    .header-wrapper {
       border-bottom: 1.5pt double #000 !important;
       margin-bottom: 8pt !important;
       padding-bottom: 6pt !important;
@@ -577,10 +639,10 @@
     .boxed-section {
       border: 1pt solid #000 !important;
       padding: 6pt 8pt !important;
-      margin-bottom: 6pt !important;
+      margin-bottom: 7pt !important;
     }
 
-    .boxed-section.cert-section {
+    .cert-section {
       margin-bottom: 0 !important;
       flex-grow: 1 !important;
       display: flex !important;
@@ -591,13 +653,19 @@
     .form-value-box {
       border: 0.75pt solid #000 !important;
       min-height: 18pt !important;
-      padding: 1pt 4pt !important;
-      font-size: 9pt !important;
+      padding: 1.5pt 5pt !important;
+    }
+
+    .photo-caption {
+      background: #000 !important;
+      color: #fff !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
     .cert-footer {
       margin-top: auto !important;
-      padding-top: 15pt !important;
+      padding-top: 16pt !important;
     }
   }
 </style>
@@ -610,9 +678,11 @@
 <% if(!recordFound) { %>
 
   <div class="printable-sheet">
-    <div class="header-section">
-      <div class="org-title">Karnatak Seva Sangha</div>
-      <div class="doc-title">Scholarship Application Details</div>
+    <div class="header-wrapper">
+      <div class="header-details">
+        <div class="org-title">Karnatak Seva Sangha</div>
+        <div class="doc-title">Scholarship Application Details</div>
+      </div>
     </div>
     <div class="error-card">
       Record Not Found or Invalid ID Parameter.
@@ -635,12 +705,26 @@
 
   <div class="printable-sheet">
 
-    <!-- HEADER SECTION -->
-    <div class="header-section">
-      <div class="org-title">KARNATAKA SEVA SANGHA</div>
-      <div class="org-subtitle">(Regd. No:16 of 1983-84 dated 21.04.1983)<br>Shivapur, Palace Road, Sandur - 583119, Ballari Dist., Karnataka</div>
-      <div class="doc-title">Sandur Vidya Protsaha Scholarship - Higher Education</div>
-      <div class="doc-subtext">(Under Auspicious SMIORE CSR)</div>
+    <!-- FORM HEADER WITH INTEGRATED PHOTO HOLDERS -->
+    <div class="header-wrapper">
+      <div class="header-details">
+        <div class="org-title">KARNATAKA SEVA SANGHA</div>
+        <div class="org-subtitle">(Regd. No:16 of 1983-84 dated 21.04.1983)<br>Shivapur, Palace Road, Sandur - 583119, Ballari Dist., Karnataka</div>
+        <div class="doc-title">Sandur Vidya Protsaha Scholarship</div>
+        <div class="doc-subtext">(Higher Education - Under Auspicious SMIORE CSR)</div>
+      </div>
+
+      <!-- Photos Container with Distinct Gap -->
+      <div class="header-photos-flex">
+        <div class="photo-frame">
+          <div class="photo-box-space">Affix Passport<br>Size Photo<br>Here</div>
+          <div class="photo-caption">Student</div>
+        </div>
+        <div class="photo-frame">
+          <div class="photo-box-space">Affix Passport<br>Size Photo<br>Here</div>
+          <div class="photo-caption">Employee</div>
+        </div>
+      </div>
     </div>
 
     <!-- 1. PARTICULARS SECTION -->
@@ -706,7 +790,7 @@
           </div>
         </div>
 
-        <!-- Right Column: Employee & Spouse Particulars -->
+        <!-- Right Column: Employee Particulars -->
         <div class="col-half">
           <div class="section-heading-row">Employee Particulars :</div>
 
@@ -734,7 +818,7 @@
             <div class="form-value-box"><%=designation != null ? designation : ""%></div>
           </div>
 
-          <div class="section-heading-row" style="margin-top: 8px;">Spouse Employment Details :</div>
+          <div class="section-heading-row" style="margin-top: 10px;">Spouse Employment Details :</div>
 
           <div class="form-row">
             <span class="form-label">Working in SMIORE?</span>
@@ -837,12 +921,12 @@
           <div class="cert-line-row">
             <span class="cert-label">Course</span>
             <div class="fill-line"><%=course != null ? course : ""%></div>
-            <span class="cert-label" style="padding-left: 8px;">for the year / semester</span>
+            <span class="cert-label" style="padding-left: 8px;">for the year</span>
             <div class="fill-line"><%=presentYear != null ? presentYear : ""%></div>
           </div>
         </div>
       </div>
-<br><br><br><br><br><br>
+
       <div class="cert-footer">
         <div>(Seal of the Institution)</div>
         <div style="border-top: 1px solid #000; padding-top: 4px; min-width: 200px; text-align: center;">Principal Signature</div>
@@ -851,105 +935,7 @@
 
   </div>
 
-  <!-- DOCUMENT UPLOADS (NON-PRINTABLE AREA) -->
-  <div class="non-printable upload-card">
-    <div class="upload-header">Document Uploads & Attachments</div>
-
-    <form action="scholarshipApplication.jsp" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="id" value="<%=id%>">
-
-      <div class="doc-grid">
-
-        <div class="doc-card">
-          <span class="doc-card-title">Previous AY Marks Card</span>
-          <div>
-            <% if(hasPreviousAyMarksCard) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=previous_ay_marks_card" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="previous_ay_marks_card" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-        <div class="doc-card">
-          <span class="doc-card-title">KSS Application</span>
-          <div>
-            <% if(hasKssApplication) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=kss_application" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="kss_application" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-        <div class="doc-card">
-          <span class="doc-card-title">Fee Structure</span>
-          <div>
-            <% if(hasFeeStructure) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=fee_structure" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="fee_structure" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-        <div class="doc-card">
-          <span class="doc-card-title">Fee Receipts</span>
-          <div>
-            <% if(hasFeeReceipts) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=fee_receipts" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="fee_receipts" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-        <div class="doc-card">
-          <span class="doc-card-title">Parent Identity Document</span>
-          <div>
-            <% if(hasParentAadharCopy) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=parent_aadhar_copy" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="parent_aadhar_copy" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-        <div class="doc-card">
-          <span class="doc-card-title">Student Identity Document</span>
-          <div>
-            <% if(hasStudentAadharCopy) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=student_aadhar_copy" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="student_aadhar_copy" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-        <div class="doc-card" style="grid-column: span 2;">
-          <span class="doc-card-title">Bank Passbook First Page</span>
-          <div>
-            <% if(hasBankPassbookFirstPage) { %>
-              <a href="scholarshipApplication.jsp?id=<%=id%>&mode=download&field=bank_passbook_first_page" target="_blank" class="status-badge view">✓ View Document</a>
-            <% } else { %>
-              <span class="status-badge none">⚠ No file uploaded</span>
-            <% } %>
-          </div>
-          <input type="file" name="bank_passbook_first_page" accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-
-      </div>
-
-      <div class="btn-actions">
-        <input type="submit" value="Upload Documents" class="btn">
-        <a href="scholarshipList.jsp" class="btn btn-secondary">Back to List</a>
-      </div>
+  
 
     </form>
   </div>
