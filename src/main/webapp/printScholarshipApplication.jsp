@@ -172,13 +172,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scholarship Application - Karnatak Seva Sangha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --text-main: #000000;
-    --bg-main: #f4f4f4;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --bg-main: #f8fafc;
     --card-bg: #ffffff;
-    --border-dark: #000000;
+    --border-color: #000000;
+    --accent-blue: #0f172a;
+    --accent-hover: #334155;
   }
 
   * {
@@ -188,85 +194,112 @@
   }
 
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--bg-main);
-    color: var(--text-main);
-    padding: 20px;
+    color: var(--text-primary);
+    padding: 24px 16px;
+    -webkit-font-smoothing: antialiased;
   }
 
   .container {
-    max-width: 900px;
+    max-width: 860px;
     margin: 0 auto;
+  }
+
+  /* Screen Control Bar */
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .action-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   /* Printable Sheet Styling */
   .printable-sheet {
     background: var(--card-bg);
-    border: 2px solid var(--border-dark);
-    padding: 24px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1.5px solid var(--border-color);
+    padding: 28px 32px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
   }
 
   .header-section {
     text-align: center;
-    margin-bottom: 20px;
+    border-bottom: 2px double var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 14px;
   }
 
   .org-title {
-    font-family: 'Lucida Handwriting', cursive, Georgia, serif;
-    font-size: 28px;
-    font-weight: bold;
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #000000;
   }
 
   .org-subtitle {
-    font-size: 12px;
-    font-weight: bold;
-  
-    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #333333;
+    margin-top: 3px;
+    line-height: 1.3;
   }
 
   .doc-title {
-    font-size: 15px;
-    font-weight: bold;
-    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #000000;
   }
 
   .doc-subtext {
-    font-size: 12px;
-    font-weight: bold;
-    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    font-style: italic;
+    color: #444444;
   }
 
   /* Boxed Section Containers */
   .boxed-section {
-    border: 2px solid var(--border-dark);
-    padding: 14px;
-    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    background: #ffffff;
   }
 
   .section-heading-row {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    font-size: 13px;
-    text-decoration: underline;
-    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    color: #000000;
   }
 
   .two-column-layout {
     display: flex;
-    justify-content: space-between;
     gap: 20px;
   }
 
   .col-half {
-    width: 48%;
+    flex: 1;
   }
 
   .form-row {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
   }
 
   .form-row:last-child {
@@ -274,24 +307,26 @@
   }
 
   .form-label {
-    width: 130px;
-    font-size: 12px;
-    font-weight: bold;
+    width: 135px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #111111;
   }
 
   .form-colon {
-    width: 15px;
-    font-size: 12px;
-    font-weight: bold;
+    width: 10px;
+    font-size: 10.5px;
+    font-weight: 700;
   }
 
   .form-value-box {
     flex: 1;
-    border: 1px solid var(--border-dark);
-    min-height: 30px;
-    padding: 4px 8px;
-    font-size: 12px;
-    background: #fff;
+    border: 1px solid #000000;
+    min-height: 22px;
+    padding: 2px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: #ffffff;
     word-break: break-word;
     display: flex;
     align-items: center;
@@ -300,165 +335,196 @@
   /* Checklist Section */
   .checklist-list {
     list-style: none;
-    font-size: 12px;
-    line-height: 1.7;
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: #111111;
+  }
+
+  .checklist-list li strong {
+    font-weight: 700;
   }
 
   .signature-area {
-    margin-top: 30px;
-    text-align: right;
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
   }
 
   .signature-line {
-    display: inline-block;
-    border-top: 1px solid var(--border-dark);
-    width: 220px;
+    border-top: 1px solid var(--border-color);
+    width: 210px;
     text-align: center;
     padding-top: 4px;
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 10.5px;
+    font-weight: 700;
   }
 
   /* Certificate Section Clean Alignment */
   .cert-heading {
     text-align: center;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
     text-decoration: underline;
-    margin-bottom: 16px;
   }
 
   .cert-text-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
   .cert-line-row {
     display: flex;
-    align-items: baseline;
-    font-size: 12px;
+    align-items: flex-end;
+    font-size: 10.5px;
     white-space: nowrap;
   }
 
   .cert-label {
-    font-weight: normal;
+    font-weight: 500;
     padding-right: 6px;
   }
 
   .fill-line {
     flex: 1;
-    border-bottom: 1px solid var(--border-dark);
-    padding: 0 8px;
-    font-weight: bold;
-    font-size: 12px;
-    min-height: 18px;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 8px 1px 8px;
+    font-weight: 700;
+    font-size: 10.5px;
+    min-height: 16px;
   }
 
   .cert-footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-top: 45px;
-    font-size: 12px;
-    font-weight: bold;
+    margin-top: 30px;
+    font-size: 10.5px;
+    font-weight: 700;
   }
 
   /* Document Upload Section Style */
   .upload-card {
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 20px;
-    margin-top: 20px;
-    border-radius: 4px;
+    background: var(--card-bg);
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    margin-top: 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+
+  .upload-header {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
   }
 
   .doc-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    margin-top: 15px;
   }
 
   .doc-card {
-    background: #fafafa;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
   .doc-card-title {
     font-size: 12px;
-    font-weight: bold;
-    color: #333;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   .status-badge {
-    display: inline-block;
-    padding: 3px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
     font-size: 11px;
-    font-weight: bold;
-    border-radius: 3px;
+    font-weight: 600;
+    border-radius: 4px;
     text-decoration: none;
+    width: fit-content;
   }
 
   .status-badge.view {
-    background-color: #e2f0d9;
-    color: #2e591b;
-    border: 1px solid #a9d18e;
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
   }
 
   .status-badge.none {
-    background-color: #fff2cc;
-    color: #7f6000;
-    border: 1px solid #ffd966;
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  input[type="file"] {
+    font-size: 11px;
+    color: var(--text-secondary);
   }
 
   .btn-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 15px;
+    margin-top: 20px;
   }
 
   .btn {
-    background-color: #333;
-    color: #fff;
+    background-color: var(--accent-blue);
+    color: #ffffff;
     border: none;
-    padding: 8px 18px;
+    padding: 9px 20px;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 6px;
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.15s ease;
   }
 
   .btn:hover {
-    background-color: #555;
+    background-color: var(--accent-hover);
   }
 
   .btn-secondary {
-    background-color: #e0e0e0;
-    color: #333;
+    background-color: #ffffff;
+    color: var(--text-primary);
+    border: 1px solid #cbd5e1;
   }
 
   .btn-secondary:hover {
-    background-color: #ccc;
+    background-color: #f1f5f9;
   }
 
   .error-card {
     text-align: center;
-    color: #c9372c;
+    color: #dc2626;
     font-size: 15px;
-    font-weight: bold;
+    font-weight: 600;
     padding: 40px 20px;
   }
 
   /* -------------------------------------------------------------------------
-     PRINT STYLING - PERFECT A4 FIT
+     PRINT STYLING - ABSOLUTE SINGLE PAGE A4 FIT
      ------------------------------------------------------------------------- */
   @page {
     size: A4 portrait;
@@ -466,62 +532,72 @@
   }
 
   @media print {
+    *, *:before, *:after {
+      background: transparent !important;
+      color: #000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
     html, body {
       height: 100%;
       background-color: #ffffff !important;
       padding: 0 !important;
       margin: 0 !important;
-      color: #000000 !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      font-size: 10pt;
     }
 
-    .no-print, .non-printable, .btn-actions {
+    .no-print, .non-printable, .btn-actions, .action-bar {
       display: none !important;
     }
 
     .container {
       max-width: 100% !important;
       width: 100% !important;
-      height: 100vh !important;
       margin: 0 !important;
       padding: 0 !important;
     }
 
     .printable-sheet {
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
+      border: 1.5pt solid #000 !important;
+      padding: 12pt !important;
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
+      box-sizing: border-box !important;
+    }
+
+    .header-section {
+      border-bottom: 1.5pt double #000 !important;
+      margin-bottom: 8pt !important;
+      padding-bottom: 6pt !important;
     }
 
     .boxed-section {
-      border: 1.5pt solid #000 !important;
-      padding: 10px !important;
-      margin-bottom: 10px !important;
+      border: 1pt solid #000 !important;
+      padding: 6pt 8pt !important;
+      margin-bottom: 6pt !important;
     }
 
     .boxed-section.cert-section {
+      margin-bottom: 0 !important;
       flex-grow: 1 !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
-      margin-bottom: 0 !important;
     }
 
     .form-value-box {
-      border: 1pt solid #000 !important;
-      min-height: 26px !important;
-      padding: 3px 6px !important;
-      font-size: 11px !important;
+      border: 0.75pt solid #000 !important;
+      min-height: 18pt !important;
+      padding: 1pt 4pt !important;
+      font-size: 9pt !important;
     }
 
     .cert-footer {
       margin-top: auto !important;
-      padding-top: 30px !important;
+      padding-top: 15pt !important;
     }
   }
 </style>
@@ -548,9 +624,13 @@
 
 <% } else { %>
 
-  <div class="no-print" style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px;">
-    <button onclick="window.print();" class="btn">🖨 Print Application</button>
-    <a href="scholarshipList.jsp" class="btn btn-secondary">Back to List</a>
+  <!-- SCREEN CONTROL BAR -->
+  <div class="action-bar no-print">
+    <div class="action-title">Scholarship Application View</div>
+    <div style="display: flex; gap: 8px;">
+      <button onclick="window.print();" class="btn">🖨 Print Application</button>
+      <a href="scholarshipList.jsp" class="btn btn-secondary">Back to List</a>
+    </div>
   </div>
 
   <div class="printable-sheet">
@@ -558,9 +638,9 @@
     <!-- HEADER SECTION -->
     <div class="header-section">
       <div class="org-title">KARNATAKA SEVA SANGHA</div>
-      <div class="org-subtitle">(Regd. No:16 of 1983-84 dated 21.04.1983)<br>Shivapur, Palace Road, Sandur - 583119, Bellary Dist., Karnataka </div>
+      <div class="org-subtitle">(Regd. No:16 of 1983-84 dated 21.04.1983)<br>Shivapur, Palace Road, Sandur - 583119, Ballari Dist., Karnataka</div>
       <div class="doc-title">Sandur Vidya Protsaha Scholarship - Higher Education</div>
-      <div class="doc-subtext">(under auspicious SMIORE CSR)</div>
+      <div class="doc-subtext">(Under Auspicious SMIORE CSR)</div>
     </div>
 
     <!-- 1. PARTICULARS SECTION -->
@@ -569,14 +649,36 @@
         
         <!-- Left Column: Student Particulars -->
         <div class="col-half">
-          <div class="section-heading-row">
-            <span>Student Particulars :</span>
-          </div>
+          <div class="section-heading-row">Student Particulars :</div>
 
           <div class="form-row">
             <span class="form-label">Student Name</span>
             <span class="form-colon">:</span>
             <div class="form-value-box"><%=childrenName != null ? childrenName : ""%></div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-label">Date of Birth</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=dob != null ? dob : ""%></div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-label">Gender / Relation</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=(gender != null ? gender : "") + " / " + (relationship != null ? relationship : "")%></div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-label">Child Order</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=childOrder != null ? childOrder : ""%></div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-label">College Name</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=collegeName != null ? collegeName : ""%></div>
           </div>
 
           <div class="form-row">
@@ -586,17 +688,27 @@
           </div>
 
           <div class="form-row">
-            <span class="form-label">Year of passing</span>
+            <span class="form-label">Present Year</span>
             <span class="form-colon">:</span>
             <div class="form-value-box"><%=presentYear != null ? presentYear : ""%></div>
           </div>
+
+          <div class="form-row">
+            <span class="form-label">Prev. AY Marks (%)</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=previousAyPercentage > 0 ? String.format("%.2f%%", previousAyPercentage) : ""%></div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-label">Fee Amount (Current)</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=feeAmountCurrentAy > 0 ? String.format("₹ %.2f", feeAmountCurrentAy) : ""%></div>
+          </div>
         </div>
 
-        <!-- Right Column: Employee Particulars -->
+        <!-- Right Column: Employee & Spouse Particulars -->
         <div class="col-half">
-          <div class="section-heading-row">
-            <span>Employee Particulars :</span>
-          </div>
+          <div class="section-heading-row">Employee Particulars :</div>
 
           <div class="form-row">
             <span class="form-label">Organisation Name</span>
@@ -615,6 +727,26 @@
             <span class="form-colon">:</span>
             <div class="form-value-box"><%=empName != null ? empName : ""%></div>
           </div>
+
+          <div class="form-row">
+            <span class="form-label">Designation</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=designation != null ? designation : ""%></div>
+          </div>
+
+          <div class="section-heading-row" style="margin-top: 8px;">Spouse Employment Details :</div>
+
+          <div class="form-row">
+            <span class="form-label">Working in SMIORE?</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=spouseWorkingSmiore != null ? spouseWorkingSmiore : ""%></div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-label">Working in Group Co.?</span>
+            <span class="form-colon">:</span>
+            <div class="form-value-box"><%=spouseWorkingGroupCompanies != null ? spouseWorkingGroupCompanies : ""%></div>
+          </div>
         </div>
 
       </div>
@@ -622,9 +754,7 @@
 
     <!-- 2. EMPLOYEE BANK DETAILS SECTION -->
     <div class="boxed-section">
-      <div class="section-heading-row" style="margin-bottom: 10px;">
-        <span>Employee Bank Details :</span>
-      </div>
+      <div class="section-heading-row">Employee Bank Details :</div>
 
       <div class="two-column-layout">
         <div class="col-half">
@@ -672,11 +802,11 @@
     <!-- 3. ENCLOSURES & SIGNATURE SECTION -->
     <div class="boxed-section">
       <ul class="checklist-list">
-        <li>I enclose the following documents :</li>
+        <li>I enclose the following documents:</li>
         <li>a. Fee paid receipt in <strong><u>Original</u></strong>.</li>
         <li>b. Copy of Previous Year Marks Card.</li>
-        <li>c. Copy of Identity Card of Employee and Student</li>
-        <li>d. Copy of Bank Pass Book</li>
+        <li>c. Copy of Identity Card of Employee and Student.</li>
+        <li>d. Copy of Bank Pass Book.</li>
       </ul>
 
       <div class="signature-area">
@@ -705,12 +835,14 @@
           </div>
 
           <div class="cert-line-row">
-            <span class="cert-label">course for the year</span>
+            <span class="cert-label">Course</span>
+            <div class="fill-line"><%=course != null ? course : ""%></div>
+            <span class="cert-label" style="padding-left: 8px;">for the year / semester</span>
             <div class="fill-line"><%=presentYear != null ? presentYear : ""%></div>
           </div>
         </div>
       </div>
-
+<br><br><br><br><br><br>
       <div class="cert-footer">
         <div>(Seal of the Institution)</div>
         <div style="border-top: 1px solid #000; padding-top: 4px; min-width: 200px; text-align: center;">Principal Signature</div>
@@ -721,7 +853,7 @@
 
   <!-- DOCUMENT UPLOADS (NON-PRINTABLE AREA) -->
   <div class="non-printable upload-card">
-    <h3 style="font-size: 14px; text-transform: uppercase;">Document Uploads & Attachments</h3>
+    <div class="upload-header">Document Uploads & Attachments</div>
 
     <form action="scholarshipApplication.jsp" method="post" enctype="multipart/form-data">
       <input type="hidden" name="id" value="<%=id%>">
