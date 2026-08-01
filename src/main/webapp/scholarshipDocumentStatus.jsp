@@ -6,6 +6,9 @@
         response.sendRedirect("login.jsp");
         return;
     }
+    String users = (String) sess.getAttribute("username");
+    String roles = (String) sess.getAttribute("role");
+    String depts = (String) sess.getAttribute("department");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -207,18 +210,38 @@ ResultSet rs = null;
 try {
     con = DBUtil.getConnection();
     
-    // Performance optimized SQL query checking length without fetching heavy BLOB payloads
-    String sql = "SELECT id, emp_no, emp_name, children_name, " +
-                 "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
-                 "OCTET_LENGTH(kss_application) AS len_kss, " +
-                 "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
-                 "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
-                 "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
-                 "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
-                 "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
-                 "FROM kss_student_scholarship ORDER BY emp_no";
+    String sql;
 
-    ps = con.prepareStatement(sql);
+    if ("Global".equalsIgnoreCase(roles)) {
+        sql = "SELECT id, emp_no, emp_name, children_name, " +
+              "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+              "OCTET_LENGTH(kss_application) AS len_kss, " +
+              "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+              "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+              "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+              "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "FROM kss_student_scholarship " +
+              "ORDER BY emp_no";
+
+        ps = con.prepareStatement(sql);
+    } else {
+        sql = "SELECT id, emp_no, emp_name, children_name, " +
+              "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+              "OCTET_LENGTH(kss_application) AS len_kss, " +
+              "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+              "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+              "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+              "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "FROM kss_student_scholarship " +
+              "WHERE org_name = ? " +
+              "ORDER BY emp_no";
+
+        ps = con.prepareStatement(sql);
+        ps.setString(1, roles);
+    }
+
     rs = ps.executeQuery();
 
     boolean hasData = false;

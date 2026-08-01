@@ -51,6 +51,7 @@
   }
 
   .form-header h2 {
+  font-family:Lucida Handwriting;
     font-size: 20px;
     font-weight: 600;
     letter-spacing: 0.5px;

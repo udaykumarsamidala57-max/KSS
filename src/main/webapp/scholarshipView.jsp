@@ -1,3 +1,4 @@
+
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.Bean.ScholarshipBean"%>
 <%
@@ -17,7 +18,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scholarship Application Details</title>
 
-<%@ include file="header.jsp"%>
+<div class="no-print">
+  <%@ include file="header.jsp"%>
+</div>
 
 <style>
   :root {
@@ -265,6 +268,59 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* PRINT STYLES - Ensures clean output for Sections 1-3 when using window.print() */
+  @media print {
+    body {
+      background-color: #ffffff !important;
+      padding: 0 !important;
+      color: #000000 !important;
+    }
+
+    /* Hide non-printable areas */
+    header, footer, nav, .btn-actions, .no-print, .non-printable {
+      display: none !important;
+    }
+
+    .container {
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .slds-card {
+      border: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+    }
+
+    .slds-page-header {
+      border-bottom: 2px solid var(--primary-color) !important;
+      padding: 10px 0 !important;
+    }
+
+    .detail-body {
+      padding: 10px 0 !important;
+    }
+
+    .slds-section-header {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      background-color: var(--accent-bg) !important;
+      border-left: 4px solid var(--primary-color) !important;
+      margin: 12px 0 8px 0 !important;
+    }
+
+    .slds-detail-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 8px 16px !important;
+      page-break-inside: avoid;
+    }
+
+    .slds-detail-item {
+      border-bottom: 1px solid #e0e0e0 !important;
+    }
+  }
 </style>
 </head>
 
@@ -295,235 +351,252 @@
         <div class="slds-page-header__title">Scholarship Application Details</div>
         <div class="slds-page-header__subtitle">Record ID: #<%=bean.getId()%> | <%=bean.getEmpName()%></div>
       </div>
-      <div>
+      <div class="no-print" style="display: flex; gap: 8px;">
+        <button
+    onclick="location.href='printScholarshipApplication.jsp?id=<%=bean.getId()%>';"
+    class="btn">
+    🖨 Print Application
+</button>
         <a href="ScholarshipListServelt" class="btn btn-secondary">Back to List</a>
       </div>
     </div>
 
     <div class="detail-body">
 
-      <!-- 1. Employee Details -->
-      <div class="slds-section-header">
-        <span class="slds-section-title">1. Employee Details</span>
-      </div>
+      <!-- START PRINTABLE AREA (Sections 1 to 3) -->
+      <div class="printable-section">
 
-      <div class="slds-detail-grid">
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Application ID</span>
-          <span class="slds-item-value"><%=bean.getId()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Organization</span>
-          <span class="slds-item-value"><%=bean.getOrgName()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Employee No</span>
-          <span class="slds-item-value"><%=bean.getEmpNo()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Employee Name</span>
-          <span class="slds-item-value"><%=bean.getEmpName()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Designation</span>
-          <span class="slds-item-value"><%=bean.getDesignation()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Spouse Working in SMIORE</span>
-          <span class="slds-item-value"><%=bean.getSpouseWorkingSMIORE()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Spouse Working in Group Company</span>
-          <span class="slds-item-value"><%=bean.getSpouseWorkingGroupCompanies()%></span>
-        </div>
-      </div>
-
-      <!-- 2. Student Details -->
-      <div class="slds-section-header">
-        <span class="slds-section-title">2. Child / Student Details</span>
-      </div>
-
-      <div class="slds-detail-grid">
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Child Name</span>
-          <span class="slds-item-value"><%=bean.getChildrenName()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Date of Birth</span>
-          <span class="slds-item-value"><%=bean.getDob()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Gender</span>
-          <span class="slds-item-value"><%=bean.getGender()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Relationship</span>
-          <span class="slds-item-value"><%=bean.getRelationship()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Child Order</span>
-          <span class="slds-item-value"><%=bean.getChildOrder()%></span>
-        </div>
-      </div>
-
-      <!-- 3. Academic Details -->
-      <div class="slds-section-header">
-        <span class="slds-section-title">3. Academic Details</span>
-      </div>
-
-      <div class="slds-detail-grid">
-        <div class="slds-detail-item">
-          <span class="slds-item-label">College Name</span>
-          <span class="slds-item-value"><%=bean.getCollegeName()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Course</span>
-          <span class="slds-item-value"><%=bean.getCourse()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Present Year</span>
-          <span class="slds-item-value"><%=bean.getPresentYear()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Previous AY Percentage</span>
-          <span class="slds-item-value"><%=bean.getPreviousAyPercentage()%>%</span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Fee Amount (Current AY)</span>
-          <span class="slds-item-value">₹<%=bean.getFeeAmountCurrentAy()%></span>
-        </div>
-      </div>
-
-      <!-- 4. Bank Details -->
-      <div class="slds-section-header">
-        <span class="slds-section-title">4. Bank Account Details</span>
-      </div>
-
-      <div class="slds-detail-grid">
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Name as per Passbook</span>
-          <span class="slds-item-value"><%=bean.getEmployeeNamePassbook()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Bank Account Number</span>
-          <span class="slds-item-value"><%=bean.getBankAccountNo()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">IFSC Code</span>
-          <span class="slds-item-value"><%=bean.getIfscCode()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Bank Name</span>
-          <span class="slds-item-value"><%=bean.getBankName()%></span>
-        </div>
-        <div class="slds-detail-item">
-          <span class="slds-item-label">Branch Name</span>
-          <span class="slds-item-value"><%=bean.getBranchName()%></span>
-        </div>
-      </div>
-
-      <!-- 5. Document Upload Section -->
-      <form action="ScholarshipDocumentUploadServlet" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="<%=bean.getId()%>">
-
+        <!-- 1. Employee Details -->
         <div class="slds-section-header">
-          <span class="slds-section-title">5. Document Uploads</span>
+          <span class="slds-section-title">1. Employee Details</span>
         </div>
 
-        <div class="doc-grid">
-
-          <div class="doc-card">
-            <span class="doc-card-title">Previous AY Marks Card</span>
-            <div class="file-container">
-              <% if(bean.getPreviousAyMarksCard() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=previousAyMarksCard" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="previousAyMarksCard" accept=".pdf,.jpg,.jpeg,.png">
+        <div class="slds-detail-grid">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Application ID</span>
+            <span class="slds-item-value"><%=bean.getId()%></span>
           </div>
-
-          <div class="doc-card">
-            <span class="doc-card-title">KSS Application</span>
-            <div class="file-container">
-              <% if(bean.getKssApplication() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=kssApplication" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="kssApplication" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Organization</span>
+            <span class="slds-item-value"><%=bean.getOrgName()%></span>
           </div>
-
-          <div class="doc-card">
-            <span class="doc-card-title">Fee Structure</span>
-            <div class="file-container">
-              <% if(bean.getFeeStructure() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=feeStructure" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="feeStructure" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Employee No</span>
+            <span class="slds-item-value"><%=bean.getEmpNo()%></span>
           </div>
-
-          <div class="doc-card">
-            <span class="doc-card-title">Fee Receipts</span>
-            <div class="file-container">
-              <% if(bean.getFeeReceipts() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=feeReceipts" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="feeReceipts" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Employee Name</span>
+            <span class="slds-item-value"><%=bean.getEmpName()%></span>
           </div>
-
-          <div class="doc-card">
-            <span class="doc-card-title">Parent Identification Document Copy</span>
-            <div class="file-container">
-              <% if(bean.getParentAadharCopy() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=parentAadharCopy" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="parentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Designation</span>
+            <span class="slds-item-value"><%=bean.getDesignation()%></span>
           </div>
-
-          <div class="doc-card">
-            <span class="doc-card-title">Student Identification Document Copy</span>
-            <div class="file-container">
-              <% if(bean.getStudentAadharCopy() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=studentAadharCopy" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="studentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Spouse Working in SMIORE</span>
+            <span class="slds-item-value"><%=bean.getSpouseWorkingSMIORE()%></span>
           </div>
-
-          <div class="doc-card" style="grid-column: span 2;">
-            <span class="doc-card-title">Bank Passbook First Page</span>
-            <div class="file-container">
-              <% if(bean.getBankPassbookFirstPage() != null) { %>
-                <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=bankPassbookFirstPage" target="_blank" class="status-badge view">✓ View Document</a>
-              <% } else { %>
-                <span class="status-badge none">⚠ No file uploaded</span>
-              <% } %>
-            </div>
-            <input type="file" name="bankPassbookFirstPage" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Spouse Working in Group Company</span>
+            <span class="slds-item-value"><%=bean.getSpouseWorkingGroupCompanies()%></span>
           </div>
-
         </div>
 
-        <div class="btn-actions" style="margin-top: 20px;">
-          <input type="submit" value="Upload Documents" class="btn">
-          <a href="ScholarshipListServelt" class="btn btn-secondary">Back to List</a>
+        <!-- 2. Student Details -->
+        <div class="slds-section-header">
+          <span class="slds-section-title">2. Child / Student Details</span>
         </div>
 
-      </form>
+        <div class="slds-detail-grid">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Child Name</span>
+            <span class="slds-item-value"><%=bean.getChildrenName()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Date of Birth</span>
+            <span class="slds-item-value"><%=bean.getDob()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Gender</span>
+            <span class="slds-item-value"><%=bean.getGender()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Relationship</span>
+            <span class="slds-item-value"><%=bean.getRelationship()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Child Order</span>
+            <span class="slds-item-value"><%=bean.getChildOrder()%></span>
+          </div>
+        </div>
+
+        <!-- 3. Academic Details -->
+        <div class="slds-section-header">
+          <span class="slds-section-title">3. Academic Details</span>
+        </div>
+
+        <div class="slds-detail-grid">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">College Name</span>
+            <span class="slds-item-value"><%=bean.getCollegeName()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Course</span>
+            <span class="slds-item-value"><%=bean.getCourse()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Present Year</span>
+            <span class="slds-item-value"><%=bean.getPresentYear()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Previous AY Percentage</span>
+            <span class="slds-item-value"><%=bean.getPreviousAyPercentage()%>%</span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Fee Amount (Current AY)</span>
+            <span class="slds-item-value">₹<%=bean.getFeeAmountCurrentAy()%></span>
+          </div>
+        </div>
+
+      </div>
+      <!-- END PRINTABLE AREA -->
+
+      <!-- START NON-PRINTABLE AREA (Bank Details & Document Uploads) -->
+      <div class="non-printable">
+
+        <!-- 4. Bank Details -->
+        <div class="slds-section-header">
+          <span class="slds-section-title">4. Bank Account Details</span>
+        </div>
+
+        <div class="slds-detail-grid">
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Name as per Passbook</span>
+            <span class="slds-item-value"><%=bean.getEmployeeNamePassbook()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Bank Account Number</span>
+            <span class="slds-item-value"><%=bean.getBankAccountNo()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">IFSC Code</span>
+            <span class="slds-item-value"><%=bean.getIfscCode()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Bank Name</span>
+            <span class="slds-item-value"><%=bean.getBankName()%></span>
+          </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Branch Name</span>
+            <span class="slds-item-value"><%=bean.getBranchName()%></span>
+          </div>
+        </div>
+
+        <!-- 5. Document Upload Section -->
+        <form action="ScholarshipDocumentUploadServlet" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="id" value="<%=bean.getId()%>">
+
+          <div class="slds-section-header">
+            <span class="slds-section-title">5. Document Uploads</span>
+          </div>
+
+          <div class="doc-grid">
+
+            <div class="doc-card">
+              <span class="doc-card-title">Previous AY Marks Card</span>
+              <div class="file-container">
+                <% if(bean.getPreviousAyMarksCard() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=previousAyMarksCard" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="previousAyMarksCard" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card">
+              <span class="doc-card-title">KSS Application</span>
+              <div class="file-container">
+                <% if(bean.getKssApplication() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=kssApplication" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="kssApplication" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card">
+              <span class="doc-card-title">Fee Structure</span>
+              <div class="file-container">
+                <% if(bean.getFeeStructure() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=feeStructure" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="feeStructure" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card">
+              <span class="doc-card-title">Fee Receipts</span>
+              <div class="file-container">
+                <% if(bean.getFeeReceipts() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=feeReceipts" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="feeReceipts" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card">
+              <span class="doc-card-title">Parent Identity Document</span>
+              <div class="file-container">
+                <% if(bean.getParentAadharCopy() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=parentAadharCopy" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="parentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card">
+              <span class="doc-card-title">Student Identity Document</span>
+              <div class="file-container">
+                <% if(bean.getStudentAadharCopy() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=studentAadharCopy" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="studentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card" style="grid-column: span 2;">
+              <span class="doc-card-title">Bank Passbook First Page</span>
+              <div class="file-container">
+                <% if(bean.getBankPassbookFirstPage() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=bankPassbookFirstPage" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="bankPassbookFirstPage" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+          </div>
+
+          <div class="btn-actions" style="margin-top: 20px;">
+            <input type="submit" value="Upload Documents" class="btn">
+            <a href="ScholarshipListServelt" class="btn btn-secondary">Back to List</a>
+          </div>
+
+        </form>
+
+      </div>
+      <!-- END NON-PRINTABLE AREA -->
 
     </div>
 

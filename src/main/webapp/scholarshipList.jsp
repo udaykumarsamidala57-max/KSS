@@ -19,7 +19,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scholarship Applications - Salesforce Master View</title>
+<title>Scholarship Application</title>
 
 <!-- INCLUDE SHARED HEADER & MENU -->
 <%@ include file="header.jsp" %>
