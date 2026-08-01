@@ -699,7 +699,7 @@
     <div class="action-title">Scholarship Application View</div>
     <div style="display: flex; gap: 8px;">
       <button onclick="window.print();" class="btn">🖨 Print Application</button>
-      <a href="scholarshipList.jsp" class="btn btn-secondary">Back to List</a>
+      <a href="ScholarshipListServelt" class="btn btn-secondary">Back to List</a>
     </div>
   </div>
 
