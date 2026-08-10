@@ -245,7 +245,7 @@
   }
 
   .org-title {
-   font-family:Lucida Handwriting;
+    font-family: 'Lucida Handwriting', cursive, sans-serif;
     font-size: 21px;
     font-weight: 800;
     letter-spacing: 0.5px;
@@ -281,7 +281,7 @@
   /* Formal Header Photo Slot Layout with Explicit Gap */
   .header-photos-flex {
     display: flex;
-    gap: 16px; /* Generous gap between Student & Employee photo slots */
+    gap: 16px;
     align-items: flex-start;
   }
 
@@ -293,7 +293,7 @@
 
   .photo-box-space {
     width: 95px;
-    height: 115px; /* Passport aspect ratio 35mm x 45mm equivalent */
+    height: 115px; /* Passport aspect ratio */
     border: 1.25px dashed #000000;
     display: flex;
     align-items: center;
@@ -396,10 +396,18 @@
     font-weight: 700;
   }
 
-  .signature-area {
-    margin-top: 20px;
+  /* Dual Signature Area */
+  .signature-area-dual {
+    margin-top: 24px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .signature-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .signature-line {
@@ -411,7 +419,14 @@
     font-weight: 700;
   }
 
-  /* Certificate Section (Fills remaining A4 Vertical Height) */
+  .signature-sublabel {
+    font-size: 9px;
+    font-weight: 500;
+    color: #444444;
+    margin-top: 1px;
+  }
+
+  /* Certificate Section */
   .cert-section {
     flex-grow: 1;
     display: flex;
@@ -466,78 +481,6 @@
     font-weight: 700;
   }
 
-  /* Document Upload Section Style (Screen Only) */
-  .upload-card {
-    background: var(--card-bg);
-    border: 1px solid #e2e8f0;
-    padding: 24px;
-    margin-top: 24px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  }
-
-  .upload-header {
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-primary);
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .doc-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  .doc-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .doc-card-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: 4px;
-    text-decoration: none;
-    width: fit-content;
-  }
-
-  .status-badge.view {
-    background-color: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-  }
-
-  .status-badge.none {
-    background-color: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
-  }
-
-  input[type="file"] {
-    font-size: 11px;
-    color: var(--text-secondary);
-  }
-
   .btn-actions {
     display: flex;
     justify-content: flex-end;
@@ -583,9 +526,7 @@
     padding: 40px 20px;
   }
 
-  /* -------------------------------------------------------------------------
-     PRINT STYLING - PERFECT FULL-PAGE A4 ADAPTATION
-     ------------------------------------------------------------------------- */
+  /* PRINT STYLING */
   @page {
     size: A4 portrait;
     margin: 10mm 10mm;
@@ -714,7 +655,7 @@
         <div class="doc-subtext">(Higher Education - Under Auspicious SMIORE CSR)</div>
       </div>
 
-      <!-- Photos Container with Distinct Gap -->
+      <!-- Photos Container -->
       <div class="header-photos-flex">
         <div class="photo-frame">
           <div class="photo-box-space">Affix Passport<br>Size Photo<br>Here</div>
@@ -883,7 +824,7 @@
       </div>
     </div>
 
-    <!-- 3. ENCLOSURES & SIGNATURE SECTION -->
+    <!-- 3. ENCLOSURES & DUAL SIGNATURE SECTION -->
     <div class="boxed-section">
       <ul class="checklist-list">
         <li>I enclose the following documents:</li>
@@ -892,11 +833,21 @@
         <li>c. Copy of Identity Card of Employee and Student.</li>
         <li>d. Copy of Bank Pass Book.</li>
       </ul>
-
-      <div class="signature-area">
-        <div class="signature-line">
-          Signature of the Employee
+  <br>
+      <div class="signature-area-dual">
+      <div class="signature-block">
+          <div class="signature-line">
+            Signature of the Employee
+          </div>
+          <div class="signature-sublabel">(Applicant)</div>
         </div>
+        <div class="signature-block">
+          <div class="signature-line">
+            Signature of the Employer / HR
+          </div>
+          <div class="signature-sublabel">(With Seal & Designation)</div>
+        </div>
+        
       </div>
     </div>
 
@@ -933,11 +884,6 @@
       </div>
     </div>
 
-  </div>
-
-  
-
-    </form>
   </div>
 
 <% } %>
