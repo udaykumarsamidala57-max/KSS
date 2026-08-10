@@ -512,7 +512,7 @@
       &copy; <%= java.time.Year.now().getValue() %> Karnataka Seva Sangha. All rights reserved.
     </div>
     <div>
-      Developed by <span class="developer-credit">SSS IT</span>
+      Developed by <span class="developer-credit">SSS IT | OFFICE CENTRAL</span>&nbsp&nbsp<span class="tagline"></span>
     </div>
   </div>
 </footer>
