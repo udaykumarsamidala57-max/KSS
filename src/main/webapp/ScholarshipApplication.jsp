@@ -176,6 +176,11 @@
     outline: none;
   }
 
+  /* Auto-capitalize text input visually */
+  .uppercase-input {
+    text-transform: uppercase;
+  }
+
   /* Read-only field styling */
   input[readonly] {
     background-color: var(--slds-section-bg);
@@ -396,7 +401,6 @@ try {
         ps = con.prepareStatement(
             "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
     } else {
-        // Case-insensitive and trimmed comparison to handle value/whitespace mismatches
         ps = con.prepareStatement(
             "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
         ps.setString(1, branch != null ? branch.trim() : "");
@@ -413,7 +417,6 @@ try {
 <%
     }
 
-    // Fallback if non-Global branch doesn't match any row in organization_master
     if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
 %>
               <option value="<%= branch.trim() %>" selected><%= branch.trim() %></option>
@@ -434,17 +437,17 @@ try {
 
           <div class="form-group">
             <label>Employee No <span class="required">*</span></label>
-            <input type="text" name="empNo" required placeholder="Enter Employee Number">
+            <input type="text" name="empNo" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" required placeholder="Enter Employee Number">
           </div>
 
           <div class="form-group">
             <label>Employee Name <span class="required">*</span></label>
-            <input type="text" name="empName" required placeholder="Enter Full Name">
+            <input type="text" name="empName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" required placeholder="Enter Full Name">
           </div>
 
           <div class="form-group">
             <label>Designation</label>
-            <input type="text" name="designation" placeholder="Enter Designation">
+            <input type="text" name="designation" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Designation">
           </div>
 
           <div class="form-group">
@@ -469,7 +472,7 @@ try {
         <div class="form-grid">
           <div class="form-group">
             <label>Child's Name</label>
-            <input type="text" name="childrenName" placeholder="Enter Child's Full Name">
+            <input type="text" name="childrenName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Child's Full Name">
           </div>
 
           <div class="form-group">
@@ -494,7 +497,7 @@ try {
 
           <div class="form-group">
             <label>Relationship</label>
-            <input type="text" name="relationship" placeholder="e.g. Son / Daughter">
+            <input type="text" name="relationship" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. Son / Daughter">
           </div>
 
           <div class="form-group">
@@ -512,23 +515,36 @@ try {
         <div class="form-grid">
           <div class="form-group full-width">
             <label>College Name</label>
-            <input type="text" name="collegeName" placeholder="Enter College Name">
+            <input type="text" name="collegeName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter College Name">
           </div>
 
           <div class="form-group">
             <label>Course Name</label>
-            <input type="text" name="course" placeholder="e.g. B.Tech, B.Sc">
+            <input type="text" name="course" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. B.Tech, B.Sc">
           </div>
 
           <div class="form-group">
-            <label>Present Year</label>
-            <input type="text" name="presentYear" placeholder="e.g. 1st Year, 2nd Year">
-          </div>
+    <label>Present Year</label>
+    <select name="presentYear" class="uppercase-input">
+        <option value="">Select Year</option>
+        <option value="1st Year">1st Year</option>
+        <option value="2nd Year">2nd Year</option>
+        <option value="3rd Year">3rd Year</option>
+        <option value="4th Year">4th Year</option>
+        <option value="5th Year">5th Year</option>
+        <option value="6th Year">6th Year</option>
+    </select>
+</div>
 
-          <div class="form-group">
-            <label>Previous Academic Year (%)</label>
-            <input type="number" step="0.01" name="previousAyPercentage" placeholder="e.g. 85.50">
-          </div>
+         <div class="form-group">
+    <label>Previous Academic Year (%)</label>
+    <input type="number"
+           name="previousAyPercentage"
+           min="0"
+           max="100"
+           step="0.01"
+           placeholder="e.g. 85.50">
+</div>
 
           <div class="form-group">
             <label>Fee Amount for Current AY</label>
@@ -541,7 +557,7 @@ try {
         <div class="form-grid">
           <div class="form-group full-width">
             <label>Name as per Bank Passbook</label>
-            <input type="text" name="employeeNamePassbook" placeholder="Enter Name as shown in Passbook">
+            <input type="text" name="employeeNamePassbook" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Name as shown in Passbook">
           </div>
 
           <div class="form-group">
@@ -551,17 +567,17 @@ try {
 
           <div class="form-group">
             <label>IFSC Code</label>
-            <input type="text" name="ifscCode" placeholder="Enter IFSC Code">
+            <input type="text" name="ifscCode" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter IFSC Code">
           </div>
 
           <div class="form-group">
             <label>Bank Name</label>
-            <input type="text" name="bankName" placeholder="Enter Bank Name">
+            <input type="text" name="bankName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Bank Name">
           </div>
 
           <div class="form-group">
             <label>Branch Name</label>
-            <input type="text" name="branchName" placeholder="Enter Branch Name">
+            <input type="text" name="branchName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Branch Name">
           </div>
         </div>
 
