@@ -41,7 +41,7 @@ public class ScholarshipViewServlet extends HttpServlet {
             int id = Integer.parseInt(idStr);
             scholarshipViewDAO dao = new scholarshipViewDAO();
             
-            // Fetches the bean natively containing the text, numeric, and binary file byte arrays
+            // Fetches the bean natively containing the text, numeric, and binary file byte arrays (including parentAadhar and studentAadhar)
             ScholarshipBean bean = dao.getScholarshipById(id);
 
             // Bind the bean payload to the request scope attributes

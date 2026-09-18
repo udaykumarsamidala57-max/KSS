@@ -42,6 +42,8 @@ public class ScholarshipBean implements Serializable {
     private byte[] parentAadharCopy;
     private byte[] studentAadharCopy;
     private byte[] bankPassbookFirstPage;
+    private byte[] parentAadhar;
+    private byte[] studentAadhar;
 
     public ScholarshipBean() {
     }
@@ -277,5 +279,21 @@ public class ScholarshipBean implements Serializable {
 
     public void setBankPassbookFirstPage(byte[] bankPassbookFirstPage) {
         this.bankPassbookFirstPage = bankPassbookFirstPage;
+    }
+
+    public byte[] getParentAadhar() {
+        return parentAadhar;
+    }
+
+    public void setParentAadhar(byte[] parentAadhar) {
+        this.parentAadhar = parentAadhar;
+    }
+
+    public byte[] getStudentAadhar() {
+        return studentAadhar;
+    }
+
+    public void setStudentAadhar(byte[] studentAadhar) {
+        this.studentAadhar = studentAadhar;
     }
 }

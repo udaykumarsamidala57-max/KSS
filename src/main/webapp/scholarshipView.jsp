@@ -608,7 +608,7 @@
               <input type="file" name="studentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
             </div>
 
-            <div class="doc-card" style="grid-column: span 2;">
+            <div class="doc-card">
               <span class="doc-card-title">Bank Passbook First Page</span>
               <div class="file-container">
                 <% if(bean.getBankPassbookFirstPage() != null) { %>
@@ -618,6 +618,30 @@
                 <% } %>
               </div>
               <input type="file" name="bankPassbookFirstPage" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card">
+              <span class="doc-card-title">Parent Aadhar</span>
+              <div class="file-container">
+                <% if(bean.getParentAadhar() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=parentAadhar" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="parentAadhar" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+
+            <div class="doc-card" style="grid-column: span 2;">
+              <span class="doc-card-title">Student Aadhar</span>
+              <div class="file-container">
+                <% if(bean.getStudentAadhar() != null) { %>
+                  <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=studentAadhar" target="_blank" class="status-badge view">✓ View Document</a>
+                <% } else { %>
+                  <span class="status-badge none">⚠ No file uploaded</span>
+                <% } %>
+              </div>
+              <input type="file" name="studentAadhar" accept=".pdf,.jpg,.jpeg,.png">
             </div>
 
           </div>

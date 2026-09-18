@@ -61,7 +61,7 @@ public class scholarshipViewDAO {
                 bean.setBankName(rs.getString("bank_name"));
                 bean.setBranchName(rs.getString("branch_name"));
                 
-                // Binary Document BLOB Data (Updated from rs.getString to rs.getBytes)
+                // Binary Document BLOB Data
                 bean.setPreviousAyMarksCard(rs.getBytes("previous_ay_marks_card"));
                 bean.setKssApplication(rs.getBytes("kss_application"));
                 bean.setFeeStructure(rs.getBytes("fee_structure"));
@@ -69,6 +69,8 @@ public class scholarshipViewDAO {
                 bean.setParentAadharCopy(rs.getBytes("parent_aadhar_copy"));
                 bean.setStudentAadharCopy(rs.getBytes("student_aadhar_copy"));
                 bean.setBankPassbookFirstPage(rs.getBytes("bank_passbook_first_page"));
+                bean.setParentAadhar(rs.getBytes("parent_aadhar"));
+                bean.setStudentAadhar(rs.getBytes("student_aadhar"));
             }
 
         } catch (Exception e) {
