@@ -499,8 +499,8 @@ try {
     <label>Relationship</label>
     <select name="relationship" class="uppercase-input">
         <option value="">Select Relationship</option>
-        <option value="SON">Son</option>
-        <option value="DAUGHTER">Daughter</option>
+        <option value="SON">SON</option>
+        <option value="DAUGHTER">DAUGHTER</option>
     </select>
 </div>
 
