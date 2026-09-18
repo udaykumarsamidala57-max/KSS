@@ -532,7 +532,7 @@ if(list != null && !list.isEmpty()){
 
 </div>
 
-<!-- SALESFORCE MODAL POPUP -->
+
 <div id="editModal" class="slds-modal-overlay">
   <div class="slds-modal-card">
     
@@ -550,9 +550,9 @@ if(list != null && !list.isEmpty()){
         <div class="slds-section-title">1. Employee Details</div>
         <div class="slds-grid">
           <div class="slds-form-element full-width">
-            <label for="edit_orgName">Organization Name *</label>
-            <input type="text" id="edit_orgName" name="orgName" required>
-          </div>
+  <label for="edit_orgName">Organization Name *</label>
+  <input type="text" id="edit_orgName" name="orgName" required readonly>
+</div>
 
           <div class="slds-form-element">
             <label for="edit_empNo">Employee No *</label>

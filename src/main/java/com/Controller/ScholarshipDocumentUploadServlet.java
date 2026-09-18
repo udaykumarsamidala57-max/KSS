@@ -17,12 +17,10 @@ import com.DAO.ScholarshipDocumentsDAO;
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,      // 1 MB
         maxFileSize = 10 * 1024 * 1024,       // 10 MB per file
-        maxRequestSize = 70 * 1024 * 1024     // 70 MB total request size
+        maxRequestSize = 90 * 1024 * 1024     // Increased to 90 MB total request size for 9 files
 )
 public class ScholarshipDocumentUploadServlet extends HttpServlet {
 
-	
-	
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -32,7 +30,7 @@ public class ScholarshipDocumentUploadServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
 
-            // Read the file Parts directly into byte arrays from request streams
+            // Read original 7 file Parts directly into byte arrays
             byte[] previousAyMarksCard = getBytesFromPart(request.getPart("previousAyMarksCard"));
             byte[] kssApplication = getBytesFromPart(request.getPart("kssApplication"));
             byte[] feeStructure = getBytesFromPart(request.getPart("feeStructure"));
@@ -41,9 +39,13 @@ public class ScholarshipDocumentUploadServlet extends HttpServlet {
             byte[] studentAadharCopy = getBytesFromPart(request.getPart("studentAadharCopy"));
             byte[] bankPassbookFirstPage = getBytesFromPart(request.getPart("bankPassbookFirstPage"));
 
+            // Read the 2 additional document file Parts
+            byte[] parentAadhar = getBytesFromPart(request.getPart("parentAadhar"));
+            byte[] studentAadhar = getBytesFromPart(request.getPart("studentAadhar"));
+
             ScholarshipDocumentsDAO dao = new ScholarshipDocumentsDAO();
 
-            // Fire database update containing raw bytes
+            // Fire database update containing all raw byte arrays
             boolean status = dao.uploadDocuments(
                     id,
                     previousAyMarksCard,
@@ -52,7 +54,9 @@ public class ScholarshipDocumentUploadServlet extends HttpServlet {
                     feeReceipts,
                     parentAadharCopy,
                     studentAadharCopy,
-                    bankPassbookFirstPage);
+                    bankPassbookFirstPage,
+                    parentAadhar,
+                    studentAadhar);
 
             if (status) {
                 response.sendRedirect("ScholarshipViewServlet?id=" + id);

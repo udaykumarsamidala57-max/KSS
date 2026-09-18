@@ -13,7 +13,9 @@ public class ScholarshipDocumentsDAO {
                                    byte[] feeReceipts, 
                                    byte[] parentAadharCopy, 
                                    byte[] studentAadharCopy, 
-                                   byte[] bankPassbookFirstPage) {
+                                   byte[] bankPassbookFirstPage,
+                                   byte[] parentAadhar,
+                                   byte[] studentAadhar) {
         
         boolean status = false;
         Connection con = null;
@@ -23,24 +25,28 @@ public class ScholarshipDocumentsDAO {
             con = DBUtil.getConnection();
 
             // 1. Identify which documents are actually provided (not empty)
-            boolean hasMarksCard = (previousAyMarksCard != null && previousAyMarksCard.length > 0);
-            boolean hasKssApp    = (kssApplication != null && kssApplication.length > 0);
-            boolean hasFeeStruct = (feeStructure != null && feeStructure.length > 0);
-            boolean hasReceipts  = (feeReceipts != null && feeReceipts.length > 0);
-            boolean hasParentAd  = (parentAadharCopy != null && parentAadharCopy.length > 0);
-            boolean hasStudentAd = (studentAadharCopy != null && studentAadharCopy.length > 0);
-            boolean hasPassbook  = (bankPassbookFirstPage != null && bankPassbookFirstPage.length > 0);
+            boolean hasMarksCard  = (previousAyMarksCard != null && previousAyMarksCard.length > 0);
+            boolean hasKssApp     = (kssApplication != null && kssApplication.length > 0);
+            boolean hasFeeStruct  = (feeStructure != null && feeStructure.length > 0);
+            boolean hasReceipts   = (feeReceipts != null && feeReceipts.length > 0);
+            boolean hasParentAdCp = (parentAadharCopy != null && parentAadharCopy.length > 0);
+            boolean hasStudentAdCp= (studentAadharCopy != null && studentAadharCopy.length > 0);
+            boolean hasPassbook   = (bankPassbookFirstPage != null && bankPassbookFirstPage.length > 0);
+            boolean hasParentAd   = (parentAadhar != null && parentAadhar.length > 0);
+            boolean hasStudentAd  = (studentAadhar != null && studentAadhar.length > 0);
 
             // 2. Build the dynamic SQL query string
             StringBuilder sql = new StringBuilder("UPDATE kss_student_scholarship SET ");
             
-            if (hasMarksCard) sql.append("previous_ay_marks_card = ?, ");
-            if (hasKssApp)    sql.append("kss_application = ?, ");
-            if (hasFeeStruct) sql.append("fee_structure = ?, ");
-            if (hasReceipts)  sql.append("fee_receipts = ?, ");
-            if (hasParentAd)  sql.append("parent_aadhar_copy = ?, ");
-            if (hasStudentAd) sql.append("student_aadhar_copy = ?, ");
-            if (hasPassbook)  sql.append("bank_passbook_first_page = ?, ");
+            if (hasMarksCard)   sql.append("previous_ay_marks_card = ?, ");
+            if (hasKssApp)      sql.append("kss_application = ?, ");
+            if (hasFeeStruct)   sql.append("fee_structure = ?, ");
+            if (hasReceipts)    sql.append("fee_receipts = ?, ");
+            if (hasParentAdCp)  sql.append("parent_aadhar_copy = ?, ");
+            if (hasStudentAdCp) sql.append("student_aadhar_copy = ?, ");
+            if (hasPassbook)    sql.append("bank_passbook_first_page = ?, ");
+            if (hasParentAd)    sql.append("parent_aadhar = ?, ");
+            if (hasStudentAd)   sql.append("student_aadhar = ?, ");
 
             // Remove the trailing comma and space if at least one document is being updated
             if (sql.toString().endsWith(", ")) {
@@ -56,13 +62,15 @@ public class ScholarshipDocumentsDAO {
             ps = con.prepareStatement(sql.toString());
             int paramIndex = 1;
 
-            if (hasMarksCard) ps.setBytes(paramIndex++, previousAyMarksCard);
-            if (hasKssApp)    ps.setBytes(paramIndex++, kssApplication);
-            if (hasFeeStruct) ps.setBytes(paramIndex++, feeStructure);
-            if (hasReceipts)  ps.setBytes(paramIndex++, feeReceipts);
-            if (hasParentAd)  ps.setBytes(paramIndex++, parentAadharCopy);
-            if (hasStudentAd) ps.setBytes(paramIndex++, studentAadharCopy);
-            if (hasPassbook)  ps.setBytes(paramIndex++, bankPassbookFirstPage);
+            if (hasMarksCard)   ps.setBytes(paramIndex++, previousAyMarksCard);
+            if (hasKssApp)      ps.setBytes(paramIndex++, kssApplication);
+            if (hasFeeStruct)   ps.setBytes(paramIndex++, feeStructure);
+            if (hasReceipts)    ps.setBytes(paramIndex++, feeReceipts);
+            if (hasParentAdCp)  ps.setBytes(paramIndex++, parentAadharCopy);
+            if (hasStudentAdCp) ps.setBytes(paramIndex++, studentAadharCopy);
+            if (hasPassbook)    ps.setBytes(paramIndex++, bankPassbookFirstPage);
+            if (hasParentAd)    ps.setBytes(paramIndex++, parentAadhar);
+            if (hasStudentAd)   ps.setBytes(paramIndex++, studentAadhar);
             
             // Final index assignment binds the WHERE clause id
             ps.setInt(paramIndex, id);
