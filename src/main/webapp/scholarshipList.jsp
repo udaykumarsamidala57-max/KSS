@@ -1,4 +1,6 @@
 <%@page import="java.util.List"%>
+<%@page import="java.util.Set"%>
+<%@page import="java.util.TreeSet"%>
 <%@page import="com.Bean.ScholarshipBean"%>
 <%
     HttpSession sess = request.getSession(false);
@@ -12,6 +14,16 @@
 %>
 <%
 List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list");
+
+// Extract unique organization names for the dropdown filter
+Set<String> orgSet = new TreeSet<String>();
+if (list != null) {
+    for (ScholarshipBean b : list) {
+        if (b.getOrgName() != null && !b.getOrgName().trim().isEmpty()) {
+            orgSet.add(b.getOrgName().trim());
+        }
+    }
+}
 %>
 
 <!DOCTYPE html>
@@ -55,7 +67,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     margin: 0 auto;
   }
 
-  /* Salesforce Page Header / Title Component */
+  /* Salesforce Page Header Bar */
   .slds-page-header {
     background-color: var(--slds-card-bg);
     border: 1px solid var(--slds-border);
@@ -66,6 +78,8 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 16px;
   }
 
   .slds-header-title-wrapper {
@@ -93,6 +107,50 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     font-weight: 700;
     color: var(--slds-text-primary);
     line-height: 1.2;
+  }
+
+  /* Header Actions & Filter Controls */
+  .slds-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .slds-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--slds-bg-page);
+    padding: 6px 12px;
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
+  }
+
+  .slds-filter-group label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slds-text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .slds-filter-group select {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slds-text-primary);
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .slds-filter-group select:focus {
+    border-color: var(--slds-brand);
+    box-shadow: 0 0 0 1px var(--slds-brand);
   }
 
   /* Salesforce Standard Buttons */
@@ -417,14 +475,27 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
 <div class="slds-container">
 
-  <!-- SALESFORCE PAGE HEADER BAR -->
+  <!-- SALESFORCE PAGE HEADER BAR WITH FILTER -->
   <div class="slds-page-header">
     <div class="slds-header-title-wrapper">
       <div class="slds-header-details">
+        <span class="slds-header-subtitle">Scholarship Management</span>
         <h1 class="slds-header-title">Applications Master List</h1>
       </div>
     </div>
-    <div>
+
+    <div class="slds-header-controls">
+      <!-- ORGANIZATION FILTER DROPDOWN -->
+      <div class="slds-filter-group">
+        <label for="orgFilter">Organization:</label>
+        <select id="orgFilter" onchange="filterByOrganization()">
+          <option value="ALL">All Organizations (<%= list != null ? list.size() : 0 %>)</option>
+          <% for(String org : orgSet) { %>
+            <option value="<%= org %>"><%= org %></option>
+          <% } %>
+        </select>
+      </div>
+
       <a href="ScholarshipApplication.jsp" class="slds-btn slds-btn-brand">+ New Application</a>
     </div>
   </div>
@@ -432,7 +503,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   <!-- DATA TABLE CARD CONTAINER -->
   <div class="slds-card">
     <div class="table-responsive">
-      <table class="slds-data-table">
+      <table class="slds-data-table" id="scholarshipTable">
         <thead>
           <tr>
             <th>ID</th>
@@ -457,10 +528,11 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <%
 if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
+        String orgVal = bean.getOrgName() != null ? bean.getOrgName().trim() : "";
 %>
-          <tr>
+          <tr class="app-row" data-org="<%= orgVal %>">
             <td><%=bean.getId()%></td>
-            <td><%=bean.getOrgName() != null ? bean.getOrgName() : ""%></td>
+            <td><%=orgVal%></td>
             <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
             <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
             <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>
@@ -518,12 +590,15 @@ if(list != null && !list.isEmpty()){
     }
 } else {
 %>
-          <tr>
+          <tr id="emptyRow">
             <td colspan="16" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
           </tr>
 <%
 }
 %>
+          <tr id="noMatchingRow" style="display: none;">
+            <td colspan="16" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found for Selected Organization</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -531,6 +606,7 @@ if(list != null && !list.isEmpty()){
 
 </div>
 
+<!-- EDIT MODAL CONTAINER -->
 <div id="editModal" class="slds-modal-overlay">
   <div class="slds-modal-card">
     
@@ -699,6 +775,33 @@ if(list != null && !list.isEmpty()){
 </div>
 
 <script>
+  // Organization Filter Logic
+  function filterByOrganization() {
+    const selectedOrg = document.getElementById('orgFilter').value;
+    const rows = document.querySelectorAll('.app-row');
+    const noMatchingRow = document.getElementById('noMatchingRow');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowOrg = row.getAttribute('data-org');
+      if (selectedOrg === 'ALL' || rowOrg === selectedOrg) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (noMatchingRow) {
+      if (visibleCount === 0 && rows.length > 0) {
+        noMatchingRow.style.display = '';
+      } else {
+        noMatchingRow.style.display = 'none';
+      }
+    }
+  }
+
+  // Edit Modal Functions
   function openEditModal(
     id, orgName, empNo, empName, designation, spouseSMIORE, spouseGroup,
     childrenName, dob, gender, relationship, childOrder,
