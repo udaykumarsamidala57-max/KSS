@@ -13,8 +13,7 @@ import com.Bean.ScholarshipBean;
 import com.DAO.SholrarshipDAO;
 
 @WebServlet({
-    "/ScholarshipServlet",
-    
+    "/ScholarshipServlet"
 })
 public class SholarshipServelt extends HttpServlet {
 
@@ -24,7 +23,7 @@ public class SholarshipServelt extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-    	HttpSession sess = request.getSession(false);
+        HttpSession sess = request.getSession(false);
         if (sess == null || sess.getAttribute("username") == null) {
             response.sendRedirect("login.jsp");
             return;
@@ -50,6 +49,7 @@ public class SholarshipServelt extends HttpServlet {
 
         // College Details
         bean.setCollegeName(request.getParameter("collegeName"));
+        bean.setPlaceCollege(request.getParameter("placeCollege"));
         bean.setCourse(request.getParameter("course"));
         bean.setPresentYear(request.getParameter("presentYear"));
 

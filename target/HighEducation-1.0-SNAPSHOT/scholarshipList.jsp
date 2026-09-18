@@ -74,8 +74,6 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     gap: 12px;
   }
 
- 
-
   .slds-header-details {
     display: flex;
     flex-direction: column;
@@ -422,9 +420,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   <!-- SALESFORCE PAGE HEADER BAR -->
   <div class="slds-page-header">
     <div class="slds-header-title-wrapper">
-     
       <div class="slds-header-details">
-      
         <h1 class="slds-header-title">Applications Master List</h1>
       </div>
     </div>
@@ -452,6 +448,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
             <th>Relation</th>
             <th>Child Order</th>
             <th>College Name</th>
+            <th>Place of College</th>
             <th>Course</th>
             <th style="text-align: center;">Actions</th>
           </tr>
@@ -475,6 +472,7 @@ if(list != null && !list.isEmpty()){
             <td><%=bean.getRelationship() != null ? bean.getRelationship() : ""%></td>
             <td><%=bean.getChildOrder() != null ? bean.getChildOrder() : ""%></td>
             <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
+            <td><%=bean.getPlaceCollege() != null ? bean.getPlaceCollege() : ""%></td>
             <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
          
             <td class="action-cell">
@@ -495,6 +493,7 @@ if(list != null && !list.isEmpty()){
                   '<%=escapeJs(bean.getRelationship())%>',
                   '<%=escapeJs(bean.getChildOrder())%>',
                   '<%=escapeJs(bean.getCollegeName())%>',
+                  '<%=escapeJs(bean.getPlaceCollege())%>',
                   '<%=escapeJs(bean.getCourse())%>',
                   '<%=escapeJs(bean.getPresentYear())%>',
                   '<%=bean.getPreviousAyPercentage()%>',
@@ -520,7 +519,7 @@ if(list != null && !list.isEmpty()){
 } else {
 %>
           <tr>
-            <td colspan="15" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
+            <td colspan="16" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
           </tr>
 <%
 }
@@ -532,7 +531,6 @@ if(list != null && !list.isEmpty()){
 
 </div>
 
-<!-- SALESFORCE MODAL POPUP -->
 <div id="editModal" class="slds-modal-overlay">
   <div class="slds-modal-card">
     
@@ -551,7 +549,7 @@ if(list != null && !list.isEmpty()){
         <div class="slds-grid">
           <div class="slds-form-element full-width">
             <label for="edit_orgName">Organization Name *</label>
-            <input type="text" id="edit_orgName" name="orgName" required>
+            <input type="text" id="edit_orgName" name="orgName" required readonly>
           </div>
 
           <div class="slds-form-element">
@@ -630,9 +628,14 @@ if(list != null && !list.isEmpty()){
 
         <div class="slds-section-title">3. Academic Details</div>
         <div class="slds-grid">
-          <div class="slds-form-element full-width">
+          <div class="slds-form-element">
             <label for="edit_collegeName">College Name</label>
             <input type="text" id="edit_collegeName" name="collegeName">
+          </div>
+
+          <div class="slds-form-element">
+            <label for="edit_placeCollege">Place of College</label>
+            <input type="text" id="edit_placeCollege" name="placeCollege">
           </div>
 
           <div class="slds-form-element">
@@ -699,7 +702,7 @@ if(list != null && !list.isEmpty()){
   function openEditModal(
     id, orgName, empNo, empName, designation, spouseSMIORE, spouseGroup,
     childrenName, dob, gender, relationship, childOrder,
-    collegeName, course, presentYear, previousAyPercentage, feeAmountCurrentAy,
+    collegeName, placeCollege, course, presentYear, previousAyPercentage, feeAmountCurrentAy,
     employeeNamePassbook, bankAccountNo, ifscCode, bankName, branchName
   ) {
     document.getElementById('edit_id').value = id;
@@ -717,6 +720,7 @@ if(list != null && !list.isEmpty()){
     document.getElementById('edit_childOrder').value = childOrder;
 
     document.getElementById('edit_collegeName').value = collegeName;
+    document.getElementById('edit_placeCollege').value = placeCollege;
     document.getElementById('edit_course').value = course;
     document.getElementById('edit_presentYear').value = presentYear;
     document.getElementById('edit_previousAyPercentage').value = previousAyPercentage;

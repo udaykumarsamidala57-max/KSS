@@ -496,9 +496,13 @@ try {
           </div>
 
           <div class="form-group">
-            <label>Relationship</label>
-            <input type="text" name="relationship" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. Son / Daughter">
-          </div>
+    <label>Relationship</label>
+    <select name="relationship" class="uppercase-input">
+        <option value="">Select Relationship</option>
+        <option value="SON">Son</option>
+        <option value="DAUGHTER">Daughter</option>
+    </select>
+</div>
 
           <div class="form-group">
             <label>Child Order</label>
@@ -513,9 +517,14 @@ try {
         <!-- Section 3: Academic Details -->
         <div class="slds-section-title">3. Academic Details</div>
         <div class="form-grid">
-          <div class="form-group full-width">
+          <div class="form-group">
             <label>College Name</label>
             <input type="text" name="collegeName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter College Name">
+          </div>
+
+          <div class="form-group">
+            <label>Place of College</label>
+            <input type="text" name="placeCollege" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter College Place/Location">
           </div>
 
           <div class="form-group">
@@ -524,27 +533,27 @@ try {
           </div>
 
           <div class="form-group">
-    <label>Present Year</label>
-    <select name="presentYear" class="uppercase-input">
-        <option value="">Select Year</option>
-        <option value="1st Year">1st Year</option>
-        <option value="2nd Year">2nd Year</option>
-        <option value="3rd Year">3rd Year</option>
-        <option value="4th Year">4th Year</option>
-        <option value="5th Year">5th Year</option>
-        <option value="6th Year">6th Year</option>
-    </select>
-</div>
+            <label>Present Year</label>
+            <select name="presentYear" class="uppercase-input">
+                <option value="">Select Year</option>
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+                <option value="5th Year">5th Year</option>
+                <option value="6th Year">6th Year</option>
+            </select>
+          </div>
 
-         <div class="form-group">
-    <label>Previous Academic Year (%)</label>
-    <input type="number"
-           name="previousAyPercentage"
-           min="0"
-           max="100"
-           step="0.01"
-           placeholder="e.g. 85.50">
-</div>
+          <div class="form-group">
+            <label>Previous Academic Year (%)</label>
+            <input type="number"
+                   name="previousAyPercentage"
+                   min="0"
+                   max="100"
+                   step="0.01"
+                   placeholder="e.g. 85.50">
+          </div>
 
           <div class="form-group">
             <label>Fee Amount for Current AY</label>

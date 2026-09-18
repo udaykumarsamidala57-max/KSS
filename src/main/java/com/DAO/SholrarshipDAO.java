@@ -32,6 +32,7 @@ public class SholrarshipDAO {
                     + "spouse_working_smiore,"
                     + "spouse_working_group_companies,"
                     + "college_name,"
+                    + "place_college,"
                     + "course,"
                     + "present_year,"
                     + "previous_ay_percentage,"
@@ -41,8 +42,8 @@ public class SholrarshipDAO {
                     + "ifsc_code,"
                     + "bank_name,"
                     + "branch_name"
-                   
-                    + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    
+                    + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
             ps = con.prepareStatement(sql);
 
@@ -61,19 +62,18 @@ public class SholrarshipDAO {
             ps.setString(11, bean.getSpouseWorkingGroupCompanies());
 
             ps.setString(12, bean.getCollegeName());
-            ps.setString(13, bean.getCourse());
-            ps.setString(14, bean.getPresentYear());
+            ps.setString(13, bean.getPlaceCollege());
+            ps.setString(14, bean.getCourse());
+            ps.setString(15, bean.getPresentYear());
 
-            ps.setDouble(15, bean.getPreviousAyPercentage());
-            ps.setDouble(16, bean.getFeeAmountCurrentAy());
+            ps.setDouble(16, bean.getPreviousAyPercentage());
+            ps.setDouble(17, bean.getFeeAmountCurrentAy());
 
-            ps.setString(17, bean.getEmployeeNamePassbook());
-            ps.setString(18, bean.getBankAccountNo());
-            ps.setString(19, bean.getIfscCode());
-            ps.setString(20, bean.getBankName());
-            ps.setString(21, bean.getBranchName());
-
-           
+            ps.setString(18, bean.getEmployeeNamePassbook());
+            ps.setString(19, bean.getBankAccountNo());
+            ps.setString(20, bean.getIfscCode());
+            ps.setString(21, bean.getBankName());
+            ps.setString(22, bean.getBranchName());
 
             int i = ps.executeUpdate();
 

@@ -7,6 +7,7 @@
         return;
     }
     String roles = (String) sess.getAttribute("role");
+    String branch = (String) sess.getAttribute("branch");
 %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
@@ -59,7 +60,7 @@
     align-items: flex-start;
   }
 
-  /* Form Main Container Container */
+  /* Form Main Container */
   .main-form-area {
     flex: 1;
     display: flex;
@@ -85,31 +86,9 @@
     gap: 12px;
   }
 
-  .slds-icon-box {
-    width: 38px;
-    height: 38px;
-    background-color: #4bca81;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 18px;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2);
-  }
-
   .slds-header-details {
     display: flex;
     flex-direction: column;
-  }
-
-  .slds-header-subtitle {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--slds-text-secondary);
-    letter-spacing: 0.5px;
   }
 
   .slds-header-title {
@@ -195,6 +174,11 @@
     border-radius: var(--slds-radius);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     outline: none;
+  }
+
+  /* Auto-capitalize text input visually */
+  .uppercase-input {
+    text-transform: uppercase;
   }
 
   /* Read-only field styling */
@@ -388,9 +372,7 @@
     <!-- PAGE HEADER BAR -->
     <div class="slds-page-header">
       <div class="slds-header-title-wrapper">
-      
         <div class="slds-header-details">
-          
           <h1 class="slds-header-title">Scholarship Application Form</h1>
         </div>
       </div>
@@ -407,68 +389,65 @@
             <label>Organization Name <span class="required">*</span></label>
             <select name="orgName" required>
               <option value="">-- Select Organization --</option>
-             <%
+<%
 Connection con = null;
 PreparedStatement ps = null;
 ResultSet rs = null;
 
 try {
-
     con = DBUtil.getConnection();
 
     if ("Global".equalsIgnoreCase(roles)) {
-
         ps = con.prepareStatement(
             "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
-
     } else {
-
         ps = con.prepareStatement(
-            "SELECT org_name FROM organization_master WHERE status='Active' AND org_name=? ORDER BY org_name");
-
-        ps.setString(1, roles);
+            "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
+        ps.setString(1, branch != null ? branch.trim() : "");
     }
 
     rs = ps.executeQuery();
+    boolean hasRows = false;
 
     while (rs.next()) {
+        hasRows = true;
+        String orgName = rs.getString("org_name");
 %>
+              <option value="<%= orgName %>"><%= orgName %></option>
+<%
+    }
 
-<option value="<%= rs.getString("org_name") %>">
-    <%= rs.getString("org_name") %>
-</option>
-
+    if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
+%>
+              <option value="<%= branch.trim() %>" selected><%= branch.trim() %></option>
 <%
     }
 
 } catch (Exception e) {
-
     e.printStackTrace();
-    out.println("<option>Error Loading Organizations</option>");
-
+    out.println("<option value=''>Error Loading Organizations</option>");
 } finally {
-
-    if (rs != null) rs.close();
-    if (ps != null) ps.close();
-    if (con != null) con.close();
+    if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
+    if (ps != null) try { ps.close(); } catch (SQLException ignore) {}
+    if (con != null) try { con.close(); } catch (SQLException ignore) {}
 }
 %>
-</select>
+            </select>
           </div>
 
           <div class="form-group">
             <label>Employee No <span class="required">*</span></label>
-            <input type="text" name="empNo" required placeholder="Enter Employee Number">
+            <input type="text" name="empNo" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" required placeholder="Enter Employee Number">
           </div>
 
           <div class="form-group">
             <label>Employee Name <span class="required">*</span></label>
-            <input type="text" name="empName" required placeholder="Enter Full Name">
+            <input type="text" name="empName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" required placeholder="Enter Full Name">
           </div>
 
           <div class="form-group">
             <label>Designation</label>
-            <input type="text" name="designation" placeholder="Enter Designation">
+            <input type="text" name="designation" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Designation">
           </div>
 
           <div class="form-group">
@@ -493,7 +472,7 @@ try {
         <div class="form-grid">
           <div class="form-group">
             <label>Child's Name</label>
-            <input type="text" name="childrenName" placeholder="Enter Child's Full Name">
+            <input type="text" name="childrenName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Child's Full Name">
           </div>
 
           <div class="form-group">
@@ -517,9 +496,13 @@ try {
           </div>
 
           <div class="form-group">
-            <label>Relationship</label>
-            <input type="text" name="relationship" placeholder="e.g. Son / Daughter">
-          </div>
+    <label>Relationship</label>
+    <select name="relationship" class="uppercase-input">
+        <option value="">Select Relationship</option>
+        <option value="SON">Son</option>
+        <option value="DAUGHTER">Daughter</option>
+    </select>
+</div>
 
           <div class="form-group">
             <label>Child Order</label>
@@ -534,24 +517,42 @@ try {
         <!-- Section 3: Academic Details -->
         <div class="slds-section-title">3. Academic Details</div>
         <div class="form-grid">
-          <div class="form-group full-width">
+          <div class="form-group">
             <label>College Name</label>
-            <input type="text" name="collegeName" placeholder="Enter College Name">
+            <input type="text" name="collegeName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter College Name">
+          </div>
+
+          <div class="form-group">
+            <label>Place of College</label>
+            <input type="text" name="placeCollege" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter College Place/Location">
           </div>
 
           <div class="form-group">
             <label>Course Name</label>
-            <input type="text" name="course" placeholder="e.g. B.Tech, B.Sc">
+            <input type="text" name="course" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. B.Tech, B.Sc">
           </div>
 
           <div class="form-group">
             <label>Present Year</label>
-            <input type="text" name="presentYear" placeholder="e.g. 1st Year, 2nd Year">
+            <select name="presentYear" class="uppercase-input">
+                <option value="">Select Year</option>
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+                <option value="5th Year">5th Year</option>
+                <option value="6th Year">6th Year</option>
+            </select>
           </div>
 
           <div class="form-group">
             <label>Previous Academic Year (%)</label>
-            <input type="number" step="0.01" name="previousAyPercentage" placeholder="e.g. 85.50">
+            <input type="number"
+                   name="previousAyPercentage"
+                   min="0"
+                   max="100"
+                   step="0.01"
+                   placeholder="e.g. 85.50">
           </div>
 
           <div class="form-group">
@@ -565,7 +566,7 @@ try {
         <div class="form-grid">
           <div class="form-group full-width">
             <label>Name as per Bank Passbook</label>
-            <input type="text" name="employeeNamePassbook" placeholder="Enter Name as shown in Passbook">
+            <input type="text" name="employeeNamePassbook" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Name as shown in Passbook">
           </div>
 
           <div class="form-group">
@@ -575,17 +576,17 @@ try {
 
           <div class="form-group">
             <label>IFSC Code</label>
-            <input type="text" name="ifscCode" placeholder="Enter IFSC Code">
+            <input type="text" name="ifscCode" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter IFSC Code">
           </div>
 
           <div class="form-group">
             <label>Bank Name</label>
-            <input type="text" name="bankName" placeholder="Enter Bank Name">
+            <input type="text" name="bankName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Bank Name">
           </div>
 
           <div class="form-group">
             <label>Branch Name</label>
-            <input type="text" name="branchName" placeholder="Enter Branch Name">
+            <input type="text" name="branchName" class="uppercase-input" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Branch Name">
           </div>
         </div>
 
@@ -610,7 +611,7 @@ try {
       <div class="sidebar-body">
         <div class="deadline-box">
           <div class="deadline-label">Last Date for Submission</div>
-          <div class="deadline-date">31st August 2026</div>
+          <div class="deadline-date">30 September 2026</div>
         </div>
         <p style="font-size: 11px; text-align: center; color: var(--slds-text-secondary); margin-top: 8px;">
           Late or incomplete applications will not be processed.
@@ -645,7 +646,7 @@ try {
         </div>
         <div class="contact-item">
           <span class="contact-label">Helpdesk Helpline</span>
-          <span class="contact-val">+91 999999999</span>
+          <span class="contact-val">+91 812342967</span>
         </div>
         <div class="contact-item">
           <span class="contact-label">Office Hours</span>

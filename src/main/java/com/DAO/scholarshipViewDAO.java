@@ -49,6 +49,7 @@ public class scholarshipViewDAO {
                 
                 // Academic Details
                 bean.setCollegeName(rs.getString("college_name"));
+                bean.setPlaceCollege(rs.getString("place_college"));
                 bean.setCourse(rs.getString("course"));
                 bean.setPresentYear(rs.getString("present_year"));
                 bean.setPreviousAyPercentage(rs.getDouble("previous_ay_percentage"));

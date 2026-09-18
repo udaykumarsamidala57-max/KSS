@@ -19,7 +19,7 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-    	HttpSession sess = request.getSession(false);
+        HttpSession sess = request.getSession(false);
         if (sess == null || sess.getAttribute("username") == null) {
             response.sendRedirect("login.jsp");
             return;
@@ -41,13 +41,15 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
             
             String columnName = null;
             switch(fieldName) {
-                case "previousAyMarksCard":    columnName = "previous_ay_marks_card"; break;
-                case "kssApplication":          columnName = "kss_application"; break;
-                case "feeStructure":            columnName = "fee_structure"; break;
-                case "feeReceipts":            columnName = "fee_receipts"; break;
-                case "parentAadharCopy":       columnName = "parent_aadhar_copy"; break;
-                case "studentAadharCopy":      columnName = "student_aadhar_copy"; break;
-                case "bankPassbookFirstPage":  columnName = "bank_passbook_first_page"; break;
+                case "previousAyMarksCard":   columnName = "previous_ay_marks_card"; break;
+                case "kssApplication":      columnName = "kss_application"; break;
+                case "feeStructure":        columnName = "fee_structure"; break;
+                case "feeReceipts":         columnName = "fee_receipts"; break;
+                case "parentAadharCopy":    columnName = "parent_aadhar_copy"; break;
+                case "studentAadharCopy":   columnName = "student_aadhar_copy"; break;
+                case "bankPassbookFirstPage": columnName = "bank_passbook_first_page"; break;
+                case "parentAadhar":        columnName = "parent_aadhar"; break;
+                case "studentAadhar":       columnName = "student_aadhar"; break;
             }
             
             if (columnName == null) {
@@ -57,7 +59,7 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
 
             con = DBUtil.getConnection();
             
-            // Modified SQL: Pull both the dynamic binary payload AND the associated employee's name field
+            // Pull both the binary blob payload AND the associated employee's name field
             String sql = "SELECT emp_name, " + columnName + " FROM kss_student_scholarship WHERE id = ?";
             ps = con.prepareStatement(sql);
             ps.setInt(1, id);
@@ -70,7 +72,7 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
                 if (fileData != null && fileData.length > 0) {
                     response.reset();
                     
-                    // Determine file extension and content type dynamically
+                    // Determine file extension and content type dynamically via magic numbers
                     String contentType = "application/pdf"; 
                     String extension = ".pdf"; 
                     
@@ -99,10 +101,10 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
                         empName = empName.replaceAll("[^a-zA-Z0-9_-]", "_");
                     }
                     
-                    // Combine into the requested format: "ID_EmployeeName_FieldName.extension"
+                    // Combine into naming structure: "ID_EmployeeName_FieldName.extension"
                     String filename = id + "_" + empName + "_" + fieldName + extension;
                     
-                    // Using "inline" opens it smoothly in the tab browser preview frame, but retains your naming structure when downloaded/saved
+                    // "inline" streams directly into browser tab viewer while retaining original download metadata
                     response.setHeader("Content-Disposition", "inline; filename=\"" + filename + "\"");
                     
                     response.getOutputStream().write(fileData);

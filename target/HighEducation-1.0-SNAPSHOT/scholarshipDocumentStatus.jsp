@@ -9,6 +9,7 @@
     String users = (String) sess.getAttribute("username");
     String roles = (String) sess.getAttribute("role");
     String depts = (String) sess.getAttribute("department");
+    String branch = (String) sess.getAttribute("branch");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -239,7 +240,7 @@ try {
               "ORDER BY emp_no";
 
         ps = con.prepareStatement(sql);
-        ps.setString(1, roles);
+        ps.setString(1, branch);
     }
 
     rs = ps.executeQuery();

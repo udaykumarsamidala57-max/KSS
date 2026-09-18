@@ -29,20 +29,19 @@ public class ScholarshipListServelt extends HttpServlet {
 			throws ServletException, IOException {
 		
 		HttpSession sess = request.getSession(false);
-	        if (sess == null || sess.getAttribute("username") == null) {
-	            response.sendRedirect("login.jsp");
-	            return;
-	        }
-	        String users = (String) sess.getAttribute("username");
-	        String roles = (String) sess.getAttribute("role");
-	        String depts = (String) sess.getAttribute("department");
-	        String branch = (String) sess.getAttribute("branch");
+		if (sess == null || sess.getAttribute("username") == null) {
+			response.sendRedirect("login.jsp");
+			return;
+		}
+		String users = (String) sess.getAttribute("username");
+		String roles = (String) sess.getAttribute("role");
+		String depts = (String) sess.getAttribute("department");
+		String branch = (String) sess.getAttribute("branch");
 		String action = request.getParameter("action");
 
 		if (action == null) {
 			action = "list";
 		}
-		
 
 		try {
 			switch (action) {
@@ -70,7 +69,7 @@ public class ScholarshipListServelt extends HttpServlet {
 				break;
 
 			default:
-				List<ScholarshipBean> list = dao.getAllScholarships(branch,roles, depts, users);
+				List<ScholarshipBean> list = dao.getAllScholarships(branch, roles, depts, users);
 				request.setAttribute("list", list);
 				RequestDispatcher listPage = request.getRequestDispatcher("/scholarshipList.jsp");
 				listPage.forward(request, response);
@@ -117,6 +116,7 @@ public class ScholarshipListServelt extends HttpServlet {
 				bean.setSpouseWorkingGroupCompanies(request.getParameter("spouseWorkingGroupCompanies"));
 
 				bean.setCollegeName(request.getParameter("collegeName"));
+				bean.setPlaceCollege(request.getParameter("placeCollege"));
 				bean.setCourse(request.getParameter("course"));
 				bean.setPresentYear(request.getParameter("presentYear"));
 

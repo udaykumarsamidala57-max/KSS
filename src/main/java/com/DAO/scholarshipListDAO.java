@@ -12,7 +12,7 @@ import com.Bean.ScholarshipBean;
 public class scholarshipListDAO {
 
     // Get All Records
-	public List<ScholarshipBean> getAllScholarships(String branch, String role, String department, String username) {
+    public List<ScholarshipBean> getAllScholarships(String branch, String role, String department, String username) {
         List<ScholarshipBean> list = new ArrayList<>();
     
         try {
@@ -58,6 +58,7 @@ public class scholarshipListDAO {
                 bean.setSpouseWorkingGroupCompanies(rs.getString("spouse_working_group_companies"));
 
                 bean.setCollegeName(rs.getString("college_name"));
+                bean.setPlaceCollege(rs.getString("place_college"));
                 bean.setCourse(rs.getString("course"));
                 bean.setPresentYear(rs.getString("present_year"));
 
@@ -108,6 +109,7 @@ public class scholarshipListDAO {
                 bean.setSpouseWorkingGroupCompanies(rs.getString("spouse_working_group_companies"));
 
                 bean.setCollegeName(rs.getString("college_name"));
+                bean.setPlaceCollege(rs.getString("place_college"));
                 bean.setCourse(rs.getString("course"));
                 bean.setPresentYear(rs.getString("present_year"));
 
@@ -139,7 +141,7 @@ public class scholarshipListDAO {
                     + "org_name=?, emp_no=?, emp_name=?, designation=?, "
                     + "children_name=?, dob=?, gender=?, relationship=?, child_order=?, "
                     + "spouse_working_smiore=?, spouse_working_group_companies=?, "
-                    + "college_name=?, course=?, present_year=?, "
+                    + "college_name=?, place_college=?, course=?, present_year=?, "
                     + "previous_ay_percentage=?, fee_amount_current_ay=?, "
                     + "employee_name_passbook=?, bank_account_no=?, ifsc_code=?, bank_name=?, branch_name=? "
                     + "WHERE id=?");
@@ -156,16 +158,17 @@ public class scholarshipListDAO {
             ps.setString(10, bean.getSpouseWorkingSMIORE());
             ps.setString(11, bean.getSpouseWorkingGroupCompanies());
             ps.setString(12, bean.getCollegeName());
-            ps.setString(13, bean.getCourse());
-            ps.setString(14, bean.getPresentYear());
-            ps.setDouble(15, bean.getPreviousAyPercentage());
-            ps.setDouble(16, bean.getFeeAmountCurrentAy());
-            ps.setString(17, bean.getEmployeeNamePassbook());
-            ps.setString(18, bean.getBankAccountNo());
-            ps.setString(19, bean.getIfscCode());
-            ps.setString(20, bean.getBankName());
-            ps.setString(21, bean.getBranchName());
-            ps.setInt(22, bean.getId());
+            ps.setString(13, bean.getPlaceCollege());
+            ps.setString(14, bean.getCourse());
+            ps.setString(15, bean.getPresentYear());
+            ps.setDouble(16, bean.getPreviousAyPercentage());
+            ps.setDouble(17, bean.getFeeAmountCurrentAy());
+            ps.setString(18, bean.getEmployeeNamePassbook());
+            ps.setString(19, bean.getBankAccountNo());
+            ps.setString(20, bean.getIfscCode());
+            ps.setString(21, bean.getBankName());
+            ps.setString(22, bean.getBranchName());
+            ps.setInt(23, bean.getId());
 
             status = ps.executeUpdate() > 0;
 

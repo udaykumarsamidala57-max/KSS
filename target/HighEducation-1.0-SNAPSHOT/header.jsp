@@ -8,6 +8,7 @@
     String userss = (String) sesso.getAttribute("username");
     String roless = (String) sesso.getAttribute("role");
     String deptss = (String) sesso.getAttribute("department");
+    String branchs = (String) sesso.getAttribute("branch");
 %>
 <style>
   /* Scoped Variables & Isolated CSS to prevent leaking into main page body */
@@ -434,18 +435,20 @@
           Scholarship List
         </a>
       </li>
+      <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
         <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
           Organization Master
         </a>
       </li>
+       <% } %>
       <li>
         <a href="scholarshipDocumentStatus.jsp" class="<%= currentURI.contains("scholarshipDocumentStatus.jsp") ? "active" : "" %>">
           Document Status
         </a>
       </li>
       
-      <!-- Dropdown Item: Verification & Approvals Actions -->
+      <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
         <a href="#" class="dropdown-toggle <%= isApprovalActive ? "active" : "" %>" onclick="return false;">
           Approvals
@@ -456,14 +459,16 @@
               Approve Documents
             </a>
           </li>
+          
           <li>
             <a href="approveScholarship.jsp" class="<%= currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
               Approve Scholarship
             </a>
           </li>
+         
         </ul>
       </li>
-
+ <% } %>
       <!-- Dropdown Item: Status Summaries & Lists Reports -->
       <li>
         <a href="#" class="dropdown-toggle <%= isReportsActive ? "active" : "" %>" onclick="return false;">
@@ -471,17 +476,17 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="approvedList.jsp" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
+            <a href="#" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
               Approved List
             </a>
           </li>
           <li>
-            <a href="rejectedList.jsp" class="<%= currentURI.contains("rejectedList.jsp") ? "active" : "" %>">
+            <a href="#" class="<%= currentURI.contains("rejectedList.jsp") ? "active" : "" %>">
               Rejected List
             </a>
           </li>
           <li>
-            <a href="reimbursement.jsp" class="<%= currentURI.contains("reimbursement.jsp") ? "active" : "" %>">
+            <a href="#" class="<%= currentURI.contains("reimbursement.jsp") ? "active" : "" %>">
               Reimbursement
             </a>
           </li>
@@ -495,6 +500,7 @@
         <span class="user-name"><%= userss != null ? userss : "User" %></span>
         <% if (roless != null && !roless.trim().isEmpty()) { %>
           <span class="user-role"><%= roless %></span>
+          <span class="user-role"><%= branchs %></span>
         <% } %>
       </div>
       <a href="Logout.jsp" class="logout-btn" title="Sign out of system">
@@ -512,7 +518,7 @@
       &copy; <%= java.time.Year.now().getValue() %> Karnataka Seva Sangha. All rights reserved.
     </div>
     <div>
-      Developed by <span class="developer-credit">SSS IT</span>
+      Developed by <span class="developer-credit">SSS IT | OFFICE CENTRAL</span>&nbsp&nbsp<span class="tagline"></span>
     </div>
   </div>
 </footer>

@@ -22,6 +22,7 @@ public class ScholarshipBean implements Serializable {
     private String spouseWorkingGroupCompanies;
 
     private String collegeName;
+    private String placeCollege;
     private String course;
     private String presentYear;
 
@@ -152,6 +153,14 @@ public class ScholarshipBean implements Serializable {
         this.collegeName = collegeName;
     }
 
+    public String getPlaceCollege() {
+        return placeCollege;
+    }
+
+    public void setPlaceCollege(String placeCollege) {
+        this.placeCollege = placeCollege;
+    }
+
     public String getCourse() {
         return course;
     }
@@ -224,7 +233,6 @@ public class ScholarshipBean implements Serializable {
         this.branchName = branchName;
     }
 
-    // Getters and Setters modified for byte[]
     public byte[] getPreviousAyMarksCard() {
         return previousAyMarksCard;
     }
