@@ -500,6 +500,7 @@
         <span class="user-name"><%= userss != null ? userss : "User" %></span>
         <% if (roless != null && !roless.trim().isEmpty()) { %>
           <span class="user-role"><%= roless %></span>
+          <span class="user-role"><%= branchs %></span>
         <% } %>
       </div>
       <a href="Logout.jsp" class="logout-btn" title="Sign out of system">
