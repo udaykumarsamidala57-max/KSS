@@ -586,7 +586,7 @@ try {
       <div class="sidebar-body">
         <div class="deadline-box">
           <div class="deadline-label">Last Date for Submission</div>
-          <div class="deadline-date">31st August 2026</div>
+          <div class="deadline-date">30 September 2026</div>
         </div>
         <p style="font-size: 11px; text-align: center; color: var(--slds-text-secondary); margin-top: 8px;">
           Late or incomplete applications will not be processed.

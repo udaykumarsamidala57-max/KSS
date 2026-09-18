@@ -476,17 +476,17 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="approvedList.jsp" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
+            <a href="#" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
               Approved List
             </a>
           </li>
           <li>
-            <a href="rejectedList.jsp" class="<%= currentURI.contains("rejectedList.jsp") ? "active" : "" %>">
+            <a href="#" class="<%= currentURI.contains("rejectedList.jsp") ? "active" : "" %>">
               Rejected List
             </a>
           </li>
           <li>
-            <a href="reimbursement.jsp" class="<%= currentURI.contains("reimbursement.jsp") ? "active" : "" %>">
+            <a href="#" class="<%= currentURI.contains("reimbursement.jsp") ? "active" : "" %>">
               Reimbursement
             </a>
           </li>
