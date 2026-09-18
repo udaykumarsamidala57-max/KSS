@@ -1,4 +1,3 @@
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.Bean.ScholarshipBean"%>
 <%
@@ -9,6 +8,32 @@
     }
 
     ScholarshipBean bean = (ScholarshipBean) request.getAttribute("bean");
+
+    // Helper method logic to safely validate string content inside scriptlet scope
+    boolean isFormComplete = false;
+    if (bean != null) {
+        boolean empValid = bean.getOrgName() != null && !bean.getOrgName().trim().isEmpty()
+            && bean.getEmpNo() != null && !bean.getEmpNo().trim().isEmpty()
+            && bean.getEmpName() != null && !bean.getEmpName().trim().isEmpty()
+            && bean.getDesignation() != null && !bean.getDesignation().trim().isEmpty();
+
+        boolean studentValid = bean.getChildrenName() != null && !bean.getChildrenName().trim().isEmpty()
+            && bean.getDob() != null && !bean.getDob().trim().isEmpty()
+            && bean.getGender() != null && !bean.getGender().trim().isEmpty()
+            && bean.getRelationship() != null && !bean.getRelationship().trim().isEmpty();
+
+        boolean academicValid = bean.getCollegeName() != null && !bean.getCollegeName().trim().isEmpty()
+            && bean.getCourse() != null && !bean.getCourse().trim().isEmpty()
+            && bean.getPresentYear() != null && !bean.getPresentYear().trim().isEmpty();
+
+        boolean bankValid = bean.getEmployeeNamePassbook() != null && !bean.getEmployeeNamePassbook().trim().isEmpty()
+            && bean.getBankAccountNo() != null && !bean.getBankAccountNo().trim().isEmpty()
+            && bean.getIfscCode() != null && !bean.getIfscCode().trim().isEmpty()
+            && bean.getBankName() != null && !bean.getBankName().trim().isEmpty()
+            && bean.getBranchName() != null && !bean.getBranchName().trim().isEmpty();
+
+        isFormComplete = empValid && studentValid && academicValid && bankValid;
+    }
 %>
 
 <!DOCTYPE html>
@@ -322,6 +347,17 @@
     }
   }
 </style>
+
+<script>
+  function handlePrintAction(applicationId) {
+    var isComplete = <%= isFormComplete %>;
+    if (isComplete) {
+      location.href = 'printScholarshipApplication.jsp?id=' + applicationId;
+    } else {
+      alert('Please fill all the details (Sections 1 through 4 including Bank Account Details) before printing.');
+    }
+  }
+</script>
 </head>
 
 <body>
@@ -352,11 +388,9 @@
         <div class="slds-page-header__subtitle">Record ID: #<%=bean.getId()%> | <%=bean.getEmpName()%></div>
       </div>
       <div class="no-print" style="display: flex; gap: 8px;">
-        <button
-    onclick="location.href='printScholarshipApplication.jsp?id=<%=bean.getId()%>';"
-    class="btn">
-    🖨 Print Application
-</button>
+        <button type="button" onclick="handlePrintAction('<%=bean.getId()%>')" class="btn">
+          🖨 Print Application
+        </button>
         <a href="ScholarshipListServelt" class="btn btn-secondary">Back to List</a>
       </div>
     </div>
