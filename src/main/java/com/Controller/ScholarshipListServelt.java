@@ -36,6 +36,7 @@ public class ScholarshipListServelt extends HttpServlet {
 	        String users = (String) sess.getAttribute("username");
 	        String roles = (String) sess.getAttribute("role");
 	        String depts = (String) sess.getAttribute("department");
+	        String branch = (String) sess.getAttribute("branch");
 		String action = request.getParameter("action");
 
 		if (action == null) {
@@ -69,7 +70,7 @@ public class ScholarshipListServelt extends HttpServlet {
 				break;
 
 			default:
-				List<ScholarshipBean> list = dao.getAllScholarships(roles, depts, users);
+				List<ScholarshipBean> list = dao.getAllScholarships(branch,roles, depts, users);
 				request.setAttribute("list", list);
 				RequestDispatcher listPage = request.getRequestDispatcher("/scholarshipList.jsp");
 				listPage.forward(request, response);

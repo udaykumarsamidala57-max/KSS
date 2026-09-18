@@ -8,6 +8,7 @@
     String userss = (String) sesso.getAttribute("username");
     String roless = (String) sesso.getAttribute("role");
     String deptss = (String) sesso.getAttribute("department");
+    String branchs = (String) sesso.getAttribute("branch");
 %>
 <style>
   /* Scoped Variables & Isolated CSS to prevent leaking into main page body */
@@ -434,18 +435,20 @@
           Scholarship List
         </a>
       </li>
+      <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
         <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
           Organization Master
         </a>
       </li>
+       <% } %>
       <li>
         <a href="scholarshipDocumentStatus.jsp" class="<%= currentURI.contains("scholarshipDocumentStatus.jsp") ? "active" : "" %>">
           Document Status
         </a>
       </li>
       
-      <!-- Dropdown Item: Verification & Approvals Actions -->
+      <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
         <a href="#" class="dropdown-toggle <%= isApprovalActive ? "active" : "" %>" onclick="return false;">
           Approvals
@@ -456,14 +459,16 @@
               Approve Documents
             </a>
           </li>
+          
           <li>
             <a href="approveScholarship.jsp" class="<%= currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
               Approve Scholarship
             </a>
           </li>
+         
         </ul>
       </li>
-
+ <% } %>
       <!-- Dropdown Item: Status Summaries & Lists Reports -->
       <li>
         <a href="#" class="dropdown-toggle <%= isReportsActive ? "active" : "" %>" onclick="return false;">

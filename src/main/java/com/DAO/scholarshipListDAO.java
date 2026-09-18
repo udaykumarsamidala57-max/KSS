@@ -12,7 +12,7 @@ import com.Bean.ScholarshipBean;
 public class scholarshipListDAO {
 
     // Get All Records
-	public List<ScholarshipBean> getAllScholarships(String role, String department, String username) {
+	public List<ScholarshipBean> getAllScholarships(String branch, String role, String department, String username) {
         List<ScholarshipBean> list = new ArrayList<>();
     
         try {
@@ -35,7 +35,7 @@ public class scholarshipListDAO {
 
                 ps = con.prepareStatement(
                     "SELECT * FROM kss_student_scholarship WHERE org_name=? ORDER BY id DESC");
-                ps.setString(1, role);
+                ps.setString(1, branch);
             }
 
             ResultSet rs = ps.executeQuery();

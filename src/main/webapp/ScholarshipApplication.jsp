@@ -7,6 +7,7 @@
         return;
     }
     String roles = (String) sess.getAttribute("role");
+    String branch = (String) sess.getAttribute("branch");
 %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
@@ -59,7 +60,7 @@
     align-items: flex-start;
   }
 
-  /* Form Main Container Container */
+  /* Form Main Container */
   .main-form-area {
     flex: 1;
     display: flex;
@@ -85,31 +86,9 @@
     gap: 12px;
   }
 
-  .slds-icon-box {
-    width: 38px;
-    height: 38px;
-    background-color: #4bca81;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 18px;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2);
-  }
-
   .slds-header-details {
     display: flex;
     flex-direction: column;
-  }
-
-  .slds-header-subtitle {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--slds-text-secondary);
-    letter-spacing: 0.5px;
   }
 
   .slds-header-title {
@@ -388,9 +367,7 @@
     <!-- PAGE HEADER BAR -->
     <div class="slds-page-header">
       <div class="slds-header-title-wrapper">
-      
         <div class="slds-header-details">
-          
           <h1 class="slds-header-title">Scholarship Application Form</h1>
         </div>
       </div>
@@ -407,53 +384,52 @@
             <label>Organization Name <span class="required">*</span></label>
             <select name="orgName" required>
               <option value="">-- Select Organization --</option>
-             <%
+<%
 Connection con = null;
 PreparedStatement ps = null;
 ResultSet rs = null;
 
 try {
-
     con = DBUtil.getConnection();
 
     if ("Global".equalsIgnoreCase(roles)) {
-
         ps = con.prepareStatement(
             "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
-
     } else {
-
+        // Case-insensitive and trimmed comparison to handle value/whitespace mismatches
         ps = con.prepareStatement(
-            "SELECT org_name FROM organization_master WHERE status='Active' AND org_name=? ORDER BY org_name");
-
-        ps.setString(1, roles);
+            "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
+        ps.setString(1, branch != null ? branch.trim() : "");
     }
 
     rs = ps.executeQuery();
+    boolean hasRows = false;
 
     while (rs.next()) {
+        hasRows = true;
+        String orgName = rs.getString("org_name");
 %>
+              <option value="<%= orgName %>"><%= orgName %></option>
+<%
+    }
 
-<option value="<%= rs.getString("org_name") %>">
-    <%= rs.getString("org_name") %>
-</option>
-
+    // Fallback if non-Global branch doesn't match any row in organization_master
+    if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
+%>
+              <option value="<%= branch.trim() %>" selected><%= branch.trim() %></option>
 <%
     }
 
 } catch (Exception e) {
-
     e.printStackTrace();
-    out.println("<option>Error Loading Organizations</option>");
-
+    out.println("<option value=''>Error Loading Organizations</option>");
 } finally {
-
-    if (rs != null) rs.close();
-    if (ps != null) ps.close();
-    if (con != null) con.close();
+    if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
+    if (ps != null) try { ps.close(); } catch (SQLException ignore) {}
+    if (con != null) try { con.close(); } catch (SQLException ignore) {}
 }
 %>
-</select>
+            </select>
           </div>
 
           <div class="form-group">
