@@ -423,6 +423,10 @@
             <span class="slds-item-value"><%=bean.getEmpName()%></span>
           </div>
           <div class="slds-detail-item">
+            <span class="slds-item-label">Employee Contact</span>
+            <span class="slds-item-value"><%=bean.getEmpContact()%></span>
+          </div>
+          <div class="slds-detail-item">
             <span class="slds-item-label">Designation</span>
             <span class="slds-item-value"><%=bean.getDesignation()%></span>
           </div>
@@ -491,10 +495,16 @@
             <span class="slds-item-value"><%=bean.getPreviousAyPercentage()%>%</span>
           </div>
           <div class="slds-detail-item">
-            <span class="slds-item-label">Fee Amount (Current AY)</span>
+            <span class="slds-item-label">Total Fee Amount (Current AY)</span>
             <span class="slds-item-value">₹<%=bean.getFeeAmountCurrentAy()%></span>
           </div>
+          <div class="slds-detail-item">
+            <span class="slds-item-label">Actual Fee Amount Paid(Current AY)</span>
+            <span class="slds-item-value">₹<%=bean.getActualFeePaid()%></span>
+          </div>
         </div>
+        
+        
 
       </div>
       <!-- END PRINTABLE AREA -->

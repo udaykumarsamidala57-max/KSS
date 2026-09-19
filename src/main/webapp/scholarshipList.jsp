@@ -511,6 +511,7 @@ if (list != null) {
             <th>Emp No</th>
             <th>Emp Name</th>
             <th>Designation</th>
+            <th>Emp Contact</th>
             <th>Spouse SMIORE</th>
             <th>Spouse Group</th>
             <th>Child Name</th>
@@ -521,6 +522,7 @@ if (list != null) {
             <th>College Name</th>
             <th>Place of College</th>
             <th>Course</th>
+            <th>Actual Fee Paid</th>
             <th style="text-align: center;">Actions</th>
           </tr>
         </thead>
@@ -536,6 +538,7 @@ if(list != null && !list.isEmpty()){
             <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
             <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
             <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>
+            <td><%=bean.getEmpContact() != null ? bean.getEmpContact() : ""%></td>
             <td><%=bean.getSpouseWorkingSMIORE() != null ? bean.getSpouseWorkingSMIORE() : ""%></td>
             <td><%=bean.getSpouseWorkingGroupCompanies() != null ? bean.getSpouseWorkingGroupCompanies() : ""%></td>
             <td><%=bean.getChildrenName() != null ? bean.getChildrenName() : ""%></td>
@@ -546,6 +549,7 @@ if(list != null && !list.isEmpty()){
             <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
             <td><%=bean.getPlaceCollege() != null ? bean.getPlaceCollege() : ""%></td>
             <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
+            <td><%=bean.getActualFeePaid()%></td>
          
             <td class="action-cell">
               <a href="ScholarshipViewServlet?id=<%=bean.getId()%>" class="slds-btn slds-btn-neutral" style="height:26px; padding:0 10px; font-size:11px;">View</a>
@@ -557,6 +561,7 @@ if(list != null && !list.isEmpty()){
                   '<%=escapeJs(bean.getEmpNo())%>',
                   '<%=escapeJs(bean.getEmpName())%>',
                   '<%=escapeJs(bean.getDesignation())%>',
+                  '<%=escapeJs(bean.getEmpContact())%>',
                   '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
                   '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
                   '<%=escapeJs(bean.getChildrenName())%>',
@@ -570,6 +575,7 @@ if(list != null && !list.isEmpty()){
                   '<%=escapeJs(bean.getPresentYear())%>',
                   '<%=bean.getPreviousAyPercentage()%>',
                   '<%=bean.getFeeAmountCurrentAy()%>',
+                  '<%=bean.getActualFeePaid()%>',
                   '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
                   '<%=escapeJs(bean.getBankAccountNo())%>',
                   '<%=escapeJs(bean.getIfscCode())%>',
@@ -591,13 +597,13 @@ if(list != null && !list.isEmpty()){
 } else {
 %>
           <tr id="emptyRow">
-            <td colspan="16" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
+            <td colspan="18" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
           </tr>
 <%
 }
 %>
           <tr id="noMatchingRow" style="display: none;">
-            <td colspan="16" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found for Selected Organization</td>
+            <td colspan="18" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found for Selected Organization</td>
           </tr>
         </tbody>
       </table>
@@ -641,6 +647,11 @@ if(list != null && !list.isEmpty()){
           <div class="slds-form-element">
             <label for="edit_designation">Designation</label>
             <input type="text" id="edit_designation" name="designation">
+          </div>
+
+          <div class="slds-form-element">
+            <label for="edit_empContact">Employee Contact</label>
+            <input type="text" id="edit_empContact" name="empContact">
           </div>
 
           <div class="slds-form-element">
@@ -733,6 +744,11 @@ if(list != null && !list.isEmpty()){
             <label for="edit_feeAmountCurrentAy">Fee Amount for Current AY</label>
             <input type="number" step="0.01" id="edit_feeAmountCurrentAy" name="feeAmountCurrentAy">
           </div>
+
+          <div class="slds-form-element">
+            <label for="edit_actualFeePaid">Actual Fee Paid</label>
+            <input type="number" step="0.01" id="edit_actualFeePaid" name="actualFeePaid">
+          </div>
         </div>
 
         <div class="slds-section-title">4. Bank Account Details</div>
@@ -803,9 +819,9 @@ if(list != null && !list.isEmpty()){
 
   // Edit Modal Functions
   function openEditModal(
-    id, orgName, empNo, empName, designation, spouseSMIORE, spouseGroup,
+    id, orgName, empNo, empName, designation, empContact, spouseSMIORE, spouseGroup,
     childrenName, dob, gender, relationship, childOrder,
-    collegeName, placeCollege, course, presentYear, previousAyPercentage, feeAmountCurrentAy,
+    collegeName, placeCollege, course, presentYear, previousAyPercentage, feeAmountCurrentAy, actualFeePaid,
     employeeNamePassbook, bankAccountNo, ifscCode, bankName, branchName
   ) {
     document.getElementById('edit_id').value = id;
@@ -813,6 +829,7 @@ if(list != null && !list.isEmpty()){
     document.getElementById('edit_empNo').value = empNo;
     document.getElementById('edit_empName').value = empName;
     document.getElementById('edit_designation').value = designation;
+    document.getElementById('edit_empContact').value = empContact;
     document.getElementById('edit_spouseWorkingSMIORE').value = spouseSMIORE || "No";
     document.getElementById('edit_spouseWorkingGroupCompanies').value = spouseGroup || "No";
 
@@ -828,6 +845,7 @@ if(list != null && !list.isEmpty()){
     document.getElementById('edit_presentYear').value = presentYear;
     document.getElementById('edit_previousAyPercentage').value = previousAyPercentage;
     document.getElementById('edit_feeAmountCurrentAy').value = feeAmountCurrentAy;
+    document.getElementById('edit_actualFeePaid').value = actualFeePaid;
 
     document.getElementById('edit_employeeNamePassbook').value = employeeNamePassbook;
     document.getElementById('edit_bankAccountNo').value = bankAccountNo;

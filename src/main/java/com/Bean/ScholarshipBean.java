@@ -11,6 +11,7 @@ public class ScholarshipBean implements Serializable {
     private String empNo;
     private String empName;
     private String designation;
+    private String empContact; // New field for emp_contact VARCHAR(45)
 
     private String childrenName;
     private String dob;
@@ -28,6 +29,7 @@ public class ScholarshipBean implements Serializable {
 
     private double previousAyPercentage;
     private double feeAmountCurrentAy;
+    private double actualFeePaid; // New field for actual_fee_paid DECIMAL(12)
 
     private String employeeNamePassbook;
     private String bankAccountNo;
@@ -87,6 +89,14 @@ public class ScholarshipBean implements Serializable {
 
     public void setDesignation(String designation) {
         this.designation = designation;
+    }
+
+    public String getEmpContact() {
+        return empContact;
+    }
+
+    public void setEmpContact(String empContact) {
+        this.empContact = empContact;
     }
 
     public String getChildrenName() {
@@ -191,6 +201,14 @@ public class ScholarshipBean implements Serializable {
 
     public void setFeeAmountCurrentAy(double feeAmountCurrentAy) {
         this.feeAmountCurrentAy = feeAmountCurrentAy;
+    }
+
+    public double getActualFeePaid() {
+        return actualFeePaid;
+    }
+
+    public void setActualFeePaid(double actualFeePaid) {
+        this.actualFeePaid = actualFeePaid;
     }
 
     public String getEmployeeNamePassbook() {

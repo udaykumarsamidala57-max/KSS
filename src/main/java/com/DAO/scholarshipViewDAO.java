@@ -36,6 +36,7 @@ public class scholarshipViewDAO {
                 bean.setOrgName(rs.getString("org_name"));
                 bean.setEmpNo(rs.getString("emp_no"));
                 bean.setEmpName(rs.getString("emp_name"));
+                bean.setEmpContact(rs.getString("emp_contact"));
                 bean.setDesignation(rs.getString("designation"));
                 bean.setSpouseWorkingSMIORE(rs.getString("spouse_working_smiore"));
                 bean.setSpouseWorkingGroupCompanies(rs.getString("spouse_working_group_companies"));
@@ -54,6 +55,8 @@ public class scholarshipViewDAO {
                 bean.setPresentYear(rs.getString("present_year"));
                 bean.setPreviousAyPercentage(rs.getDouble("previous_ay_percentage"));
                 bean.setFeeAmountCurrentAy(rs.getDouble("fee_amount_current_ay"));
+                bean.setFeeAmountCurrentAy(rs.getDouble("actual_fee_paid"));
+                
                 
                 // Bank Details
                 bean.setEmployeeNamePassbook(rs.getString("employee_name_passbook"));

@@ -63,7 +63,7 @@ public class ScholarshipListServelt extends HttpServlet {
 					request.setAttribute("bean", bean);
 				}
 				
-				// Forwarding back to list page to let the modal pop up with data if desired
+				// Forwarding back to form/modal page with populate data
 				RequestDispatcher edit = request.getRequestDispatcher("/ScholarshipApplication.jsp");
 				edit.forward(request, response);
 				break;
@@ -105,6 +105,9 @@ public class ScholarshipListServelt extends HttpServlet {
 				bean.setEmpNo(request.getParameter("empNo"));
 				bean.setEmpName(request.getParameter("empName"));
 				bean.setDesignation(request.getParameter("designation"));
+				
+				// Added Field: empContact
+				bean.setEmpContact(request.getParameter("empContact"));
 
 				bean.setChildrenName(request.getParameter("childrenName"));
 				bean.setDob(request.getParameter("dob"));
@@ -132,6 +135,14 @@ public class ScholarshipListServelt extends HttpServlet {
 					bean.setFeeAmountCurrentAy(Double.parseDouble(fee));
 				} else {
 					bean.setFeeAmountCurrentAy(0.0);
+				}
+
+				// Added Field: actualFeePaid
+				String actualFee = request.getParameter("actualFeePaid");
+				if (actualFee != null && !actualFee.trim().isEmpty()) {
+					bean.setActualFeePaid(Double.parseDouble(actualFee));
+				} else {
+					bean.setActualFeePaid(0.0);
 				}
 
 				bean.setEmployeeNamePassbook(request.getParameter("employeeNamePassbook"));

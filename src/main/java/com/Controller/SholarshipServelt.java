@@ -35,6 +35,7 @@ public class SholarshipServelt extends HttpServlet {
         bean.setEmpNo(request.getParameter("empNo"));
         bean.setEmpName(request.getParameter("empName"));
         bean.setDesignation(request.getParameter("designation"));
+        bean.setEmpContact(request.getParameter("empContact")); // Added empContact
 
         // Student Details
         bean.setChildrenName(request.getParameter("childrenName"));
@@ -63,6 +64,12 @@ public class SholarshipServelt extends HttpServlet {
         String fee = request.getParameter("feeAmountCurrentAy");
         if (fee != null && !fee.trim().isEmpty()) {
             bean.setFeeAmountCurrentAy(Double.parseDouble(fee));
+        }
+
+        // Actual Fee Paid
+        String actualFee = request.getParameter("actualFeePaid"); // Added actualFeePaid
+        if (actualFee != null && !actualFee.trim().isEmpty()) {
+            bean.setActualFeePaid(Double.parseDouble(actualFee));
         }
 
         // Bank Details

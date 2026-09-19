@@ -24,6 +24,7 @@ public class SholrarshipDAO {
                     + "emp_no,"
                     + "emp_name,"
                     + "designation,"
+                    + "emp_contact," // Added column 5
                     + "children_name,"
                     + "dob,"
                     + "gender,"
@@ -37,13 +38,14 @@ public class SholrarshipDAO {
                     + "present_year,"
                     + "previous_ay_percentage,"
                     + "fee_amount_current_ay,"
+                    + "actual_fee_paid," // Added column 19
                     + "employee_name_passbook,"
                     + "bank_account_no,"
                     + "ifsc_code,"
                     + "bank_name,"
                     + "branch_name"
                     
-                    + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"; // 24 placeholders
 
             ps = con.prepareStatement(sql);
 
@@ -51,29 +53,31 @@ public class SholrarshipDAO {
             ps.setString(2, bean.getEmpNo());
             ps.setString(3, bean.getEmpName());
             ps.setString(4, bean.getDesignation());
+            ps.setString(5, bean.getEmpContact()); // Added parameter mapping
 
-            ps.setString(5, bean.getChildrenName());
-            ps.setString(6, bean.getDob());
-            ps.setString(7, bean.getGender());
-            ps.setString(8, bean.getRelationship());
-            ps.setString(9, bean.getChildOrder());
+            ps.setString(6, bean.getChildrenName());
+            ps.setString(7, bean.getDob());
+            ps.setString(8, bean.getGender());
+            ps.setString(9, bean.getRelationship());
+            ps.setString(10, bean.getChildOrder());
 
-            ps.setString(10, bean.getSpouseWorkingSMIORE());
-            ps.setString(11, bean.getSpouseWorkingGroupCompanies());
+            ps.setString(11, bean.getSpouseWorkingSMIORE());
+            ps.setString(12, bean.getSpouseWorkingGroupCompanies());
 
-            ps.setString(12, bean.getCollegeName());
-            ps.setString(13, bean.getPlaceCollege());
-            ps.setString(14, bean.getCourse());
-            ps.setString(15, bean.getPresentYear());
+            ps.setString(13, bean.getCollegeName());
+            ps.setString(14, bean.getPlaceCollege());
+            ps.setString(15, bean.getCourse());
+            ps.setString(16, bean.getPresentYear());
 
-            ps.setDouble(16, bean.getPreviousAyPercentage());
-            ps.setDouble(17, bean.getFeeAmountCurrentAy());
+            ps.setDouble(17, bean.getPreviousAyPercentage());
+            ps.setDouble(18, bean.getFeeAmountCurrentAy());
+            ps.setDouble(19, bean.getActualFeePaid()); // Added parameter mapping
 
-            ps.setString(18, bean.getEmployeeNamePassbook());
-            ps.setString(19, bean.getBankAccountNo());
-            ps.setString(20, bean.getIfscCode());
-            ps.setString(21, bean.getBankName());
-            ps.setString(22, bean.getBranchName());
+            ps.setString(20, bean.getEmployeeNamePassbook());
+            ps.setString(21, bean.getBankAccountNo());
+            ps.setString(22, bean.getIfscCode());
+            ps.setString(23, bean.getBankName());
+            ps.setString(24, bean.getBranchName());
 
             int i = ps.executeUpdate();
 

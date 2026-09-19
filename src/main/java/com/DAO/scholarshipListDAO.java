@@ -11,71 +11,74 @@ import com.Bean.ScholarshipBean;
 
 public class scholarshipListDAO {
 
+    // Helper method to map ResultSet row to ScholarshipBean
+    private ScholarshipBean mapResultSetToBean(ResultSet rs) throws Exception {
+        ScholarshipBean bean = new ScholarshipBean();
+        bean.setId(rs.getInt("id"));
+        bean.setOrgName(rs.getString("org_name"));
+        bean.setEmpNo(rs.getString("emp_no"));
+        bean.setEmpName(rs.getString("emp_name"));
+        bean.setDesignation(rs.getString("designation"));
+
+        // Added Field
+        bean.setEmpContact(rs.getString("emp_contact"));
+
+        bean.setChildrenName(rs.getString("children_name"));
+        bean.setDob(rs.getString("dob"));
+        bean.setGender(rs.getString("gender"));
+        bean.setRelationship(rs.getString("relationship"));
+        bean.setChildOrder(rs.getString("child_order"));
+
+        bean.setSpouseWorkingSMIORE(rs.getString("spouse_working_smiore"));
+        bean.setSpouseWorkingGroupCompanies(rs.getString("spouse_working_group_companies"));
+
+        bean.setCollegeName(rs.getString("college_name"));
+        bean.setPlaceCollege(rs.getString("place_college"));
+        bean.setCourse(rs.getString("course"));
+        bean.setPresentYear(rs.getString("present_year"));
+
+        bean.setPreviousAyPercentage(rs.getDouble("previous_ay_percentage"));
+        bean.setFeeAmountCurrentAy(rs.getDouble("fee_amount_current_ay"));
+        
+        // Added Field
+        bean.setActualFeePaid(rs.getDouble("actual_fee_paid"));
+
+        bean.setEmployeeNamePassbook(rs.getString("employee_name_passbook"));
+        bean.setBankAccountNo(rs.getString("bank_account_no"));
+        bean.setIfscCode(rs.getString("ifsc_code"));
+        bean.setBankName(rs.getString("bank_name"));
+        bean.setBranchName(rs.getString("branch_name"));
+
+        return bean;
+    }
+
     // Get All Records
     public List<ScholarshipBean> getAllScholarships(String branch, String role, String department, String username) {
         List<ScholarshipBean> list = new ArrayList<>();
-    
-        try {
-            Connection con = DBUtil.getConnection();
+        String sql;
 
-            PreparedStatement ps;
+        if ("Global".equalsIgnoreCase(role)) {
+            sql = "SELECT * FROM kss_student_scholarship ORDER BY id DESC";
+        } else if ("HR".equalsIgnoreCase(role)) {
+            sql = "SELECT * FROM kss_student_scholarship WHERE department=? ORDER BY id DESC";
+        } else {
+            sql = "SELECT * FROM kss_student_scholarship WHERE org_name=? ORDER BY id DESC";
+        }
 
-            if ("Global".equalsIgnoreCase(role)) {
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
-                ps = con.prepareStatement(
-                    "SELECT * FROM kss_student_scholarship ORDER BY id DESC");
-
-            } else if ("HR".equalsIgnoreCase(role)) {
-
-                ps = con.prepareStatement(
-                    "SELECT * FROM kss_student_scholarship WHERE department=? ORDER BY id DESC");
+            if ("HR".equalsIgnoreCase(role)) {
                 ps.setString(1, department);
-
-            } else {
-
-                ps = con.prepareStatement(
-                    "SELECT * FROM kss_student_scholarship WHERE org_name=? ORDER BY id DESC");
+            } else if (!"Global".equalsIgnoreCase(role)) {
                 ps.setString(1, branch);
             }
 
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                ScholarshipBean bean = new ScholarshipBean();
-                bean.setId(rs.getInt("id"));
-                bean.setOrgName(rs.getString("org_name"));
-                bean.setEmpNo(rs.getString("emp_no"));
-                bean.setEmpName(rs.getString("emp_name"));
-                bean.setDesignation(rs.getString("designation"));
-
-                bean.setChildrenName(rs.getString("children_name"));
-                bean.setDob(rs.getString("dob"));
-                bean.setGender(rs.getString("gender"));
-                bean.setRelationship(rs.getString("relationship"));
-                bean.setChildOrder(rs.getString("child_order"));
-
-                bean.setSpouseWorkingSMIORE(rs.getString("spouse_working_smiore"));
-                bean.setSpouseWorkingGroupCompanies(rs.getString("spouse_working_group_companies"));
-
-                bean.setCollegeName(rs.getString("college_name"));
-                bean.setPlaceCollege(rs.getString("place_college"));
-                bean.setCourse(rs.getString("course"));
-                bean.setPresentYear(rs.getString("present_year"));
-
-                bean.setPreviousAyPercentage(rs.getDouble("previous_ay_percentage"));
-                bean.setFeeAmountCurrentAy(rs.getDouble("fee_amount_current_ay"));
-
-                bean.setEmployeeNamePassbook(rs.getString("employee_name_passbook"));
-                bean.setBankAccountNo(rs.getString("bank_account_no"));
-                bean.setIfscCode(rs.getString("ifsc_code"));
-                bean.setBankName(rs.getString("bank_name"));
-                bean.setBranchName(rs.getString("branch_name"));
-
-                list.add(bean);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToBean(rs));
+                }
             }
-            rs.close();
-            ps.close();
-            con.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -84,47 +87,18 @@ public class scholarshipListDAO {
 
     // Get Record By ID
     public ScholarshipBean getScholarshipById(int id) {
-        ScholarshipBean bean = new ScholarshipBean();
-        try {
-            Connection con = DBUtil.getConnection();
-            PreparedStatement ps = con.prepareStatement(
-                    "SELECT * FROM kss_student_scholarship WHERE id=?");
+        ScholarshipBean bean = null;
+        String sql = "SELECT * FROM kss_student_scholarship WHERE id=?";
+
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                bean.setId(rs.getInt("id"));
-                bean.setOrgName(rs.getString("org_name"));
-                bean.setEmpNo(rs.getString("emp_no"));
-                bean.setEmpName(rs.getString("emp_name"));
-                bean.setDesignation(rs.getString("designation"));
-
-                bean.setChildrenName(rs.getString("children_name"));
-                bean.setDob(rs.getString("dob"));
-                bean.setGender(rs.getString("gender"));
-                bean.setRelationship(rs.getString("relationship"));
-                bean.setChildOrder(rs.getString("child_order"));
-
-                bean.setSpouseWorkingSMIORE(rs.getString("spouse_working_smiore"));
-                bean.setSpouseWorkingGroupCompanies(rs.getString("spouse_working_group_companies"));
-
-                bean.setCollegeName(rs.getString("college_name"));
-                bean.setPlaceCollege(rs.getString("place_college"));
-                bean.setCourse(rs.getString("course"));
-                bean.setPresentYear(rs.getString("present_year"));
-
-                bean.setPreviousAyPercentage(rs.getDouble("previous_ay_percentage"));
-                bean.setFeeAmountCurrentAy(rs.getDouble("fee_amount_current_ay"));
-
-                bean.setEmployeeNamePassbook(rs.getString("employee_name_passbook"));
-                bean.setBankAccountNo(rs.getString("bank_account_no"));
-                bean.setIfscCode(rs.getString("ifsc_code"));
-                bean.setBankName(rs.getString("bank_name"));
-                bean.setBranchName(rs.getString("branch_name"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    bean = mapResultSetToBean(rs);
+                }
             }
-            rs.close();
-            ps.close();
-            con.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -134,46 +108,51 @@ public class scholarshipListDAO {
     // Update Existing Record
     public boolean updateScholarship(ScholarshipBean bean) {
         boolean status = false;
-        try {
-            Connection con = DBUtil.getConnection();
-            PreparedStatement ps = con.prepareStatement(
-                    "UPDATE kss_student_scholarship SET "
-                    + "org_name=?, emp_no=?, emp_name=?, designation=?, "
-                    + "children_name=?, dob=?, gender=?, relationship=?, child_order=?, "
-                    + "spouse_working_smiore=?, spouse_working_group_companies=?, "
-                    + "college_name=?, place_college=?, course=?, present_year=?, "
-                    + "previous_ay_percentage=?, fee_amount_current_ay=?, "
-                    + "employee_name_passbook=?, bank_account_no=?, ifsc_code=?, bank_name=?, branch_name=? "
-                    + "WHERE id=?");
+        String sql = "UPDATE kss_student_scholarship SET "
+                   + "org_name=?, emp_no=?, emp_name=?, designation=?, emp_contact=?, "
+                   + "children_name=?, dob=?, gender=?, relationship=?, child_order=?, "
+                   + "spouse_working_smiore=?, spouse_working_group_companies=?, "
+                   + "college_name=?, place_college=?, course=?, present_year=?, "
+                   + "previous_ay_percentage=?, fee_amount_current_ay=?, actual_fee_paid=?, "
+                   + "employee_name_passbook=?, bank_account_no=?, ifsc_code=?, bank_name=?, branch_name=? "
+                   + "WHERE id=?";
+
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, bean.getOrgName());
             ps.setString(2, bean.getEmpNo());
             ps.setString(3, bean.getEmpName());
             ps.setString(4, bean.getDesignation());
-            ps.setString(5, bean.getChildrenName());
-            ps.setString(6, bean.getDob());
-            ps.setString(7, bean.getGender());
-            ps.setString(8, bean.getRelationship());
-            ps.setString(9, bean.getChildOrder());
-            ps.setString(10, bean.getSpouseWorkingSMIORE());
-            ps.setString(11, bean.getSpouseWorkingGroupCompanies());
-            ps.setString(12, bean.getCollegeName());
-            ps.setString(13, bean.getPlaceCollege());
-            ps.setString(14, bean.getCourse());
-            ps.setString(15, bean.getPresentYear());
-            ps.setDouble(16, bean.getPreviousAyPercentage());
-            ps.setDouble(17, bean.getFeeAmountCurrentAy());
-            ps.setString(18, bean.getEmployeeNamePassbook());
-            ps.setString(19, bean.getBankAccountNo());
-            ps.setString(20, bean.getIfscCode());
-            ps.setString(21, bean.getBankName());
-            ps.setString(22, bean.getBranchName());
-            ps.setInt(23, bean.getId());
+            ps.setString(5, bean.getEmpContact());
+
+            ps.setString(6, bean.getChildrenName());
+            ps.setString(7, bean.getDob());
+            ps.setString(8, bean.getGender());
+            ps.setString(9, bean.getRelationship());
+            ps.setString(10, bean.getChildOrder());
+
+            ps.setString(11, bean.getSpouseWorkingSMIORE());
+            ps.setString(12, bean.getSpouseWorkingGroupCompanies());
+
+            ps.setString(13, bean.getCollegeName());
+            ps.setString(14, bean.getPlaceCollege());
+            ps.setString(15, bean.getCourse());
+            ps.setString(16, bean.getPresentYear());
+
+            ps.setDouble(17, bean.getPreviousAyPercentage());
+            ps.setDouble(18, bean.getFeeAmountCurrentAy());
+            ps.setDouble(19, bean.getActualFeePaid());
+
+            ps.setString(20, bean.getEmployeeNamePassbook());
+            ps.setString(21, bean.getBankAccountNo());
+            ps.setString(22, bean.getIfscCode());
+            ps.setString(23, bean.getBankName());
+            ps.setString(24, bean.getBranchName());
+
+            ps.setInt(25, bean.getId());
 
             status = ps.executeUpdate() > 0;
-
-            ps.close();
-            con.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -183,16 +162,13 @@ public class scholarshipListDAO {
     // Delete Record
     public boolean deleteScholarship(int id) {
         boolean status = false;
-        try {
-            Connection con = DBUtil.getConnection();
-            PreparedStatement ps = con.prepareStatement(
-                    "DELETE FROM kss_student_scholarship WHERE id=?");
+        String sql = "DELETE FROM kss_student_scholarship WHERE id=?";
+
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, id);
-
             status = ps.executeUpdate() > 0;
-
-            ps.close();
-            con.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -451,6 +451,11 @@ try {
           </div>
 
           <div class="form-group">
+            <label>Employee Contact No <span class="required">*</span></label>
+            <input type="text" name="empContact" maxlength="45" required placeholder="Enter Contact Number">
+          </div>
+
+          <div class="form-group">
             <label>Spouse Working in SMIORE?</label>
             <select name="spouseWorkingSMIORE">
               <option value="No">No</option>
@@ -458,7 +463,7 @@ try {
             </select>
           </div>
 
-          <div class="form-group full-width">
+          <div class="form-group">
             <label>Spouse Working in Group Companies?</label>
             <select name="spouseWorkingGroupCompanies">
               <option value="No">No</option>
@@ -496,13 +501,13 @@ try {
           </div>
 
           <div class="form-group">
-    <label>Relationship</label>
-    <select name="relationship" class="uppercase-input">
-        <option value="">Select Relationship</option>
-        <option value="SON">SON</option>
-        <option value="DAUGHTER">DAUGHTER</option>
-    </select>
-</div>
+            <label>Relationship</label>
+            <select name="relationship" class="uppercase-input">
+                <option value="">Select Relationship</option>
+                <option value="SON">SON</option>
+                <option value="DAUGHTER">DAUGHTER</option>
+            </select>
+          </div>
 
           <div class="form-group">
             <label>Child Order</label>
@@ -558,6 +563,11 @@ try {
           <div class="form-group">
             <label>Fee Amount for Current AY</label>
             <input type="number" step="0.01" name="feeAmountCurrentAy" placeholder="e.g. 50000.00">
+          </div>
+
+          <div class="form-group full-width">
+            <label>Actual Fee Paid</label>
+            <input type="number" step="0.01" name="actualFeePaid" placeholder="e.g. 45000.00">
           </div>
         </div>
 
