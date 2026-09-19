@@ -815,11 +815,7 @@
             <div class="form-value-box"><%=branchName != null ? branchName : ""%></div>
           </div>
 
-          <div class="form-row">
-            <span class="form-label">Place</span>
-            <span class="form-colon">:</span>
-            <div class="form-value-box">Sandur</div>
-          </div>
+          
         </div>
       </div>
     </div>

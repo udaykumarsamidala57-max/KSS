@@ -652,11 +652,11 @@ try {
       <div class="sidebar-body">
         <div class="contact-item">
           <span class="contact-label">Email Support</span>
-          <span class="contact-val">saritha@sandurschool.com</span>
+          <span class="contact-val">ksevasangha1983@gmail.com</span>
         </div>
         <div class="contact-item">
           <span class="contact-label">Helpdesk Helpline</span>
-          <span class="contact-val">+91 812342967</span>
+          <span class="contact-val">+91 8123429674</span>
         </div>
         <div class="contact-item">
           <span class="contact-label">Office Hours</span>
