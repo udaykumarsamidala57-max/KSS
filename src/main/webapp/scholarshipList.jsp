@@ -587,12 +587,13 @@ if(list != null && !list.isEmpty()){
                   )">
                   Edit
               </button>
-
+               <% if ("Uday".equalsIgnoreCase(users)){%>
               <a class="slds-btn slds-btn-danger" style="height:26px; padding:0 10px; font-size:11px;"
                  href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
                  onclick="return confirm('Are you sure you want to delete this record?');">
                   Delete
               </a>
+              <%} %>
             </td>
           </tr>
 <%
@@ -639,12 +640,12 @@ if(list != null && !list.isEmpty()){
 
           <div class="slds-form-element">
             <label for="edit_empNo">Employee No *</label>
-            <input type="text" id="edit_empNo" name="empNo" required>
+            <input type="text" id="edit_empNo" name="empNo" required readonly>
           </div>
 
           <div class="slds-form-element">
             <label for="edit_empName">Employee Name *</label>
-            <input type="text" id="edit_empName" name="empName" required>
+            <input type="text" id="edit_empName" name="empName" required readonly>
           </div>
 
           <div class="slds-form-element">

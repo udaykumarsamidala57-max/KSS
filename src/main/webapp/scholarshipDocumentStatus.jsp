@@ -121,10 +121,20 @@
     background-color: #f7e8ec;
   }
 
-  /* Interactive Status Link & Badge Styling */
-  .doc-link {
-    text-decoration: none;
+  /* Interactive Form & Badge Styling */
+  .doc-form {
     display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .doc-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-family: inherit;
   }
 
   .status-badge {
@@ -308,9 +318,13 @@ try {
           <!-- Marks Card -->
           <td class="center-align">
             <% if(hasMarks) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=previousAyMarksCard" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="previousAyMarksCard" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -319,9 +333,13 @@ try {
           <!-- KSS Application -->
           <td class="center-align">
             <% if(hasKss) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=kssApplication" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="kssApplication" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -330,9 +348,13 @@ try {
           <!-- Fee Structure -->
           <td class="center-align">
             <% if(hasFeeStruct) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=feeStructure" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="feeStructure" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -341,9 +363,13 @@ try {
           <!-- Fee Receipts -->
           <td class="center-align">
             <% if(hasFeeRec) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=feeReceipts" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="feeReceipts" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -352,9 +378,13 @@ try {
           <!-- Parent ID Copy -->
           <td class="center-align">
             <% if(hasParentId) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=parentAadharCopy" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="parentAadharCopy" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -363,9 +393,13 @@ try {
           <!-- Student ID Copy -->
           <td class="center-align">
             <% if(hasStudentId) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=studentAadharCopy" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="studentAadharCopy" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -374,9 +408,13 @@ try {
           <!-- Bank Passbook -->
           <td class="center-align">
             <% if(hasBank) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=bankPassbookFirstPage" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="bankPassbookFirstPage" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>

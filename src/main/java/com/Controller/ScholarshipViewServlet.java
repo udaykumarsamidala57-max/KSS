@@ -22,13 +22,48 @@ public class ScholarshipViewServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-    	
-    	HttpSession sess = request.getSession(false);
+        
+        // 1. Session Authentication Check
+        HttpSession sess = request.getSession(false);
         if (sess == null || sess.getAttribute("username") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
 
+        // 2. Referer Header Check: Verify request comes from the List page/servlet
+        String referer = request.getHeader("referer");
+        
+        // If referer is null (direct URL typed into address bar) or doesn't originate from the list page, block it
+        if (referer == null || !referer.contains("ScholarshipListServelt")) {
+            response.sendRedirect("ScholarshipListServelt");
+            return;
+        }
+
+        // 3. Process Request
+        processViewRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        // Session Authentication Check
+        HttpSession sess = request.getSession(false);
+        if (sess == null || sess.getAttribute("username") == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        // POST requests directly from forms on the list page are treated as valid
+        processViewRequest(request, response);
+    }
+
+    /**
+     * Helper method to handle application lookup and forwarding
+     */
+    private void processViewRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
         try {
             String idStr = request.getParameter("id");
 
@@ -41,28 +76,26 @@ public class ScholarshipViewServlet extends HttpServlet {
             int id = Integer.parseInt(idStr);
             scholarshipViewDAO dao = new scholarshipViewDAO();
             
-            // Fetches the bean natively containing the text, numeric, and binary file byte arrays (including parentAadhar and studentAadhar)
+            // Fetches the bean containing text, numeric, and binary file byte arrays
             ScholarshipBean bean = dao.getScholarshipById(id);
+
+            if (bean == null) {
+                response.sendRedirect("ScholarshipListServelt");
+                return;
+            }
 
             // Bind the bean payload to the request scope attributes
             request.setAttribute("bean", bean);
             
-            // Forward execution down to the presentation layer view
+            // Forward execution to the presentation layer view
             request.getRequestDispatcher("scholarshipView.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            // Gracefully handle situations where non-numeric parameters are injected into the URI
+            // Handle non-numeric parameter injections
             response.sendRedirect("ScholarshipListServelt");
         } catch (Exception e) {
-            // Standardize deep stack tracing to local servlet container tracking logs
             getServletContext().log("Exception encountered inside ScholarshipViewServlet processing request parameters", e);
             throw new ServletException("Core application error processing scholarship file system retrieval pipeline.", e);
         }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        doGet(request, response);
     }
 }

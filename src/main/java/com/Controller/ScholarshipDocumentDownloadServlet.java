@@ -17,13 +17,27 @@ import com.Bean.DBUtil;
 public class ScholarshipDocumentDownloadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        
+        // 1. Check User Session
         HttpSession sess = request.getSession(false);
         if (sess == null || sess.getAttribute("username") == null) {
             response.sendRedirect("login.jsp");
             return;
         }
+
+        // 2. Block Direct URL Entry via HTTP Referer
+        String referer = request.getHeader("referer");
+        
+        // If referer is null (typed directly into address bar) or not coming from authorized pages, reject access
+        if (referer == null || (!referer.contains("scholarshipDocumentStatus") && 
+                                !referer.contains("scholarshipView") && 
+                                !referer.contains("ScholarshipViewServlet"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Direct access is prohibited. Please access files through the application dashboard.");
+            return;
+        }
+
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -59,7 +73,7 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
 
             con = DBUtil.getConnection();
             
-            // Pull both the binary blob payload AND the associated employee's name field
+            // Query binary file data and associated employee name
             String sql = "SELECT emp_name, " + columnName + " FROM kss_student_scholarship WHERE id = ?";
             ps = con.prepareStatement(sql);
             ps.setInt(1, id);
@@ -94,17 +108,15 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
                     response.setContentType(contentType);
                     response.setContentLength(fileData.length);
                     
-                    // Sanitize employee name to replace spaces/special characters with clean underscores
+                    // Sanitize employee name
                     if (empName == null || empName.trim().isEmpty()) {
                         empName = "Employee";
                     } else {
                         empName = empName.replaceAll("[^a-zA-Z0-9_-]", "_");
                     }
                     
-                    // Combine into naming structure: "ID_EmployeeName_FieldName.extension"
                     String filename = id + "_" + empName + "_" + fieldName + extension;
                     
-                    // "inline" streams directly into browser tab viewer while retaining original download metadata
                     response.setHeader("Content-Disposition", "inline; filename=\"" + filename + "\"");
                     
                     response.getOutputStream().write(fileData);
@@ -126,5 +138,17 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
             try { if(ps != null) ps.close(); } catch(Exception e){}
             try { if(con != null) con.close(); } catch(Exception e){}
         }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        processRequest(request, response);
     }
 }
