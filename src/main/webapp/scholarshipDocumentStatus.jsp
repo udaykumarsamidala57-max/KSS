@@ -212,6 +212,8 @@ try {
     con = DBUtil.getConnection();
     
     String sql;
+    boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
+    boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
 
     if ("Global".equalsIgnoreCase(roles)) {
         sql = "SELECT id, emp_no, emp_name, children_name, " +
@@ -226,6 +228,45 @@ try {
               "ORDER BY emp_no";
 
         ps = con.prepareStatement(sql);
+    } else if (isSandurEducationSociety) {
+        sql = "SELECT id, emp_no, emp_name, children_name, " +
+              "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+              "OCTET_LENGTH(kss_application) AS len_kss, " +
+              "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+              "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+              "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+              "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "FROM kss_student_scholarship " +
+              "WHERE LOWER(TRIM(org_name)) IN (" +
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
+              "ORDER BY emp_no";
+
+        ps = con.prepareStatement(sql);
+        ps.setString(1, "SANDUR EDUCATION SOCIETY");
+        ps.setString(2, "SES VIDYAMANDIR PU COLLEGE");
+        ps.setString(3, "SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
+        ps.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
+        ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
+        ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+    } else if (isSandurHatcheries) {
+        sql = "SELECT id, emp_no, emp_name, children_name, " +
+              "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+              "OCTET_LENGTH(kss_application) AS len_kss, " +
+              "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+              "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+              "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+              "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "FROM kss_student_scholarship " +
+              "WHERE LOWER(TRIM(org_name)) IN (" +
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
+              "ORDER BY emp_no";
+
+        ps = con.prepareStatement(sql);
+        ps.setString(1, "SANDUR HATCHERIES PVT LTD");
+        ps.setString(2, "SANDUR POULTRY FARM");
+        ps.setString(3, "SANDUR POULTRY BREEDERS");
     } else {
         sql = "SELECT id, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
@@ -236,11 +277,11 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
-              "WHERE org_name = ? " +
+              "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) " +
               "ORDER BY emp_no";
 
         ps = con.prepareStatement(sql);
-        ps.setString(1, branch);
+        ps.setString(1, branch != null ? branch.trim() : "");
     }
 
     rs = ps.executeQuery();
@@ -308,7 +349,7 @@ try {
             <% } %>
           </td>
 
-          <!-- Parent Aadhar Copy -->
+          <!-- Parent ID Copy -->
           <td class="center-align">
             <% if(hasParentId) { %>
               <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=parentAadharCopy" target="_blank" class="doc-link" title="View Document">
@@ -319,7 +360,7 @@ try {
             <% } %>
           </td>
 
-          <!-- Student Aadhar Copy -->
+          <!-- Student ID Copy -->
           <td class="center-align">
             <% if(hasStudentId) { %>
               <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=studentAadharCopy" target="_blank" class="doc-link" title="View Document">

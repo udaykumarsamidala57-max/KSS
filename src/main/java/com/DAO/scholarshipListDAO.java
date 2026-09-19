@@ -58,6 +58,7 @@ public class scholarshipListDAO {
         String sql;
 
         boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
+        boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
 
         if ("Global".equalsIgnoreCase(role)) {
             sql = "SELECT * FROM kss_student_scholarship ORDER BY id DESC";
@@ -66,6 +67,10 @@ public class scholarshipListDAO {
         } else if (isSandurEducationSociety) {
             sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
                 + "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) "
+                + "ORDER BY id DESC";
+        } else if (isSandurHatcheries) {
+            sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
+                + "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) "
                 + "ORDER BY id DESC";
         } else {
             sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY id DESC";
@@ -84,6 +89,10 @@ public class scholarshipListDAO {
                     ps.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
                     ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
                     ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+                } else if (isSandurHatcheries) {
+                    ps.setString(1, "SANDUR HATCHERIES PVT LTD");
+                    ps.setString(2, "SANDUR POULTRY FARM");
+                    ps.setString(3, "SANDUR POULTRY BREEDERS");
                 } else {
                     ps.setString(1, branch != null ? branch.trim() : "");
                 }

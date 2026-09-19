@@ -398,6 +398,12 @@ if (branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim())
               <option value="SMIORE HIGH SCHOOL, DEOGIRI">SMIORE HIGH SCHOOL, DEOGIRI</option>
               <option value="SMIORE VYASAPURI HIGHER PRIMARY SCHOOL">SMIORE VYASAPURI HIGHER PRIMARY SCHOOL</option>
 <%
+} else if (branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim())) {
+%>
+              <option value="SANDUR HATCHERIES PVT LTD">SANDUR HATCHERIES PVT LTD</option>
+              <option value="SANDUR POULTRY FARM">SANDUR POULTRY FARM</option>
+              <option value="SANDUR POULTRY BREEDERS">SANDUR POULTRY BREEDERS</option>
+<%
 } else {
     Connection con = null;
     PreparedStatement ps = null;
