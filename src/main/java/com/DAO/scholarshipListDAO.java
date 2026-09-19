@@ -15,6 +15,7 @@ public class scholarshipListDAO {
     private ScholarshipBean mapResultSetToBean(ResultSet rs) throws Exception {
         ScholarshipBean bean = new ScholarshipBean();
         bean.setId(rs.getInt("id"));
+        bean.setApp_no(rs.getString("App_no"));
         bean.setOrgName(rs.getString("org_name"));
         bean.setEmpNo(rs.getString("emp_no"));
         bean.setEmpName(rs.getString("emp_name"));

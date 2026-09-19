@@ -507,6 +507,7 @@ if (list != null) {
         <thead>
           <tr>
             <th>ID</th>
+            <th>App No</th>
             <th>Organization</th>
             <th>Emp No</th>
             <th>Emp Name</th>
@@ -534,7 +535,9 @@ if(list != null && !list.isEmpty()){
 %>
           <tr class="app-row" data-org="<%= orgVal %>">
             <td><%=bean.getId()%></td>
+            <td><strong><%=bean.getApp_no() != null ? bean.getApp_no() : ""%></strong></td>
             <td><%=orgVal%></td>
+            
             <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
             <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
             <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>

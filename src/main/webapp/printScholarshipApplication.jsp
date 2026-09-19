@@ -77,6 +77,7 @@
     boolean recordFound = false;
     
     int id = 0;
+    String appno="";
     String orgName = "", empNo = "", empName = "", designation = "";
     String childrenName = "", dob = "", gender = "", relationship = "", childOrder = "";
     String spouseWorkingSmiore = "", spouseWorkingGroupCompanies = "";
@@ -101,7 +102,7 @@
 
         try {
             conn = DBUtil.getConnection();
-            String query = "SELECT id, org_name, emp_no, emp_name, designation, children_name, dob, gender, " +
+            String query = "SELECT id, App_no,org_name, emp_no, emp_name, designation, children_name, dob, gender, " +
                            "relationship, child_order, spouse_working_smiore, spouse_working_group_companies, " +
                            "college_name, course, present_year, previous_ay_percentage, fee_amount_current_ay, " +
                            "employee_name_passbook, bank_account_no, ifsc_code, bank_name, branch_name, " +
@@ -121,6 +122,7 @@
             if (rs.next()) {
                 recordFound = true;
                 id = rs.getInt("id");
+                appno = rs.getString("App_no");
                 orgName = rs.getString("org_name");
                 empNo = rs.getString("emp_no");
                 empName = rs.getString("emp_name");
@@ -653,10 +655,12 @@
         <div class="org-subtitle">(Regd. No:16 of 1983-84 dated 21.04.1983)<br>Shivapur, Palace Road, Sandur - 583119, Ballari Dist., Karnataka</div>
         <div class="doc-title">Sandur Vidya Protsaha Scholarship</div>
         <div class="doc-subtext">(Higher Education - Under Auspicious SMIORE CSR)</div>
+           <br>Application Number:<b>  <%=appno%></b>
       </div>
 
       <!-- Photos Container -->
       <div class="header-photos-flex">
+      
         <div class="photo-frame">
           <div class="photo-box-space">Affix Passport<br>Size Photo<br>Here</div>
           <div class="photo-caption">Student</div>
@@ -667,11 +671,12 @@
         </div>
       </div>
     </div>
-
+    
     <!-- 1. PARTICULARS SECTION -->
     <div class="boxed-section">
+    
       <div class="two-column-layout">
-        
+   
         <!-- Left Column: Student Particulars -->
         <div class="col-half">
           <div class="section-heading-row">Student Particulars :</div>

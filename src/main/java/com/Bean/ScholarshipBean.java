@@ -7,6 +7,7 @@ public class ScholarshipBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int id;
+    private String App_no;
     private String orgName;
     private String empNo;
     private String empName;
@@ -57,6 +58,14 @@ public class ScholarshipBean implements Serializable {
 
     public void setId(int id) {
         this.id = id;
+    }
+    
+    public String getApp_no() {
+        return App_no;
+    }
+
+    public void setApp_no(String App_no) {
+        this.App_no = App_no;
     }
 
     public String getOrgName() {
