@@ -390,46 +390,56 @@
             <select name="orgName" required>
               <option value="">-- Select Organization --</option>
 <%
-Connection con = null;
-PreparedStatement ps = null;
-ResultSet rs = null;
+if (branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim())) {
+%>
+              <option value="SES VIDYAMANDIR PU COLLEGE">SES VIDYAMANDIR PU COLLEGE</option>
+              <option value="SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI">SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI</option>
+              <option value="SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI">SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI</option>
+              <option value="SMIORE HIGH SCHOOL, DEOGIRI">SMIORE HIGH SCHOOL, DEOGIRI</option>
+              <option value="SMIORE VYASAPURI HIGHER PRIMARY SCHOOL">SMIORE VYASAPURI HIGHER PRIMARY SCHOOL</option>
+<%
+} else {
+    Connection con = null;
+    PreparedStatement ps = null;
+    ResultSet rs = null;
 
-try {
-    con = DBUtil.getConnection();
+    try {
+        con = DBUtil.getConnection();
 
-    if ("Global".equalsIgnoreCase(roles)) {
-        ps = con.prepareStatement(
-            "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
-    } else {
-        ps = con.prepareStatement(
-            "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
-        ps.setString(1, branch != null ? branch.trim() : "");
-    }
+        if ("Global".equalsIgnoreCase(roles)) {
+            ps = con.prepareStatement(
+                "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
+        } else {
+            ps = con.prepareStatement(
+                "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
+            ps.setString(1, branch != null ? branch.trim() : "");
+        }
 
-    rs = ps.executeQuery();
-    boolean hasRows = false;
+        rs = ps.executeQuery();
+        boolean hasRows = false;
 
-    while (rs.next()) {
-        hasRows = true;
-        String orgName = rs.getString("org_name");
+        while (rs.next()) {
+            hasRows = true;
+            String orgName = rs.getString("org_name");
 %>
               <option value="<%= orgName %>"><%= orgName %></option>
 <%
-    }
+        }
 
-    if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
+        if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
 %>
               <option value="<%= branch.trim() %>" selected><%= branch.trim() %></option>
 <%
-    }
+        }
 
-} catch (Exception e) {
-    e.printStackTrace();
-    out.println("<option value=''>Error Loading Organizations</option>");
-} finally {
-    if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
-    if (ps != null) try { ps.close(); } catch (SQLException ignore) {}
-    if (con != null) try { con.close(); } catch (SQLException ignore) {}
+    } catch (Exception e) {
+        e.printStackTrace();
+        out.println("<option value=''>Error Loading Organizations</option>");
+    } finally {
+        if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
+        if (ps != null) try { ps.close(); } catch (SQLException ignore) {}
+        if (con != null) try { con.close(); } catch (SQLException ignore) {}
+    }
 }
 %>
             </select>

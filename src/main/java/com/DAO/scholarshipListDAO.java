@@ -57,12 +57,18 @@ public class scholarshipListDAO {
         List<ScholarshipBean> list = new ArrayList<>();
         String sql;
 
+        boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
+
         if ("Global".equalsIgnoreCase(role)) {
             sql = "SELECT * FROM kss_student_scholarship ORDER BY id DESC";
         } else if ("HR".equalsIgnoreCase(role)) {
             sql = "SELECT * FROM kss_student_scholarship WHERE department=? ORDER BY id DESC";
+        } else if (isSandurEducationSociety) {
+            sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
+                + "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) "
+                + "ORDER BY id DESC";
         } else {
-            sql = "SELECT * FROM kss_student_scholarship WHERE org_name=? ORDER BY id DESC";
+            sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY id DESC";
         }
 
         try (Connection con = DBUtil.getConnection();
@@ -71,7 +77,16 @@ public class scholarshipListDAO {
             if ("HR".equalsIgnoreCase(role)) {
                 ps.setString(1, department);
             } else if (!"Global".equalsIgnoreCase(role)) {
-                ps.setString(1, branch);
+                if (isSandurEducationSociety) {
+                    ps.setString(1, "SANDUR EDUCATION SOCIETY");
+                    ps.setString(2, "SES VIDYAMANDIR PU COLLEGE");
+                    ps.setString(3, "SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
+                    ps.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
+                    ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
+                    ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+                } else {
+                    ps.setString(1, branch != null ? branch.trim() : "");
+                }
             }
 
             try (ResultSet rs = ps.executeQuery()) {
