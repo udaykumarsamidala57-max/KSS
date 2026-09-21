@@ -9,14 +9,14 @@
     <style>
         :root {
             /* Header Matched Color Palette */
-            --primary-color: #104c82;
-            --primary-light: #1a68aa;
-            --primary-hover: #0b3760;
-            --bg-color: #f4f6f9;
+            --primary-color: #7a1f35;
+            --primary-light: #a83d56;
+            --primary-hover: #5e1627;
+            --bg-color: #fdf6f7;
             --card-bg: #ffffff;
-            --border-color: #dce2e6;
-            --text-main: #2c3e50;
-            --text-muted: #6c757d;
+            --border-color: #e2cece;
+            --text-main: #2b2b2b;
+            --text-muted: #666666;
             --success-bg: #e6f4ea;
             --success-text: #137333;
             --danger-bg: #fce8e6;
@@ -30,9 +30,10 @@
         }
 
         body { 
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
             margin: 0;
             padding: 15px;
+            padding-bottom: 60px;
             background-color: var(--bg-color); 
             color: var(--text-main);
             width: 100%;
@@ -80,7 +81,7 @@
             background: var(--card-bg); 
             padding: 15px; 
             border-radius: 8px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+            box-shadow: 0 2px 8px rgba(122, 31, 53, 0.08); 
             border: 1px solid var(--border-color);
             width: 100%;
             overflow-x: auto;
@@ -97,7 +98,7 @@
 
         /* Header Styling */
         th { 
-            background-color: var(--primary-color); 
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-hover) 100%); 
             color: #ffffff; 
             padding: 10px 8px;
             font-weight: 600;
@@ -121,7 +122,7 @@
         }
 
         tr:hover td { 
-            background-color: #f8fafc; 
+            background-color: #fdf6f7; 
         }
 
         /* Basic Info Column Formatting */
@@ -152,7 +153,7 @@
 
         details.more-details summary {
             font-weight: 600;
-            color: var(--primary-light);
+            color: var(--primary-color);
             font-size: 0.75rem;
             outline: none;
             user-select: none;
@@ -174,10 +175,10 @@
         }
 
         .details-section {
-            background: #f8fafc;
+            background: #fdf8f9;
             padding: 8px;
             border-radius: 6px;
-            border: 1px solid #edf2f7;
+            border: 1px solid #f3e5e8;
         }
 
         .section-header {
@@ -186,7 +187,7 @@
             color: var(--primary-color);
             text-transform: uppercase;
             margin-bottom: 5px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 2px;
         }
 
@@ -256,7 +257,7 @@
             margin-top: 4px;
         }
         .btn-update { 
-            background-color: var(--primary-light); 
+            background-color: var(--primary-color); 
             color: white; 
             border: none; 
             padding: 8px 14px; 
@@ -279,7 +280,7 @@
     <%@ include file="header.jsp" %>
 
     <div class="container">
-        <h2 class="page-title">Scholarship Applications Management</h2>
+        <h2 class="page-title">Forward Applications to KSS</h2>
 
         <%-- Success & Error Alerts --%>
         <c:if test="${not empty message}">
@@ -308,7 +309,7 @@
                             <td><strong>${app.id}</strong></td>
 
                             <%-- 2. App No --%>
-                            <td><span style="color: var(--primary-light); font-weight: 700;">${app.app_no}</span></td>
+                            <td><span style="color: var(--primary-color); font-weight: 700;">${app.app_no}</span></td>
 
                             <%-- 3. Basic Employee & Org --%>
                             <td>
@@ -369,7 +370,7 @@
                                                 <div class="info-row"><span class="label">Place:</span><span class="value">${app.placeCollege}</span></div>
                                                 <div class="info-row"><span class="label">Prev AY %:</span><span class="value">${app.previousAyPercentage}%</span></div>
                                                 <div class="info-row"><span class="label">Curr Fee:</span><span class="value">₹${app.feeAmountCurrentAy}</span></div>
-                                                <div class="info-row"><span class="label">Fee Paid:</span><span class="value" style="color: var(--primary-light); font-weight:700;">₹${app.actualFeePaid}</span></div>
+                                                <div class="info-row"><span class="label">Fee Paid:</span><span class="value" style="color: var(--primary-color); font-weight:700;">₹${app.actualFeePaid}</span></div>
                                             </div>
                                         </div>
 
@@ -447,7 +448,7 @@
                                         </div>
 
                                         <%-- Actions Section Inside Dropdown --%>
-                                        <div class="details-section" style="grid-column: span 1 / -1; background-color: #f1f5f9; border-top: 2px solid var(--primary-light);">
+                                        <div class="details-section" style="grid-column: span 1 / -1; background-color: #fdf6f7; border-top: 2px solid var(--primary-light);">
                                             <div class="section-header">Application Actions</div>
                                             <form action="UpdateStatusServlet" method="post" class="action-form">
                                                 <input type="hidden" name="scholarshipId" value="${app.id}" />

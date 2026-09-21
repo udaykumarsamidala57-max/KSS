@@ -466,6 +466,11 @@
           Scholarship List
         </a>
       </li>
+      <li>
+        <a href="UpdateStatusServlet" class="<%= currentURI.contains("UpdateStatusServlet") ? "active" : "" %>">
+          Submit to KSS
+        </a>
+      </li>
       <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
         <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
@@ -505,6 +510,11 @@
           Lists & Claims
         </a>
         <ul class="dropdown-menu">
+        <li>
+            <a href="submitted_list.jsp" class="<%= currentURI.contains("submitted_list.jsp") ? "active" : "" %>">
+              Submitted List
+            </a>
+          </li>
           <li>
             <a href="#" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
               Approved List
