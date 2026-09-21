@@ -43,6 +43,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scholarship Application Details</title>
 
+
 <div class="no-print">
   <%@ include file="header.jsp"%>
 </div>
