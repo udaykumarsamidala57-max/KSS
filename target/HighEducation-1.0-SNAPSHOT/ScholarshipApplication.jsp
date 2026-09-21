@@ -390,46 +390,64 @@
             <select name="orgName" required>
               <option value="">-- Select Organization --</option>
 <%
-Connection con = null;
-PreparedStatement ps = null;
-ResultSet rs = null;
+if (branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim())) {
+%>
+              <option value="SANDUR EDUCATION SOCIETY, SANDUR">SANDUR EDUCATION SOCIETY, SANDUR</option>
+              <option value="SES VIDYAMANDIR PU COLLEGE">SES VIDYAMANDIR PU COLLEGE</option>
+              <option value="SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI">SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI</option>
+              <option value="SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI">SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI</option>
+              <option value="SMIORE HIGH SCHOOL, DEOGIRI">SMIORE HIGH SCHOOL, DEOGIRI</option>
+              <option value="SMIORE VYASAPURI HIGHER PRIMARY SCHOOL">SMIORE VYASAPURI HIGHER PRIMARY SCHOOL</option>
+              
+<%
+} else if (branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim())) {
+%>
+              <option value="SANDUR HATCHERIES PVT LTD">SANDUR HATCHERIES PVT LTD</option>
+              <option value="SANDUR POULTRY FARM">SANDUR POULTRY FARM</option>
+              <option value="SANDUR POULTRY BREEDERS">SANDUR POULTRY BREEDERS</option>
+<%
+} else {
+    Connection con = null;
+    PreparedStatement ps = null;
+    ResultSet rs = null;
 
-try {
-    con = DBUtil.getConnection();
+    try {
+        con = DBUtil.getConnection();
 
-    if ("Global".equalsIgnoreCase(roles)) {
-        ps = con.prepareStatement(
-            "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
-    } else {
-        ps = con.prepareStatement(
-            "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
-        ps.setString(1, branch != null ? branch.trim() : "");
-    }
+        if ("Global".equalsIgnoreCase(roles)) {
+            ps = con.prepareStatement(
+                "SELECT org_name FROM organization_master WHERE status='Active' ORDER BY org_name");
+        } else {
+            ps = con.prepareStatement(
+                "SELECT org_name FROM organization_master WHERE status='Active' AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY org_name");
+            ps.setString(1, branch != null ? branch.trim() : "");
+        }
 
-    rs = ps.executeQuery();
-    boolean hasRows = false;
+        rs = ps.executeQuery();
+        boolean hasRows = false;
 
-    while (rs.next()) {
-        hasRows = true;
-        String orgName = rs.getString("org_name");
+        while (rs.next()) {
+            hasRows = true;
+            String orgName = rs.getString("org_name");
 %>
               <option value="<%= orgName %>"><%= orgName %></option>
 <%
-    }
+        }
 
-    if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
+        if (!hasRows && !"Global".equalsIgnoreCase(roles) && branch != null && !branch.trim().isEmpty()) {
 %>
               <option value="<%= branch.trim() %>" selected><%= branch.trim() %></option>
 <%
-    }
+        }
 
-} catch (Exception e) {
-    e.printStackTrace();
-    out.println("<option value=''>Error Loading Organizations</option>");
-} finally {
-    if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
-    if (ps != null) try { ps.close(); } catch (SQLException ignore) {}
-    if (con != null) try { con.close(); } catch (SQLException ignore) {}
+    } catch (Exception e) {
+        e.printStackTrace();
+        out.println("<option value=''>Error Loading Organizations</option>");
+    } finally {
+        if (rs != null) try { rs.close(); } catch (SQLException ignore) {}
+        if (ps != null) try { ps.close(); } catch (SQLException ignore) {}
+        if (con != null) try { con.close(); } catch (SQLException ignore) {}
+    }
 }
 %>
             </select>
@@ -451,6 +469,11 @@ try {
           </div>
 
           <div class="form-group">
+            <label>Employee Contact No <span class="required">*</span></label>
+            <input type="text" name="empContact" maxlength="45" required placeholder="Enter Contact Number">
+          </div>
+
+          <div class="form-group">
             <label>Spouse Working in SMIORE?</label>
             <select name="spouseWorkingSMIORE">
               <option value="No">No</option>
@@ -458,7 +481,7 @@ try {
             </select>
           </div>
 
-          <div class="form-group full-width">
+          <div class="form-group">
             <label>Spouse Working in Group Companies?</label>
             <select name="spouseWorkingGroupCompanies">
               <option value="No">No</option>
@@ -496,13 +519,13 @@ try {
           </div>
 
           <div class="form-group">
-    <label>Relationship</label>
-    <select name="relationship" class="uppercase-input">
-        <option value="">Select Relationship</option>
-        <option value="SON">Son</option>
-        <option value="DAUGHTER">Daughter</option>
-    </select>
-</div>
+            <label>Relationship</label>
+            <select name="relationship" class="uppercase-input">
+                <option value="">Select Relationship</option>
+                <option value="SON">SON</option>
+                <option value="DAUGHTER">DAUGHTER</option>
+            </select>
+          </div>
 
           <div class="form-group">
             <label>Child Order</label>
@@ -558,6 +581,11 @@ try {
           <div class="form-group">
             <label>Fee Amount for Current AY</label>
             <input type="number" step="0.01" name="feeAmountCurrentAy" placeholder="e.g. 50000.00">
+          </div>
+
+          <div class="form-group full-width">
+            <label>Actual Fee Paid</label>
+            <input type="number" step="0.01" name="actualFeePaid" placeholder="e.g. 45000.00">
           </div>
         </div>
 
@@ -642,11 +670,11 @@ try {
       <div class="sidebar-body">
         <div class="contact-item">
           <span class="contact-label">Email Support</span>
-          <span class="contact-val">saritha@sandurschool.com</span>
+          <span class="contact-val">ksevasangha1983@gmail.com</span>
         </div>
         <div class="contact-item">
           <span class="contact-label">Helpdesk Helpline</span>
-          <span class="contact-val">+91 812342967</span>
+          <span class="contact-val">+91 8123429674</span>
         </div>
         <div class="contact-item">
           <span class="contact-label">Office Hours</span>

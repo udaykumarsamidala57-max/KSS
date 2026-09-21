@@ -84,7 +84,7 @@ public class scholarshipListDAO {
                 ps.setString(1, department);
             } else if (!"Global".equalsIgnoreCase(role)) {
                 if (isSandurEducationSociety) {
-                    ps.setString(1, "SANDUR EDUCATION SOCIETY");
+                    ps.setString(1, "SANDUR EDUCATION SOCIETY, SANDUR");
                     ps.setString(2, "SES VIDYAMANDIR PU COLLEGE");
                     ps.setString(3, "SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
                     ps.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");

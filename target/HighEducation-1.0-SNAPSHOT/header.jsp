@@ -80,7 +80,7 @@
   }
 
   .kss-navbar-scope .brand-title {
-  font-family:Lucida Handwriting;
+    font-family: Lucida Handwriting;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.6px;
@@ -115,13 +115,13 @@
     display: inline-block;
   }
 
-  /* Core Navigation Menu styling */
+  /* Core Navigation Menu styling - pushed towards the right */
   .kss-navbar-scope .navbar-menu {
     list-style: none;
     display: flex;
     gap: 4px;
     align-items: center;
-    margin: 0;
+    margin: 0 0 0 auto;
     padding: 0;
     background: transparent;
   }
@@ -226,7 +226,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-left: 12px;
+    padding-left: 16px;
+    margin-left: 12px;
     border-left: 1px solid rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
   }
@@ -243,19 +244,44 @@
     font-weight: 600;
     color: #ffffff;
     line-height: 1.2;
+    margin-bottom: 3px;
   }
 
-  .kss-navbar-scope .user-role {
+  .kss-navbar-scope .user-meta-group {
+    align-items: center;
+    gap: 6px;
+  }
+
+  .kss-navbar-scope .user-role-badge {
     font-size: 10px;
-    font-weight: 500;
-    color: #fce8ec;
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-top: 2px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 2px 8px;
+    border-radius: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
-    display: inline-block;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .kss-navbar-scope .user-branch-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: #fce8ec;
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    
+    align-items: center;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
 
   .kss-navbar-scope .logout-btn {
@@ -351,6 +377,7 @@
       width: 100%;
       justify-content: center;
       flex-wrap: wrap;
+      margin: 0;
     }
 
     .kss-navbar-scope .user-profile-section {
@@ -358,6 +385,7 @@
       border-top: 1px solid rgba(255, 255, 255, 0.2);
       padding-left: 0;
       padding-top: 10px;
+      margin-left: 0;
       width: 100%;
       justify-content: center;
     }
@@ -365,6 +393,10 @@
     .kss-navbar-scope .user-details {
       align-items: center;
       text-align: center;
+    }
+
+    .kss-navbar-scope .user-meta-group {
+      justify-content: center;
     }
 
     .kss-navbar-scope .dropdown-menu {
@@ -408,7 +440,6 @@
         <span class="brand-title">Karnataka Seva Sangha</span>
         <span class="brand-subtitle">Higher Education Scholarship Portal</span>
       </div>
-
     </a>
     
     <%
@@ -465,10 +496,9 @@
               Approve Scholarship
             </a>
           </li>
-         
         </ul>
       </li>
- <% } %>
+      <% } %>
       <!-- Dropdown Item: Status Summaries & Lists Reports -->
       <li>
         <a href="#" class="dropdown-toggle <%= isReportsActive ? "active" : "" %>" onclick="return false;">
@@ -498,10 +528,14 @@
     <div class="user-profile-section">
       <div class="user-details">
         <span class="user-name"><%= userss != null ? userss : "User" %></span>
-        <% if (roless != null && !roless.trim().isEmpty()) { %>
-          <span class="user-role"><%= roless %></span>
-          <span class="user-role"><%= branchs %></span>
-        <% } %>
+        <div class="user-meta-group">
+          <% if (roless != null && !roless.trim().isEmpty()) { %>
+            <span class="user-role-badge"><%= roless %></span>
+          <% } %>
+          <% if (branchs != null && !branchs.trim().isEmpty()) { %>
+            <span class="user-branch-badge"><%= branchs %></span>
+          <% } %>
+        </div>
       </div>
       <a href="Logout.jsp" class="logout-btn" title="Sign out of system">
         Logout &#x279F;
@@ -518,7 +552,7 @@
       &copy; <%= java.time.Year.now().getValue() %> Karnataka Seva Sangha. All rights reserved.
     </div>
     <div>
-      Developed by <span class="developer-credit">SSS IT | OFFICE CENTRAL</span>&nbsp&nbsp<span class="tagline"></span>
+      Developed by <span class="developer-credit">SSS IT | OFFICE CENTRAL</span>&nbsp;&nbsp;<span class="tagline"></span>
     </div>
   </div>
 </footer>

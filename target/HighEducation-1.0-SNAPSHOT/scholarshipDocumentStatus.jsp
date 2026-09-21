@@ -121,10 +121,20 @@
     background-color: #f7e8ec;
   }
 
-  /* Interactive Status Link & Badge Styling */
-  .doc-link {
-    text-decoration: none;
+  /* Interactive Form & Badge Styling */
+  .doc-form {
     display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .doc-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-family: inherit;
   }
 
   .status-badge {
@@ -212,6 +222,8 @@ try {
     con = DBUtil.getConnection();
     
     String sql;
+    boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
+    boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
 
     if ("Global".equalsIgnoreCase(roles)) {
         sql = "SELECT id, emp_no, emp_name, children_name, " +
@@ -226,6 +238,45 @@ try {
               "ORDER BY emp_no";
 
         ps = con.prepareStatement(sql);
+    } else if (isSandurEducationSociety) {
+        sql = "SELECT id, emp_no, emp_name, children_name, " +
+              "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+              "OCTET_LENGTH(kss_application) AS len_kss, " +
+              "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+              "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+              "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+              "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "FROM kss_student_scholarship " +
+              "WHERE LOWER(TRIM(org_name)) IN (" +
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
+              "ORDER BY emp_no";
+
+        ps = con.prepareStatement(sql);
+        ps.setString(1, "SANDUR EDUCATION SOCIETY");
+        ps.setString(2, "SES VIDYAMANDIR PU COLLEGE");
+        ps.setString(3, "SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
+        ps.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
+        ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
+        ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+    } else if (isSandurHatcheries) {
+        sql = "SELECT id, emp_no, emp_name, children_name, " +
+              "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
+              "OCTET_LENGTH(kss_application) AS len_kss, " +
+              "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
+              "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
+              "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
+              "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "FROM kss_student_scholarship " +
+              "WHERE LOWER(TRIM(org_name)) IN (" +
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
+              "ORDER BY emp_no";
+
+        ps = con.prepareStatement(sql);
+        ps.setString(1, "SANDUR HATCHERIES PVT LTD");
+        ps.setString(2, "SANDUR POULTRY FARM");
+        ps.setString(3, "SANDUR POULTRY BREEDERS");
     } else {
         sql = "SELECT id, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
@@ -236,11 +287,11 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
-              "WHERE org_name = ? " +
+              "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) " +
               "ORDER BY emp_no";
 
         ps = con.prepareStatement(sql);
-        ps.setString(1, branch);
+        ps.setString(1, branch != null ? branch.trim() : "");
     }
 
     rs = ps.executeQuery();
@@ -267,9 +318,13 @@ try {
           <!-- Marks Card -->
           <td class="center-align">
             <% if(hasMarks) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=previousAyMarksCard" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="previousAyMarksCard" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -278,9 +333,13 @@ try {
           <!-- KSS Application -->
           <td class="center-align">
             <% if(hasKss) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=kssApplication" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="kssApplication" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -289,9 +348,13 @@ try {
           <!-- Fee Structure -->
           <td class="center-align">
             <% if(hasFeeStruct) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=feeStructure" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="feeStructure" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -300,31 +363,43 @@ try {
           <!-- Fee Receipts -->
           <td class="center-align">
             <% if(hasFeeRec) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=feeReceipts" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="feeReceipts" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
           </td>
 
-          <!-- Parent Aadhar Copy -->
+          <!-- Parent ID Copy -->
           <td class="center-align">
             <% if(hasParentId) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=parentAadharCopy" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="parentAadharCopy" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
           </td>
 
-          <!-- Student Aadhar Copy -->
+          <!-- Student ID Copy -->
           <td class="center-align">
             <% if(hasStudentId) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=studentAadharCopy" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="studentAadharCopy" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
@@ -333,9 +408,13 @@ try {
           <!-- Bank Passbook -->
           <td class="center-align">
             <% if(hasBank) { %>
-              <a href="ScholarshipDocumentDownloadServlet?id=<%=recId%>&field=bankPassbookFirstPage" target="_blank" class="doc-link" title="View Document">
-                <span class="status-badge tick">&#10004; View</span>
-              </a>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="bankPassbookFirstPage" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>

@@ -1,4 +1,6 @@
 <%@page import="java.util.List"%>
+<%@page import="java.util.Set"%>
+<%@page import="java.util.TreeSet"%>
 <%@page import="com.Bean.ScholarshipBean"%>
 <%
     HttpSession sess = request.getSession(false);
@@ -12,6 +14,16 @@
 %>
 <%
 List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list");
+
+// Extract unique organization names for the dropdown filter
+Set<String> orgSet = new TreeSet<String>();
+if (list != null) {
+    for (ScholarshipBean b : list) {
+        if (b.getOrgName() != null && !b.getOrgName().trim().isEmpty()) {
+            orgSet.add(b.getOrgName().trim());
+        }
+    }
+}
 %>
 
 <!DOCTYPE html>
@@ -55,7 +67,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     margin: 0 auto;
   }
 
-  /* Salesforce Page Header / Title Component */
+  /* Salesforce Page Header Bar */
   .slds-page-header {
     background-color: var(--slds-card-bg);
     border: 1px solid var(--slds-border);
@@ -66,6 +78,8 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 16px;
   }
 
   .slds-header-title-wrapper {
@@ -93,6 +107,50 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
     font-weight: 700;
     color: var(--slds-text-primary);
     line-height: 1.2;
+  }
+
+  /* Header Actions & Filter Controls */
+  .slds-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .slds-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--slds-bg-page);
+    padding: 6px 12px;
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
+  }
+
+  .slds-filter-group label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slds-text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .slds-filter-group select {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slds-text-primary);
+    border: 1px solid var(--slds-border);
+    border-radius: var(--slds-radius);
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .slds-filter-group select:focus {
+    border-color: var(--slds-brand);
+    box-shadow: 0 0 0 1px var(--slds-brand);
   }
 
   /* Salesforce Standard Buttons */
@@ -417,14 +475,27 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 
 <div class="slds-container">
 
-  <!-- SALESFORCE PAGE HEADER BAR -->
+  <!-- SALESFORCE PAGE HEADER BAR WITH FILTER -->
   <div class="slds-page-header">
     <div class="slds-header-title-wrapper">
       <div class="slds-header-details">
+        <span class="slds-header-subtitle">Scholarship Management</span>
         <h1 class="slds-header-title">Applications Master List</h1>
       </div>
     </div>
-    <div>
+
+    <div class="slds-header-controls">
+      <!-- ORGANIZATION FILTER DROPDOWN -->
+      <div class="slds-filter-group">
+        <label for="orgFilter">Organization:</label>
+        <select id="orgFilter" onchange="filterByOrganization()">
+          <option value="ALL">All Organizations (<%= list != null ? list.size() : 0 %>)</option>
+          <% for(String org : orgSet) { %>
+            <option value="<%= org %>"><%= org %></option>
+          <% } %>
+        </select>
+      </div>
+
       <a href="ScholarshipApplication.jsp" class="slds-btn slds-btn-brand">+ New Application</a>
     </div>
   </div>
@@ -432,14 +503,16 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
   <!-- DATA TABLE CARD CONTAINER -->
   <div class="slds-card">
     <div class="table-responsive">
-      <table class="slds-data-table">
+      <table class="slds-data-table" id="scholarshipTable">
         <thead>
           <tr>
             <th>ID</th>
+            <th>App No</th>
             <th>Organization</th>
             <th>Emp No</th>
             <th>Emp Name</th>
             <th>Designation</th>
+            <th>Emp Contact</th>
             <th>Spouse SMIORE</th>
             <th>Spouse Group</th>
             <th>Child Name</th>
@@ -450,6 +523,7 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
             <th>College Name</th>
             <th>Place of College</th>
             <th>Course</th>
+            <th>Actual Fee Paid</th>
             <th style="text-align: center;">Actions</th>
           </tr>
         </thead>
@@ -457,13 +531,17 @@ List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list"
 <%
 if(list != null && !list.isEmpty()){
     for(ScholarshipBean bean : list){
+        String orgVal = bean.getOrgName() != null ? bean.getOrgName().trim() : "";
 %>
-          <tr>
+          <tr class="app-row" data-org="<%= orgVal %>">
             <td><%=bean.getId()%></td>
-            <td><%=bean.getOrgName() != null ? bean.getOrgName() : ""%></td>
+            <td><strong><%=bean.getApp_no() != null ? bean.getApp_no() : ""%></strong></td>
+            <td><%=orgVal%></td>
+            
             <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
             <td><strong><%=bean.getEmpName() != null ? bean.getEmpName() : ""%></strong></td>
             <td><%=bean.getDesignation() != null ? bean.getDesignation() : ""%></td>
+            <td><%=bean.getEmpContact() != null ? bean.getEmpContact() : ""%></td>
             <td><%=bean.getSpouseWorkingSMIORE() != null ? bean.getSpouseWorkingSMIORE() : ""%></td>
             <td><%=bean.getSpouseWorkingGroupCompanies() != null ? bean.getSpouseWorkingGroupCompanies() : ""%></td>
             <td><%=bean.getChildrenName() != null ? bean.getChildrenName() : ""%></td>
@@ -474,6 +552,7 @@ if(list != null && !list.isEmpty()){
             <td><%=bean.getCollegeName() != null ? bean.getCollegeName() : ""%></td>
             <td><%=bean.getPlaceCollege() != null ? bean.getPlaceCollege() : ""%></td>
             <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
+            <td><%=bean.getActualFeePaid()%></td>
          
             <td class="action-cell">
               <a href="ScholarshipViewServlet?id=<%=bean.getId()%>" class="slds-btn slds-btn-neutral" style="height:26px; padding:0 10px; font-size:11px;">View</a>
@@ -485,6 +564,7 @@ if(list != null && !list.isEmpty()){
                   '<%=escapeJs(bean.getEmpNo())%>',
                   '<%=escapeJs(bean.getEmpName())%>',
                   '<%=escapeJs(bean.getDesignation())%>',
+                  '<%=escapeJs(bean.getEmpContact())%>',
                   '<%=escapeJs(bean.getSpouseWorkingSMIORE())%>',
                   '<%=escapeJs(bean.getSpouseWorkingGroupCompanies())%>',
                   '<%=escapeJs(bean.getChildrenName())%>',
@@ -498,6 +578,7 @@ if(list != null && !list.isEmpty()){
                   '<%=escapeJs(bean.getPresentYear())%>',
                   '<%=bean.getPreviousAyPercentage()%>',
                   '<%=bean.getFeeAmountCurrentAy()%>',
+                  '<%=bean.getActualFeePaid()%>',
                   '<%=escapeJs(bean.getEmployeeNamePassbook())%>',
                   '<%=escapeJs(bean.getBankAccountNo())%>',
                   '<%=escapeJs(bean.getIfscCode())%>',
@@ -506,24 +587,28 @@ if(list != null && !list.isEmpty()){
                   )">
                   Edit
               </button>
-
+               <% if ("Uday".equalsIgnoreCase(users)){%>
               <a class="slds-btn slds-btn-danger" style="height:26px; padding:0 10px; font-size:11px;"
                  href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
                  onclick="return confirm('Are you sure you want to delete this record?');">
                   Delete
               </a>
+              <%} %>
             </td>
           </tr>
 <%
     }
 } else {
 %>
-          <tr>
-            <td colspan="16" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
+          <tr id="emptyRow">
+            <td colspan="18" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
           </tr>
 <%
 }
 %>
+          <tr id="noMatchingRow" style="display: none;">
+            <td colspan="18" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found for Selected Organization</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -531,6 +616,7 @@ if(list != null && !list.isEmpty()){
 
 </div>
 
+<!-- EDIT MODAL CONTAINER -->
 <div id="editModal" class="slds-modal-overlay">
   <div class="slds-modal-card">
     
@@ -554,17 +640,22 @@ if(list != null && !list.isEmpty()){
 
           <div class="slds-form-element">
             <label for="edit_empNo">Employee No *</label>
-            <input type="text" id="edit_empNo" name="empNo" required>
+            <input type="text" id="edit_empNo" name="empNo" required readonly>
           </div>
 
           <div class="slds-form-element">
             <label for="edit_empName">Employee Name *</label>
-            <input type="text" id="edit_empName" name="empName" required>
+            <input type="text" id="edit_empName" name="empName" required readonly>
           </div>
 
           <div class="slds-form-element">
             <label for="edit_designation">Designation</label>
             <input type="text" id="edit_designation" name="designation">
+          </div>
+
+          <div class="slds-form-element">
+            <label for="edit_empContact">Employee Contact</label>
+            <input type="text" id="edit_empContact" name="empContact">
           </div>
 
           <div class="slds-form-element">
@@ -657,6 +748,11 @@ if(list != null && !list.isEmpty()){
             <label for="edit_feeAmountCurrentAy">Fee Amount for Current AY</label>
             <input type="number" step="0.01" id="edit_feeAmountCurrentAy" name="feeAmountCurrentAy">
           </div>
+
+          <div class="slds-form-element">
+            <label for="edit_actualFeePaid">Actual Fee Paid</label>
+            <input type="number" step="0.01" id="edit_actualFeePaid" name="actualFeePaid">
+          </div>
         </div>
 
         <div class="slds-section-title">4. Bank Account Details</div>
@@ -699,10 +795,37 @@ if(list != null && !list.isEmpty()){
 </div>
 
 <script>
+  // Organization Filter Logic
+  function filterByOrganization() {
+    const selectedOrg = document.getElementById('orgFilter').value;
+    const rows = document.querySelectorAll('.app-row');
+    const noMatchingRow = document.getElementById('noMatchingRow');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowOrg = row.getAttribute('data-org');
+      if (selectedOrg === 'ALL' || rowOrg === selectedOrg) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (noMatchingRow) {
+      if (visibleCount === 0 && rows.length > 0) {
+        noMatchingRow.style.display = '';
+      } else {
+        noMatchingRow.style.display = 'none';
+      }
+    }
+  }
+
+  // Edit Modal Functions
   function openEditModal(
-    id, orgName, empNo, empName, designation, spouseSMIORE, spouseGroup,
+    id, orgName, empNo, empName, designation, empContact, spouseSMIORE, spouseGroup,
     childrenName, dob, gender, relationship, childOrder,
-    collegeName, placeCollege, course, presentYear, previousAyPercentage, feeAmountCurrentAy,
+    collegeName, placeCollege, course, presentYear, previousAyPercentage, feeAmountCurrentAy, actualFeePaid,
     employeeNamePassbook, bankAccountNo, ifscCode, bankName, branchName
   ) {
     document.getElementById('edit_id').value = id;
@@ -710,6 +833,7 @@ if(list != null && !list.isEmpty()){
     document.getElementById('edit_empNo').value = empNo;
     document.getElementById('edit_empName').value = empName;
     document.getElementById('edit_designation').value = designation;
+    document.getElementById('edit_empContact').value = empContact;
     document.getElementById('edit_spouseWorkingSMIORE').value = spouseSMIORE || "No";
     document.getElementById('edit_spouseWorkingGroupCompanies').value = spouseGroup || "No";
 
@@ -725,6 +849,7 @@ if(list != null && !list.isEmpty()){
     document.getElementById('edit_presentYear').value = presentYear;
     document.getElementById('edit_previousAyPercentage').value = previousAyPercentage;
     document.getElementById('edit_feeAmountCurrentAy').value = feeAmountCurrentAy;
+    document.getElementById('edit_actualFeePaid').value = actualFeePaid;
 
     document.getElementById('edit_employeeNamePassbook').value = employeeNamePassbook;
     document.getElementById('edit_bankAccountNo').value = bankAccountNo;
