@@ -259,6 +259,7 @@ try {
         ps.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
         ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
         ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+        ps.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
     } else if (isSandurHatcheries) {
         sql = "SELECT id, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +

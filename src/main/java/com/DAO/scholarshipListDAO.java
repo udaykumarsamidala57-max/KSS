@@ -3,9 +3,13 @@ package com.DAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.Bean.AuditUtil;
 import com.Bean.DBUtil;
 import com.Bean.ScholarshipBean;
 
@@ -21,7 +25,6 @@ public class scholarshipListDAO {
         bean.setEmpName(rs.getString("emp_name"));
         bean.setDesignation(rs.getString("designation"));
 
-        // Added Field
         bean.setEmpContact(rs.getString("emp_contact"));
 
         bean.setChildrenName(rs.getString("children_name"));
@@ -40,8 +43,6 @@ public class scholarshipListDAO {
 
         bean.setPreviousAyPercentage(rs.getDouble("previous_ay_percentage"));
         bean.setFeeAmountCurrentAy(rs.getDouble("fee_amount_current_ay"));
-        
-        // Added Field
         bean.setActualFeePaid(rs.getDouble("actual_fee_paid"));
 
         bean.setEmployeeNamePassbook(rs.getString("employee_name_passbook"));
@@ -51,6 +52,32 @@ public class scholarshipListDAO {
         bean.setBranchName(rs.getString("branch_name"));
 
         return bean;
+    }
+
+    // Record transaction details into the audit table with explicit IST timestamp
+    public void logAudit(Connection con, int scholarshipId, String actionType, String appNo, String empNo, String empName, String performedBy, String details) {
+        String sql = "INSERT INTO kss_scholarship_audit "
+                   + "(scholarship_id, action_type, app_no, emp_no, emp_name, changed_by, changed_at, details) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            // Force current timestamp to Asia/Kolkata (IST)
+            LocalDateTime istNow = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+            Timestamp istTimestamp = Timestamp.valueOf(istNow);
+
+            ps.setInt(1, scholarshipId);
+            ps.setString(2, actionType);
+            ps.setString(3, appNo);
+            ps.setString(4, empNo);
+            ps.setString(5, empName);
+            ps.setString(6, performedBy);
+            ps.setTimestamp(7, istTimestamp);
+            ps.setString(8, details);
+
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // Get All Records
@@ -130,9 +157,21 @@ public class scholarshipListDAO {
         return bean;
     }
 
-    // Update Existing Record
-    public boolean updateScholarship(ScholarshipBean bean) {
+    // Overloaded Update Method (Calls AuditUtil to compute exact changes)
+    public boolean updateScholarship(ScholarshipBean bean, String performedBy) {
         boolean status = false;
+
+        ScholarshipBean existingBean = getScholarshipById(bean.getId());
+
+        if (existingBean != null) {
+            if (bean.getApp_no() == null || bean.getApp_no().trim().isEmpty()) {
+                bean.setApp_no(existingBean.getApp_no());
+            }
+        }
+
+        // Delegate change string building to AuditUtil
+        String auditDetails = AuditUtil.getDetailedChanges(existingBean, bean);
+
         String sql = "UPDATE kss_student_scholarship SET "
                    + "org_name=?, emp_no=?, emp_name=?, designation=?, emp_contact=?, "
                    + "children_name=?, dob=?, gender=?, relationship=?, child_order=?, "
@@ -178,15 +217,26 @@ public class scholarshipListDAO {
             ps.setInt(25, bean.getId());
 
             status = ps.executeUpdate() > 0;
+
+            if (status) {
+                logAudit(con, bean.getId(), "UPDATE", bean.getApp_no(), bean.getEmpNo(), bean.getEmpName(), performedBy, auditDetails);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return status;
     }
 
-    // Delete Record
-    public boolean deleteScholarship(int id) {
+    // Default Update Method (Fallback)
+    public boolean updateScholarship(ScholarshipBean bean) {
+        return updateScholarship(bean, "SYSTEM");
+    }
+
+    // Overloaded Delete Method (Accepts user for auditing)
+    public boolean deleteScholarship(int id, String performedBy) {
         boolean status = false;
+
+        ScholarshipBean bean = getScholarshipById(id);
         String sql = "DELETE FROM kss_student_scholarship WHERE id=?";
 
         try (Connection con = DBUtil.getConnection();
@@ -194,9 +244,18 @@ public class scholarshipListDAO {
 
             ps.setInt(1, id);
             status = ps.executeUpdate() > 0;
+
+            if (status && bean != null) {
+                logAudit(con, id, "DELETE", bean.getApp_no(), bean.getEmpNo(), bean.getEmpName(), performedBy, "Deleted record via Servlet");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return status;
+    }
+
+    // Default Delete Method (Fallback)
+    public boolean deleteScholarship(int id) {
+        return deleteScholarship(id, "SYSTEM");
     }
 }
