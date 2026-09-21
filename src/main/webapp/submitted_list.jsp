@@ -4,63 +4,98 @@
 <%@ page import="com.Bean.DBUtil" %>
 
 <%
-    // ==========================================
-    // 1. EXCEL DOWNLOAD ROUTE
-    // ==========================================
-    String exportFormat = request.getParameter("export");
-    boolean isExcel = "excel".equalsIgnoreCase(exportFormat);
+// Session Validation
+if (session == null || session.getAttribute("username") == null) {
+    response.sendRedirect("login.jsp");
+    return;
+}
 
-    if (isExcel) {
-        response.setContentType("application/vnd.ms-excel");
-        response.setHeader("Content-Disposition", "attachment; filename=\"submitted_scholarship_applications.xls\"");
+String role = (String) session.getAttribute("role");
+String branch = (String) session.getAttribute("branch");
+
+// Role and Organization Checks
+boolean isSandurEducationSociety = "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch) || "Sandur Education Society".equalsIgnoreCase(branch);
+boolean isSandurHatcheries = "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch) || "Sandur Hatcheries".equalsIgnoreCase(branch);
+
+// ==========================================
+// 1. EXCEL DOWNLOAD ROUTE
+// ==========================================
+String exportFormat = request.getParameter("export");
+boolean isExcel = "excel".equalsIgnoreCase(exportFormat);
+
+if (isExcel) {
+    response.setContentType("application/vnd.ms-excel");
+    response.setHeader("Content-Disposition", "attachment; filename=\"submitted_scholarship_applications.xls\"");
+}
+
+// ==========================================
+// 2. PAGE PARAMS & DB QUERY
+// ==========================================
+int pageNum = 1;
+int limit = isExcel ? 5000 : 10; // Export all records (up to 5000) or paginate
+if (request.getParameter("page") != null && !isExcel) {
+    try { pageNum = Integer.parseInt(request.getParameter("page")); } catch (Exception ignored) {}
+}
+int offset = (pageNum - 1) * limit;
+
+// Fetch details strictly for "Submitted" applications filtered by Role & Branch/Organization
+List<Map<String, Object>> applications = new ArrayList<>();
+
+StringBuilder sqlSelect = new StringBuilder("SELECT * FROM kss_student_scholarship WHERE submiited = ? ");
+List<Object> params = new ArrayList<>();
+params.add("Submitted");
+
+if (!"Global".equalsIgnoreCase(role)) {
+    if (isSandurEducationSociety) {
+        sqlSelect.append(" AND org_name IN (?, ?, ?, ?, ?, ?)");
+        params.add("SANDUR EDUCATION SOCIETY, SANDUR");
+        params.add("SES VIDYAMANDIR PU COLLEGE");
+        params.add("SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
+        params.add("SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
+        params.add("SMIORE HIGH SCHOOL, DEOGIRI");
+        params.add("SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+    } else if (isSandurHatcheries) {
+        sqlSelect.append(" AND org_name IN (?, ?, ?)");
+        params.add("SANDUR HATCHERIES PVT LTD");
+        params.add("SANDUR POULTRY FARM");
+        params.add("SANDUR POULTRY BREEDERS");
+    } else {
+        sqlSelect.append(" AND org_name = ?");
+        params.add(branch != null ? branch.trim() : "");
+    }
+}
+
+sqlSelect.append(" ORDER BY id DESC ");
+
+// Apply pagination only for web display
+if (!isExcel) {
+    sqlSelect.append("LIMIT ? OFFSET ?");
+    params.add(limit);
+    params.add(offset);
+}
+
+try (Connection conn = DBUtil.getConnection();
+     PreparedStatement ps = conn.prepareStatement(sqlSelect.toString())) {
+
+    for (int i = 0; i < params.size(); i++) {
+        ps.setObject(i + 1, params.get(i));
     }
 
-    // ==========================================
-    // 2. PAGE PARAMS & DB QUERY
-    // ==========================================
-    int pageNum = 1;
-    int limit = isExcel ? 5000 : 10; // Export all records (up to 5000) or paginate
-    if (request.getParameter("page") != null && !isExcel) {
-        try { pageNum = Integer.parseInt(request.getParameter("page")); } catch (Exception ignored) {}
-    }
-    int offset = (pageNum - 1) * limit;
+    try (ResultSet rs = ps.executeQuery()) {
+        ResultSetMetaData md = rs.getMetaData();
+        int columns = md.getColumnCount();
 
-    // Fetch details strictly for "Submitted" applications from kss_student_scholarship
-    List<Map<String, Object>> applications = new ArrayList<>();
-    
-    StringBuilder sqlSelect = new StringBuilder("SELECT * FROM kss_student_scholarship WHERE submiited = ? ORDER BY id DESC ");
-    List<Object> params = new ArrayList<>();
-    params.add("Submitted");
-
-    // Apply pagination only for web display
-    if (!isExcel) {
-        sqlSelect.append("LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-    }
-
-    try (Connection conn = DBUtil.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sqlSelect.toString())) {
-
-        for (int i = 0; i < params.size(); i++) {
-            ps.setObject(i + 1, params.get(i));
-        }
-
-        try (ResultSet rs = ps.executeQuery()) {
-            ResultSetMetaData md = rs.getMetaData();
-            int columns = md.getColumnCount();
-
-            while (rs.next()) {
-                Map<String, Object> row = new HashMap<>();
-                for (int i = 1; i <= columns; i++) {
-                    row.put(md.getColumnLabel(i), rs.getObject(i));
-                }
-                applications.add(row);
+        while (rs.next()) {
+            Map<String, Object> row = new HashMap<>();
+            for (int i = 1; i <= columns; i++) {
+                row.put(md.getColumnLabel(i), rs.getObject(i));
             }
+            applications.add(row);
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
     }
+} catch (SQLException e) {
+    e.printStackTrace();
+}
 %>
 
 <% if (!isExcel) { %>
