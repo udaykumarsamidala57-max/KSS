@@ -49,6 +49,20 @@ public class ScholarshipBean implements Serializable {
     private byte[] parentAadhar;
     private byte[] studentAadhar;
 
+    // Added field for submiited VARCHAR(45)
+    private String submitted;
+
+    // Document Upload Status Fields (Calculated via SQL)
+    private String marksCardStatus;
+    private String kssAppStatus;
+    private String feeStructureStatus;
+    private String feeReceiptsStatus;
+    private String parentAadharCopyStatus;
+    private String studentAadharCopyStatus;
+    private String passbookStatus;
+    private String parentAadharStatus;
+    private String studentAadharStatus;
+
     public ScholarshipBean() {
     }
 
@@ -330,5 +344,87 @@ public class ScholarshipBean implements Serializable {
 
     public void setStudentAadhar(byte[] studentAadhar) {
         this.studentAadhar = studentAadhar;
+    }
+
+    // Getter and Setter for submitted
+    public String getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(String submitted) {
+        this.submitted = submitted;
+    }
+
+    // Getters and Setters for Document Statuses
+    public String getMarksCardStatus() {
+        return marksCardStatus;
+    }
+
+    public void setMarksCardStatus(String marksCardStatus) {
+        this.marksCardStatus = marksCardStatus;
+    }
+
+    public String getKssAppStatus() {
+        return kssAppStatus;
+    }
+
+    public void setKssAppStatus(String kssAppStatus) {
+        this.kssAppStatus = kssAppStatus;
+    }
+
+    public String getFeeStructureStatus() {
+        return feeStructureStatus;
+    }
+
+    public void setFeeStructureStatus(String feeStructureStatus) {
+        this.feeStructureStatus = feeStructureStatus;
+    }
+
+    public String getFeeReceiptsStatus() {
+        return feeReceiptsStatus;
+    }
+
+    public void setFeeReceiptsStatus(String feeReceiptsStatus) {
+        this.feeReceiptsStatus = feeReceiptsStatus;
+    }
+
+    public String getParentAadharCopyStatus() {
+        return parentAadharCopyStatus;
+    }
+
+    public void setParentAadharCopyStatus(String parentAadharCopyStatus) {
+        this.parentAadharCopyStatus = parentAadharCopyStatus;
+    }
+
+    public String getStudentAadharCopyStatus() {
+        return studentAadharCopyStatus;
+    }
+
+    public void setStudentAadharCopyStatus(String studentAadharCopyStatus) {
+        this.studentAadharCopyStatus = studentAadharCopyStatus;
+    }
+
+    public String getPassbookStatus() {
+        return passbookStatus;
+    }
+
+    public void setPassbookStatus(String passbookStatus) {
+        this.passbookStatus = passbookStatus;
+    }
+
+    public String getParentAadharStatus() {
+        return parentAadharStatus;
+    }
+
+    public void setParentAadharStatus(String parentAadharStatus) {
+        this.parentAadharStatus = parentAadharStatus;
+    }
+
+    public String getStudentAadharStatus() {
+        return studentAadharStatus;
+    }
+
+    public void setStudentAadharStatus(String studentAadharStatus) {
+        this.studentAadharStatus = studentAadharStatus;
     }
 }
