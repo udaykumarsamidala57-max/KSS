@@ -467,6 +467,11 @@
         </a>
       </li>
       <li>
+        <a href="scholarshipDocumentStatus.jsp" class="<%= currentURI.contains("scholarshipDocumentStatus.jsp") ? "active" : "" %>">
+          Document Status
+        </a>
+      </li>
+      <li>
         <a href="UpdateStatusServlet" class="<%= currentURI.contains("UpdateStatusServlet") ? "active" : "" %>">
           Submit to KSS
         </a>
@@ -478,11 +483,7 @@
         </a>
       </li>
        <% } %>
-      <li>
-        <a href="scholarshipDocumentStatus.jsp" class="<%= currentURI.contains("scholarshipDocumentStatus.jsp") ? "active" : "" %>">
-          Document Status
-        </a>
-      </li>
+      
       
       <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
