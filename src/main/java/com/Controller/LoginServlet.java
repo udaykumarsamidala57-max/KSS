@@ -58,13 +58,13 @@ public class LoginServlet extends HttpServlet {
                 
                 // Redirect based on role / department
                 if ("Global".equalsIgnoreCase(role)) {
-                    response.sendRedirect("ScholarshipListServelt");
+                    response.sendRedirect("Dashboard.jsp");
                 } else if ("incharge".equalsIgnoreCase(role) || "Finance".equalsIgnoreCase(department)) {
-                    response.sendRedirect("ScholarshipListServelt");
+                    response.sendRedirect("Dashboard.jsp");
                 } else if ("HOSTEL".equalsIgnoreCase(department)) {
-                    response.sendRedirect("ScholarshipListServelt");
+                    response.sendRedirect("Dashboard.jsp");
                 } else {
-                    response.sendRedirect("ScholarshipListServelt");
+                    response.sendRedirect("Dashboard.jsp");
                 }
             } else {
                 request.setAttribute("error", "Invalid Username or Password!");

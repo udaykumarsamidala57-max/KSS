@@ -19,82 +19,105 @@
 <title>Scholarship Document Upload Status</title>
 
 <style>
+  /* Salesforce Lightning Design System (SLDS) Inspired Palette */
   :root {
-    --primary-color: #7a1f35;
-    --primary-hover: #5e1627;
-    --accent-bg: #fdf6f7;
-    --border-color: #e2cece;
-    --text-main: #2b2b2b;
-    --text-muted: #666666;
-    --success-color: #27ae60;
-    --danger-color: #c0392b;
+    --slds-brand: #0176d3;
+    --slds-brand-hover: #014486;
+    --slds-bg-page: #f3f3f3;
+    --slds-bg-card: #ffffff;
+    --slds-border-color: #dddbda;
+    --slds-text-primary: #181818;
+    --slds-text-secondary: #444444;
+    --slds-text-header: #514f4d;
+    --slds-row-hover: #f3f3f3;
+    --slds-header-bg: #fafaf9;
+    --slds-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+    /* Badge Colors */
+    --badge-success-bg: #e6f4ea;
+    --badge-success-text: #137333;
+    --badge-success-border: #ceead6;
+    
+    --badge-missing-bg: #fce8e6;
+    --badge-missing-text: #c5221f;
+    --badge-missing-border: #fad2cf;
+  }
+
+  * {
+    box-sizing: border-box;
   }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f4f6f8;
+    background-color: var(--slds-bg-page);
     margin: 0;
     padding: 24px;
-    color: var(--text-main);
+    color: var(--slds-text-primary);
+    line-height: 1.5;
   }
 
-  .container {
+  .page-wrapper {
     max-width: 1600px;
     margin: 0 auto;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e4e8;
-    overflow: hidden;
+    width: 100%;
   }
 
-  .header-bar {
+  /* Header Container */
+  .header-container {
+    background-color: var(--slds-bg-card);
+    border: 1px solid var(--slds-border-color);
+    border-radius: 4px;
     padding: 16px 24px;
-    background-color: var(--accent-bg);
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    box-shadow: var(--slds-shadow);
   }
 
-  .header-bar h2 {
+  .header-title {
     margin: 0;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  .header-bar p {
-    margin: 4px 0 0 0;
-    font-size: 12px;
-    color: var(--text-muted);
+    color: var(--slds-text-primary);
+    letter-spacing: -0.2px;
   }
 
-  .table-responsive {
+  .header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: var(--slds-text-secondary);
+  }
+
+  /* Responsive Table Container */
+  .table-container {
+    background: var(--slds-bg-card);
+    border: 1px solid var(--slds-border-color);
+    border-radius: 4px;
+    box-shadow: var(--slds-shadow);
     overflow-x: auto;
-    padding: 20px;
+    -webkit-overflow-scrolling: touch;
   }
 
   table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 12px;
-    white-space: nowrap;
+    border-collapse: collapse;
+    min-width: 900px;
+    font-size: 13px;
   }
 
+  /* Standard Normalized Headers */
   th {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    font-weight: 600;
+    background-color: var(--slds-header-bg);
+    color: var(--slds-text-header);
+    font-size: 12px;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 11px;
     letter-spacing: 0.5px;
-    padding: 12px 10px;
+    padding: 12px 16px;
     text-align: left;
-    border-bottom: 2px solid var(--primary-hover);
+    border-bottom: 1px solid var(--slds-border-color);
+    white-space: nowrap;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 2;
   }
 
   th.center-align, td.center-align {
@@ -102,23 +125,18 @@
   }
 
   td {
-    padding: 10px;
-    border-bottom: 1px solid #eef1f4;
-    border-right: 1px solid #f0f0f0;
-    color: var(--text-main);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--slds-border-color);
+    color: var(--slds-text-primary);
     vertical-align: middle;
   }
 
-  tr:last-child td {
-    border-bottom: 1px solid #eef1f4;
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 
-  tr:nth-child(even) td {
-    background-color: #fafbfc;
-  }
-
-  tr:hover td {
-    background-color: #f7e8ec;
+  tbody tr:hover {
+    background-color: var(--slds-row-hover);
   }
 
   /* Interactive Form & Badge Styling */
@@ -142,60 +160,76 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 5px 10px;
+    padding: 4px 12px;
     font-size: 11px;
-    font-weight: 600;
-    border-radius: 4px;
-    min-width: 90px;
+    font-weight: 700;
+    border-radius: 12px;
+    min-width: 85px;
     text-align: center;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
   }
 
+  /* Green badge for uploaded documents */
   .tick {
-    background-color: #e2f0d9;
-    color: #2e5b1e;
-    border: 1px solid #a9d18e;
+    background-color: var(--badge-success-bg);
+    color: var(--badge-success-text);
+    border: 1px solid var(--badge-success-border);
     cursor: pointer;
   }
 
   .tick:hover {
-    background-color: #d4e8c4;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    background-color: #d2e3d6;
     transform: translateY(-1px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
 
+  /* Red badge for missing documents */
   .cross {
-    background-color: #fce8e6;
-    color: #a51d24;
-    border: 1px solid #f5c2c1;
+    background-color: var(--badge-missing-bg);
+    color: var(--badge-missing-text);
+    border: 1px solid var(--badge-missing-border);
     cursor: default;
   }
 
   .emp-badge {
-    font-weight: bold;
+    font-weight: 600;
+    color: var(--slds-text-primary);
   }
-  
+
   .error-box {
     margin: 20px;
     padding: 16px;
-    background-color: #fce8e6;
-    border: 1px solid #f5c2c1;
-    color: #a51d24;
+    background-color: #fef0f0;
+    border: 1px solid #fca5a5;
+    color: #ea001e;
     border-radius: 4px;
     font-size: 13px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding: 12px;
+    }
+
+    .header-title {
+      font-size: 18px;
+    }
   }
 </style>
 </head>
 <body>
+
 <%@ include file="header.jsp" %>
-<div class="container">
-  
-  <div class="header-bar">
-    <h2>Student Scholarship Document Status</h2>
-    <p>Click on any uploaded document badge to view or download the attachment.</p>
+
+<div class="page-wrapper">
+
+  <div class="header-container">
+    <h1 class="header-title">Student Scholarship Document Status</h1>
+    <p class="header-subtitle">Click on any uploaded document badge to view or download the attachment.</p>
   </div>
 
-  <div class="table-responsive">
+  <div class="table-container">
     <table>
       <thead>
         <tr>
@@ -427,7 +461,7 @@ try {
     if (!hasData) {
 %>
         <tr>
-          <td colspan="11" style="text-align: center; padding: 32px; color: var(--text-muted);">No scholarship application records available.</td>
+          <td colspan="11" style="text-align: center; padding: 24px; color: var(--slds-text-secondary);">No scholarship application records available.</td>
         </tr>
 <%
     }
@@ -435,7 +469,7 @@ try {
 %>
     </table>
     <div class="error-box">
-      <strong>Database Error:</strong> <%=e.getMessage()%>
+      Error retrieving scholarship document status: <%=e.getMessage()%>
     </div>
     <table>
 <%

@@ -278,7 +278,6 @@
     border-radius: 12px;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    
     align-items: center;
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -445,7 +444,11 @@
     <%
       String currentURI = request.getRequestURI();
       
-      // Compute helper states to keep core folder links highlighted if drop items are selected
+      // Compute helper states to keep top-level folder links highlighted if inner items are active
+      boolean isScholarshipActive = currentURI.contains("ScholarshipApplication.jsp") || 
+                                    currentURI.contains("ScholarshipListServelt") || 
+                                    currentURI.contains("scholarshipDocumentStatus.jsp");
+
       boolean isApprovalActive = currentURI.contains("approveDocuments.jsp") || 
                                  currentURI.contains("approveScholarship.jsp") || 
                                  currentURI.contains("approvalAction.jsp");
@@ -456,34 +459,47 @@
     %>
     
     <ul class="navbar-menu">
+      <!-- Combined Scholarship Options Dropdown -->
       <li>
-        <a href="ScholarshipApplication.jsp" class="<%= currentURI.contains("ScholarshipApplication.jsp") ? "active" : "" %>">
-          Apply
+        <a href="Dashboard.jsp" class="<%= currentURI.contains("Dashboard.jsp") ? "active" : "" %>">
+          Dashboard
         </a>
-      </li>
       <li>
-        <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") ? "active" : "" %>">
-          Scholarship List
+        <a href="#" class="dropdown-toggle <%= isScholarshipActive ? "active" : "" %>" onclick="return false;">
+          Scholarships
         </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a href="ScholarshipApplication.jsp" class="<%= currentURI.contains("ScholarshipApplication.jsp") ? "active" : "" %>">
+              Apply
+            </a>
+          </li>
+          <li>
+            <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") ? "active" : "" %>">
+              Scholarship List
+            </a>
+          </li>
+          <li>
+            <a href="scholarshipDocumentStatus.jsp" class="<%= currentURI.contains("scholarshipDocumentStatus.jsp") ? "active" : "" %>">
+              Document Status
+            </a>
+          </li>
+        </ul>
       </li>
-      <li>
-        <a href="scholarshipDocumentStatus.jsp" class="<%= currentURI.contains("scholarshipDocumentStatus.jsp") ? "active" : "" %>">
-          Document Status
-        </a>
-      </li>
+
       <li>
         <a href="UpdateStatusServlet" class="<%= currentURI.contains("UpdateStatusServlet") ? "active" : "" %>">
           Submit to KSS
         </a>
       </li>
+
       <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
         <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
           Organization Master
         </a>
       </li>
-       <% } %>
-      
+      <% } %>
       
       <% if ("Global".equalsIgnoreCase(roless)) { %>
       <li>
@@ -496,7 +512,6 @@
               Approve Documents
             </a>
           </li>
-          
           <li>
             <a href="approveScholarship.jsp" class="<%= currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
               Approve Scholarship
@@ -505,13 +520,14 @@
         </ul>
       </li>
       <% } %>
+
       <!-- Dropdown Item: Status Summaries & Lists Reports -->
       <li>
         <a href="#" class="dropdown-toggle <%= isReportsActive ? "active" : "" %>" onclick="return false;">
           Lists & Claims
         </a>
         <ul class="dropdown-menu">
-        <li>
+          <li>
             <a href="submitted_list.jsp" class="<%= currentURI.contains("submitted_list.jsp") ? "active" : "" %>">
               Submitted List
             </a>
