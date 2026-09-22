@@ -249,7 +249,7 @@ try {
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
-              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
               "ORDER BY emp_no";
 
         ps = con.prepareStatement(sql);
@@ -260,6 +260,7 @@ try {
         ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
         ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
         ps.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
+    
     } else if (isSandurHatcheries) {
         sql = "SELECT id, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
