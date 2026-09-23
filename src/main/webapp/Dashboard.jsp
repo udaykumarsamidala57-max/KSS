@@ -32,19 +32,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KSS Scholarship Applications Summary</title>
     <style>
-        /* Salesforce Lightning Design System (SLDS) Inspired Palette */
+        /* Professional Maroon Color Scheme & Shadows */
         :root {
-            --slds-brand: #0176d3;
-            --slds-brand-hover: #014486;
-            --slds-bg-page: #f3f3f3;
-            --slds-bg-card: #ffffff;
-            --slds-border-color: #dddbda;
-            --slds-text-primary: #181818;
-            --slds-text-secondary: #444444;
-            --slds-text-header: #514f4d;
-            --slds-row-hover: #f3f3f3;
-            --slds-header-bg: #fafaf9;
-            --slds-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+            --brand-primary: #7a1f35;       
+            --brand-primary-dark: #5e1627;  
+            --brand-accent-bg: #fdf6f7;     
+            --brand-border: #e2cece;        
+            --text-main: #2b2b2b;
+            --text-muted: #666666;
+            
+            --bg-page: #f8f9fa;
+            --bg-card: #ffffff;
+            --header-bg: #fdf6f7;
+            --row-hover: #fcf2f4;
+            
+            /* Professional Elevation & Shadows */
+            --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
+            --card-shadow-hover: 0 6px 16px rgba(122, 31, 53, 0.15);
+            --header-shadow: 0 4px 12px rgba(122, 31, 53, 0.12);
         }
 
         * {
@@ -52,11 +57,12 @@
         }
 
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
             margin: 0;
             padding: 24px;
-            background-color: var(--slds-bg-page); 
-            color: var(--slds-text-primary);
+            padding-bottom: 70px;
+            background-color: var(--bg-page); 
+            color: var(--text-main);
             line-height: 1.5;
         }
 
@@ -66,14 +72,15 @@
             width: 100%;
         }
         
-        /* Salesforce Header Banner */
+        /* Header Banner with Gradient Accent */
         .header-container {
-            background-color: var(--slds-bg-card);
-            border: 1px solid var(--slds-border-color);
-            border-radius: 4px;
-            padding: 16px 24px;
-            margin-bottom: 20px;
-            box-shadow: var(--slds-shadow);
+            background-color: var(--bg-card);
+            border: 1px solid var(--brand-border);
+            border-left: 5px solid var(--brand-primary);
+            border-radius: 8px;
+            padding: 18px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--card-shadow);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -82,68 +89,59 @@
         }
 
         .header-title {
-            color: var(--slds-text-primary);
+            color: var(--brand-primary-dark);
             margin: 0;
             font-size: 20px;
             font-weight: 700;
             letter-spacing: -0.2px;
         }
 
-        .branch-badge {
-            background-color: #eef4fe;
-            color: var(--slds-brand);
-            border: 1px solid #aecbfa;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
         /* Summary Metric Cards */
         .summary-box { 
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px; 
-            margin-bottom: 20px; 
+            gap: 18px; 
+            margin-bottom: 24px; 
         }
 
         .card { 
-            background: var(--slds-bg-card); 
-            padding: 16px 20px; 
-            border-radius: 4px; 
-            border: 1px solid var(--slds-border-color);
-            box-shadow: var(--slds-shadow);
-            transition: border-color 0.15s ease-in-out;
+            background: var(--bg-card); 
+            padding: 18px 22px; 
+            border-radius: 8px; 
+            border: 1px solid var(--brand-border);
+            border-top: 3px solid var(--brand-primary);
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease-in-out;
         }
 
         .card:hover {
-            border-color: var(--slds-brand);
+            transform: translateY(-2px);
+            border-color: var(--brand-primary);
+            box-shadow: var(--card-shadow-hover);
         }
 
         .card h3 { 
             margin: 0 0 6px 0; 
-            font-size: 12px; 
-            color: var(--slds-text-header); 
+            font-size: 11px; 
+            color: var(--text-muted); 
             text-transform: uppercase;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
         }
 
         .card p { 
             margin: 0; 
-            font-size: 26px; 
-            font-weight: 700; 
-            color: var(--slds-brand); 
+            font-size: 28px; 
+            font-weight: 800; 
+            color: var(--brand-primary); 
         }
 
         /* Responsive Table Container */
         .table-container {
-            background: var(--slds-bg-card);
-            border: 1px solid var(--slds-border-color);
-            border-radius: 4px;
-            box-shadow: var(--slds-shadow);
+            background: var(--bg-card);
+            border: 1px solid var(--brand-border);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -155,26 +153,26 @@
             font-size: 13px;
         }
 
-        /* Standard Normalized Headers */
+        /* Styled Headers */
         th { 
-            background-color: var(--slds-header-bg); 
-            color: var(--slds-text-header); 
+            background-color: var(--header-bg); 
+            color: var(--brand-primary-dark); 
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 12px 16px;
+            padding: 14px 18px;
             text-align: left;
-            border-bottom: 1px solid var(--slds-border-color);
+            border-bottom: 2px solid var(--brand-border);
             border-top: none;
             white-space: nowrap;
         }
 
         td { 
-            padding: 12px 16px; 
+            padding: 14px 18px; 
             text-align: left; 
-            border-bottom: 1px solid var(--slds-border-color); 
-            color: var(--slds-text-primary);
+            border-bottom: 1px solid var(--brand-border); 
+            color: var(--text-main);
         }
 
         tbody tr:last-child td {
@@ -182,32 +180,35 @@
         }
 
         tbody tr:hover {
-            background-color: var(--slds-row-hover);
+            background-color: var(--row-hover);
         }
 
         .total-row {
             font-weight: 700; 
-            background-color: #f8f9fa !important;
-            border-top: 2px solid var(--slds-border-color);
+            background-color: var(--brand-accent-bg) !important;
+            border-top: 2px solid var(--brand-border);
         }
 
         .total-row td {
-            color: var(--slds-text-primary);
+            color: var(--brand-primary-dark);
+            font-size: 14px;
         }
 
         .error { 
-            color: #ea001e; 
+            color: #a93226; 
             font-weight: 600; 
-            background: #fef0f0;
+            background: #fdf2e9;
             padding: 16px;
-            border-radius: 4px;
-            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
             margin-top: 20px;
+            box-shadow: var(--card-shadow);
         }
 
         @media (max-width: 768px) {
             body {
                 padding: 12px;
+                padding-bottom: 80px;
             }
 
             .header-container {
@@ -239,7 +240,6 @@
 
     <div class="header-container">
         <h1 class="header-title">KSS Student Scholarship Summary</h1>
-       
     </div>
 
 <%
@@ -372,7 +372,7 @@
         if (rows.isEmpty()) {
 %>
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--slds-text-secondary); padding: 24px;">No records found for the selected branch.</td>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">No records found for the selected branch.</td>
                 </tr>
 <%
         } else {

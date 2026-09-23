@@ -7,19 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scholarship Applications Management</title>
     <style>
-        /* Salesforce Lightning Design System (SLDS) Inspired Variables */
+        /* Professional Maroon Color Scheme & Elevation Variables */
         :root {
-            --slds-brand: #0176d3;
-            --slds-brand-hover: #014486;
-            --slds-bg-page: #f3f3f3;
-            --slds-bg-card: #ffffff;
-            --slds-border-color: #dddbda;
-            --slds-text-primary: #181818;
-            --slds-text-secondary: #514f4d;
-            --slds-text-header: #514f4d;
-            --slds-row-hover: #f3f3f3;
-            --slds-header-bg: #fafaf9;
-            --slds-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+            --brand-primary: #7a1f35;       
+            --brand-primary-dark: #5e1627;  
+            --brand-accent-bg: #fdf6f7;     
+            --brand-border: #e2cece;        
+            --text-main: #2b2b2b;
+            --text-muted: #666666;
+
+            --bg-page: #f8f9fa;
+            --bg-card: #ffffff;
+            --header-bg: #fdf6f7;
+            --row-hover: #fcf2f4;
 
             /* Status Badge Colors */
             --badge-success-bg: #e6f4ea;
@@ -29,6 +29,10 @@
             --badge-missing-bg: #fce8e6;
             --badge-missing-text: #c5221f;
             --badge-missing-border: #fad2cf;
+
+            /* Shadows */
+            --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
+            --card-shadow-hover: 0 6px 16px rgba(122, 31, 53, 0.15);
         }
 
         * {
@@ -39,8 +43,9 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             margin: 0;
             padding: 24px;
-            background-color: var(--slds-bg-page); 
-            color: var(--slds-text-primary);
+            padding-bottom: 70px;
+            background-color: var(--bg-page); 
+            color: var(--text-main);
             line-height: 1.5;
         }
 
@@ -50,38 +55,39 @@
             width: 100%;
         }
 
-        /* Header Container */
+        /* Header Container with Left Accent Border */
         .header-container {
-            background-color: var(--slds-bg-card);
-            border: 1px solid var(--slds-border-color);
-            border-radius: 4px;
-            padding: 16px 24px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--brand-border);
+            border-left: 5px solid var(--brand-primary);
+            border-radius: 8px;
+            padding: 18px 24px;
             margin-bottom: 20px;
-            box-shadow: var(--slds-shadow);
+            box-shadow: var(--card-shadow);
         }
 
         .header-title {
             margin: 0;
             font-size: 20px;
             font-weight: 700;
-            color: var(--slds-text-primary);
+            color: var(--brand-primary-dark);
             letter-spacing: -0.2px;
         }
 
         .header-subtitle {
             margin: 4px 0 0 0;
             font-size: 13px;
-            color: var(--slds-text-secondary);
+            color: var(--text-muted);
         }
 
         /* Alert Notifications */
         .alert { 
             padding: 12px 16px; 
             margin-bottom: 16px; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             font-weight: 600; 
             font-size: 13px;
-            box-shadow: var(--slds-shadow);
+            box-shadow: var(--card-shadow);
         }
         .alert-success { 
             background-color: var(--badge-success-bg); 
@@ -96,10 +102,10 @@
 
         /* Table Card Container */
         .table-card { 
-            background: var(--slds-bg-card); 
-            border: 1px solid var(--slds-border-color);
-            border-radius: 4px;
-            box-shadow: var(--slds-shadow);
+            background: var(--bg-card); 
+            border: 1px solid var(--brand-border);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -112,16 +118,16 @@
             text-align: left; 
         }
 
-        /* Standard SLDS Headers */
+        /* Sticky Headers */
         th { 
-            background-color: var(--slds-header-bg); 
-            color: var(--slds-text-header); 
+            background-color: var(--header-bg); 
+            color: var(--brand-primary-dark); 
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--slds-border-color);
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--brand-border);
             white-space: nowrap;
             position: sticky;
             top: 0;
@@ -130,9 +136,9 @@
 
         td { 
             padding: 12px 16px; 
-            border-bottom: 1px solid var(--slds-border-color); 
+            border-bottom: 1px solid var(--brand-border); 
             vertical-align: top;
-            color: var(--slds-text-primary);
+            color: var(--text-main);
         }
 
         tbody tr:last-child td {
@@ -140,7 +146,7 @@
         }
 
         tbody tr:hover { 
-            background-color: var(--slds-row-hover); 
+            background-color: var(--row-hover); 
         }
 
         /* Basic Info Formatting */
@@ -151,34 +157,40 @@
         }
         .basic-title {
             font-weight: 600;
-            color: var(--slds-text-primary);
+            color: var(--text-main);
             font-size: 13px;
         }
         .basic-sub {
-            color: var(--slds-text-secondary);
+            color: var(--text-muted);
             font-size: 12px;
         }
 
         /* Accordion Details Dropdown */
         details.more-details {
-            border: 1px solid var(--slds-border-color);
-            border-radius: 4px;
-            background: var(--slds-bg-card);
+            border: 1px solid var(--brand-border);
+            border-radius: 6px;
+            background: var(--bg-card);
             padding: 8px 12px;
             cursor: pointer;
             width: 100%;
+            transition: all 0.15s ease-in-out;
+        }
+
+        details.more-details[open] {
+            box-shadow: 0 2px 8px rgba(122, 31, 53, 0.08);
+            border-color: var(--brand-primary);
         }
 
         details.more-details summary {
             font-weight: 600;
-            color: var(--slds-brand);
+            color: var(--brand-primary);
             font-size: 13px;
             outline: none;
             user-select: none;
         }
 
         details.more-details summary:hover {
-            color: var(--slds-brand-hover);
+            color: var(--brand-primary-dark);
         }
 
         /* Structured Container Inside View */
@@ -188,26 +200,26 @@
             gap: 16px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid var(--slds-border-color);
+            border-top: 1px solid var(--brand-border);
             cursor: default;
-            text-align: left; /* Ensures strict left-alignment */
+            text-align: left;
         }
 
         .details-section {
-            background: var(--slds-header-bg);
+            background: var(--header-bg);
             padding: 12px 16px;
-            border-radius: 4px;
-            border: 1px solid var(--slds-border-color);
+            border-radius: 6px;
+            border: 1px solid var(--brand-border);
         }
 
         .section-header {
             font-size: 11px;
             font-weight: 700;
-            color: var(--slds-text-header);
+            color: var(--brand-primary-dark);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 10px;
-            border-bottom: 1px solid var(--slds-border-color);
+            border-bottom: 1px solid var(--brand-border);
             padding-bottom: 4px;
             text-align: left;
         }
@@ -228,7 +240,7 @@
 
         .label {
             font-weight: 600;
-            color: var(--slds-text-secondary);
+            color: var(--text-muted);
             font-size: 12px;
             width: 140px;
             flex-shrink: 0;
@@ -236,7 +248,7 @@
         }
 
         .value {
-            color: var(--slds-text-primary);
+            color: var(--text-main);
             font-weight: 500;
             font-size: 12px;
             text-align: left;
@@ -247,7 +259,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 2px 8px; 
+            padding: 3px 10px; 
             border-radius: 12px; 
             font-size: 11px; 
             font-weight: 700; 
@@ -264,7 +276,7 @@
             border: 1px solid var(--badge-missing-border);
         }
 
-        /* Left-Aligned Document Grid */
+        /* Document Grid */
         .doc-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -277,22 +289,22 @@
             gap: 12px;
             font-size: 12px;
             padding: 4px 0;
-            border-bottom: 1px dashed var(--slds-border-color);
+            border-bottom: 1px dashed var(--brand-border);
         }
 
         .doc-name {
             width: 140px;
             font-weight: 600;
-            color: var(--slds-text-secondary);
+            color: var(--text-muted);
             flex-shrink: 0;
         }
 
         /* Actions Section */
         .action-section {
-            background-color: var(--slds-header-bg);
-            border: 1px solid var(--slds-border-color);
+            background-color: var(--header-bg);
+            border: 1px solid var(--brand-border);
             padding: 12px 16px;
-            border-radius: 4px;
+            border-radius: 6px;
         }
 
         .action-form {
@@ -302,21 +314,23 @@
         }
 
         .btn-update { 
-            background-color: var(--slds-brand); 
+            background-color: var(--brand-primary); 
             color: #ffffff; 
-            border: 1px solid var(--slds-brand); 
+            border: 1px solid var(--brand-primary-dark); 
             padding: 8px 20px; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             cursor: pointer; 
             font-weight: 600;
             font-size: 13px;
-            transition: background-color 0.15s ease-in-out;
+            transition: all 0.15s ease-in-out;
             text-align: center;
+            box-shadow: 0 2px 4px rgba(122, 31, 53, 0.2);
         }
 
         .btn-update:hover { 
-            background-color: var(--slds-brand-hover); 
-            border-color: var(--slds-brand-hover);
+            background-color: var(--brand-primary-dark); 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(122, 31, 53, 0.3);
         }
 
         @media (max-width: 992px) {
@@ -328,6 +342,7 @@
         @media (max-width: 768px) {
             body {
                 padding: 12px;
+                padding-bottom: 80px;
             }
             .header-title {
                 font-size: 18px;
@@ -373,7 +388,7 @@
                             <td><strong>${app.id}</strong></td>
 
                             <%-- 2. App No --%>
-                            <td><span style="color: var(--slds-brand); font-weight: 700;">${app.app_no}</span></td>
+                            <td><span style="color: var(--brand-primary); font-weight: 700;">${app.app_no}</span></td>
 
                             <%-- 3. Basic Employee & Org --%>
                             <td>
@@ -434,7 +449,7 @@
                                                 <div class="info-row"><span class="label">Place:</span><span class="value">${app.placeCollege}</span></div>
                                                 <div class="info-row"><span class="label">Prev AY %:</span><span class="value">${app.previousAyPercentage}%</span></div>
                                                 <div class="info-row"><span class="label">Curr Fee:</span><span class="value">₹${app.feeAmountCurrentAy}</span></div>
-                                                <div class="info-row"><span class="label">Fee Paid:</span><span class="value" style="color: var(--slds-brand); font-weight:700;">₹${app.actualFeePaid}</span></div>
+                                                <div class="info-row"><span class="label">Fee Paid:</span><span class="value" style="color: var(--brand-primary); font-weight:700;">₹${app.actualFeePaid}</span></div>
                                             </div>
                                         </div>
 
@@ -530,7 +545,7 @@
                     <%-- Empty Fallback --%>
                     <c:if test="${empty applicationList}">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 24px; color: var(--slds-text-secondary);">
+                            <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
                                 No scholarship records found.
                             </td>
                         </tr>
