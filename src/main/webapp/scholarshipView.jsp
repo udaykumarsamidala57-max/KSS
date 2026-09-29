@@ -9,6 +9,11 @@
 
     ScholarshipBean bean = (ScholarshipBean) request.getAttribute("bean");
 
+    boolean isSubmitted = false;
+    if (bean != null && bean.getSubmitted() != null) {
+        isSubmitted = "Submitted".equalsIgnoreCase(bean.getSubmitted().trim());
+    }
+
     // Helper method logic to safely validate string content inside scriptlet scope
     boolean isFormComplete = false;
     if (bean != null) {
@@ -560,7 +565,7 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="previousAyMarksCard" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="previousAyMarksCard" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
@@ -572,7 +577,7 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="kssApplication" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="kssApplication" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
@@ -584,7 +589,7 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="feeStructure" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="feeStructure" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
@@ -596,7 +601,7 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="feeReceipts" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="feeReceipts" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
@@ -608,7 +613,7 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="parentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="parentAadharCopy" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
@@ -620,7 +625,7 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="studentAadharCopy" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="studentAadharCopy" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
@@ -632,11 +637,11 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="bankPassbookFirstPage" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="bankPassbookFirstPage" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card">
-              <span class="doc-card-title">Parent Aadhar</span>
+              <span class="doc-card-title">Parent Identity Proof</span>
               <div class="file-container">
                 <% if(bean.getParentAadhar() != null) { %>
                   <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=parentAadhar" target="_blank" class="status-badge view">✓ View Document</a>
@@ -644,11 +649,11 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="parentAadhar" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="parentAadhar" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
             <div class="doc-card" style="grid-column: span 2;">
-              <span class="doc-card-title">Student Aadhar</span>
+              <span class="doc-card-title">Student Identity Proof</span>
               <div class="file-container">
                 <% if(bean.getStudentAadhar() != null) { %>
                   <a href="ScholarshipDocumentDownloadServlet?id=<%=bean.getId()%>&field=studentAadhar" target="_blank" class="status-badge view">✓ View Document</a>
@@ -656,13 +661,13 @@
                   <span class="status-badge none">⚠ No file uploaded</span>
                 <% } %>
               </div>
-              <input type="file" name="studentAadhar" accept=".pdf,.jpg,.jpeg,.png">
+              <input type="file" name="studentAadhar" accept=".pdf,.jpg,.jpeg,.png" <%= isSubmitted ? "disabled" : "" %>>
             </div>
 
           </div>
 
           <div class="btn-actions" style="margin-top: 20px;">
-            <input type="submit" value="Upload Documents" class="btn">
+            <input type="submit" value="Upload Documents" class="btn" <%= isSubmitted ? "disabled style=\"opacity:0.6; cursor:not-allowed;\"" : "" %>>
             <a href="ScholarshipListServelt" class="btn btn-secondary">Back to List</a>
           </div>
 

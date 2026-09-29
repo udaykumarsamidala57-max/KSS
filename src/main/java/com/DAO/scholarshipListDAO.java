@@ -50,6 +50,7 @@ public class scholarshipListDAO {
         bean.setIfscCode(rs.getString("ifsc_code"));
         bean.setBankName(rs.getString("bank_name"));
         bean.setBranchName(rs.getString("branch_name"));
+        bean.setSubmitted(rs.getString("submiited"));
 
         return bean;
     }

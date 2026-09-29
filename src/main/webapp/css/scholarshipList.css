@@ -1,0 +1,466 @@
+
+  :root {
+    --brand-primary: #7a1f35;
+    --brand-primary-dark: #5e1627;
+    --brand-accent-bg: #fdf6f7;
+    --brand-border: #e2cece;
+    --brand-border-dark: #c8b1b1;
+    --text-main: #2b2b2b;
+    --text-muted: #666666;
+    --text-label: #514f4d;
+
+    --bg-page: #f8f9fa;
+    --bg-card: #ffffff;
+    --table-header-bg: #faf0f2;
+    --row-hover: #fcf2f4;
+    --radius: 4px;
+    --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #7a1f35;
+
+    /* Status Badges */
+    --badge-success-bg: #e6f4ea;
+    --badge-success-text: #137333;
+    --badge-success-border: #ceead6;
+
+    --badge-missing-bg: #fce8e6;
+    --badge-missing-text: #c5221f;
+    --badge-missing-border: #fad2cf;
+
+    /* Shadows */
+    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
+    --card-shadow-hover: 0 6px 16px rgba(122, 31, 53, 0.15);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-page);
+    margin: 0;
+    padding: 16px 20px 80px 20px;
+    color: var(--text-main);
+    line-height: 1.5;
+  }
+
+  .slds-container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* Salesforce Page Header Bar */
+  .slds-page-header {
+    background-color: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-left: 5px solid var(--brand-primary);
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .slds-header-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .slds-header-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slds-header-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .slds-header-title {
+    margin: 2px 0 0 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+  }
+
+  /* Header Actions & Filter Controls */
+  .slds-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .slds-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand-accent-bg);
+    padding: 6px 12px;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
+  }
+
+  .slds-filter-group label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .slds-filter-group select {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .slds-filter-group select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 1px var(--brand-primary);
+  }
+
+  /* Standard Action Buttons */
+  .slds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    height: 32px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid transparent;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+
+  .slds-btn-brand {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+    border-color: var(--brand-primary);
+  }
+
+  .slds-btn-brand:hover {
+    background-color: var(--brand-primary-dark);
+    border-color: var(--brand-primary-dark);
+    color: #ffffff;
+  }
+
+  .slds-btn-neutral {
+    background-color: #ffffff;
+    color: var(--brand-primary);
+    border-color: var(--brand-border);
+  }
+
+  .slds-btn-neutral:hover {
+    background-color: var(--brand-accent-bg);
+    border-color: var(--brand-border-dark);
+    color: var(--brand-primary-dark);
+  }
+
+  .slds-btn-danger {
+    background-color: #ffffff;
+    color: var(--badge-missing-text);
+    border-color: var(--brand-border);
+  }
+
+  .slds-btn-danger:hover {
+    background-color: var(--badge-missing-bg);
+    border-color: var(--badge-missing-border);
+  }
+
+  /* Card & Datatable Wrapper */
+  .slds-card {
+    background: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .slds-org-header {
+    background-color: var(--brand-accent-bg);
+    border-bottom: 2px solid var(--brand-border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .slds-org-header-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .slds-org-count-badge {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .slds-data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .slds-data-table th {
+    background-color: var(--table-header-bg);
+    color: var(--brand-primary-dark);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--brand-border);
+    border-right: 1px solid var(--brand-border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .slds-data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--brand-border);
+    border-right: 1px solid var(--brand-border);
+    color: var(--text-main);
+    vertical-align: middle;
+  }
+
+  .slds-data-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .slds-data-table td:last-child, 
+  .slds-data-table th:last-child {
+    border-right: none;
+  }
+
+  /* Sticky First and Last Columns */
+  .slds-data-table td:first-child, 
+  .slds-data-table th:first-child {
+    position: sticky;
+    left: 0;
+    background-color: var(--bg-card);
+    z-index: 1;
+    box-shadow: 2px 0 4px rgba(122, 31, 53, 0.04);
+  }
+
+  .slds-data-table th:first-child {
+    background-color: var(--table-header-bg);
+    z-index: 3;
+  }
+
+  .slds-data-table td:last-child,
+  .slds-data-table th:last-child {
+    position: sticky;
+    right: 0;
+    background-color: var(--bg-card);
+    z-index: 1;
+    box-shadow: -2px 0 4px rgba(122, 31, 53, 0.04);
+  }
+
+  .slds-data-table th:last-child {
+    background-color: var(--table-header-bg);
+    z-index: 3;
+  }
+
+  .slds-data-table tr:hover td { 
+    background-color: var(--row-hover) !important; 
+  }
+
+  .action-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Modal Panel Overlay & Layout */
+  .slds-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(43, 43, 43, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .slds-modal-card {
+    background: #ffffff;
+    width: 90%;
+    max-width: 920px;
+    max-height: 88vh;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(122, 31, 53, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlide 0.2s ease-out;
+  }
+
+  @keyframes modalSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slds-modal-card form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .slds-modal-header {
+    background-color: var(--brand-accent-bg);
+    border-bottom: 1px solid var(--brand-border);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .slds-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+  }
+
+  .slds-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  .slds-modal-close:hover {
+    background-color: var(--brand-border);
+    color: var(--text-main);
+  }
+
+  .slds-modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    background-color: #ffffff;
+  }
+
+  .slds-section-title {
+    background-color: var(--brand-accent-bg);
+    color: var(--brand-primary-dark);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border-left: 3px solid var(--brand-primary);
+    margin: 20px 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .slds-section-title:first-of-type {
+    margin-top: 0;
+  }
+
+  .slds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px 20px;
+  }
+
+  .slds-grid > .slds-form-element.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .slds-form-element {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slds-form-element label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-label);
+    margin-bottom: 4px;
+  }
+
+  .slds-form-element input,
+  .slds-form-element select {
+    width: 100%;
+    padding: 6px 12px;
+    font-size: 13px;
+    height: 36px;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
+    outline: none;
+    box-sizing: border-box;
+    color: var(--text-main);
+    background-color: #ffffff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .slds-form-element input:focus,
+  .slds-form-element select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 1px var(--brand-primary);
+  }
+
+  .slds-form-element input[readonly] {
+    background-color: var(--bg-page);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .slds-modal-footer {
+    padding: 14px 24px;
+    background-color: var(--brand-accent-bg);
+    border-top: 1px solid var(--brand-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+  }

@@ -601,8 +601,11 @@ if (list != null && !list.isEmpty()) {
         int i = 0;
         for (ScholarshipBean bean : orgList) {
             String orgVal = bean.getOrgName() != null ? bean.getOrgName().trim() : "";
+            
+            // Check submission status (handles String or Boolean getter safely)
+            boolean isSubmitted = "Submitted".equalsIgnoreCase(String.valueOf(bean.getSubmitted()));
 %>
-          <tr class="app-row" data-org="<%= orgVal %>">
+          <tr class="app-row <%= isSubmitted ? "row-submitted" : "" %>" data-org="<%= orgVal %>">
             <td><%= ++i %></td>
             <td><strong><%=bean.getApp_no() != null ? bean.getApp_no() : ""%></strong></td>
             <td><%=orgVal%></td>
@@ -622,10 +625,12 @@ if (list != null && !list.isEmpty()) {
             <td><%=bean.getPlaceCollege() != null ? bean.getPlaceCollege() : ""%></td>
             <td><%=bean.getCourse() != null ? bean.getCourse() : ""%></td>
             <td><%=bean.getActualFeePaid()%></td>
-         
+
             <td class="action-cell">
               <a href="ScholarshipViewServlet?id=<%=bean.getId()%>" class="slds-btn slds-btn-neutral" style="height:26px; padding:0 10px; font-size:11px;">View</a>
 
+              <%-- Render Edit Button ONLY if NOT submitted --%>
+              <% if (!isSubmitted) { %>
               <button type="button" class="slds-btn slds-btn-neutral" style="height:26px; padding:0 10px; font-size:11px;"
                   onclick="openEditModal(
                   '<%=bean.getId()%>',
@@ -656,7 +661,9 @@ if (list != null && !list.isEmpty()) {
                   )">
                   Edit
               </button>
-               <% if ("Uday".equalsIgnoreCase(users)){%>
+              <% } %>
+
+              <% if ("Uday".equalsIgnoreCase(users)){%>
               <a class="slds-btn slds-btn-danger" style="height:26px; padding:0 10px; font-size:11px;"
                  href="ScholarshipListServelt?action=delete&id=<%=bean.getId()%>"
                  onclick="return confirm('Are you sure you want to delete this record?');">
@@ -668,6 +675,7 @@ if (list != null && !list.isEmpty()) {
 <%
         }
 %>
+
         </tbody>
       </table>
     </div>

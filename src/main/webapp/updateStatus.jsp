@@ -348,6 +348,15 @@
                 font-size: 18px;
             }
         }
+        /* Dimmed Row styling for Submitted Applications */
+.slds-data-table tr.row-submitted td {
+  background-color: #f1f3f5 !important;
+  color: #8c8c8c !important;
+}
+
+.slds-data-table tr.row-submitted td strong {
+  color: #666666 !important;
+}
     </style>
 </head>
 <body>

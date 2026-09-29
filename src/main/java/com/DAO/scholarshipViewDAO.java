@@ -75,6 +75,7 @@ public class scholarshipViewDAO {
                 bean.setBankPassbookFirstPage(rs.getBytes("bank_passbook_first_page"));
                 bean.setParentAadhar(rs.getBytes("parent_aadhar"));
                 bean.setStudentAadhar(rs.getBytes("student_aadhar"));
+                bean.setSubmitted(rs.getString("submiited"));
             }
 
         } catch (Exception e) {
