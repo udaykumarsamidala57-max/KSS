@@ -10,6 +10,18 @@
     String roles = (String) sess.getAttribute("role");
     String depts = (String) sess.getAttribute("department");
     String branch = (String) sess.getAttribute("branch");
+    
+    // Retrieve filter selection
+    String selectedOrgFilter = request.getParameter("orgFilter");
+    if (selectedOrgFilter == null) {
+        selectedOrgFilter = "ALL";
+    }
+
+    // Check if request is an AJAX request
+    boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With")) 
+                     || "true".equalsIgnoreCase(request.getParameter("ajax"));
+
+    if (!isAjax) {
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -76,6 +88,16 @@
     padding: 18px 24px;
     margin-bottom: 24px;
     box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-title-area {
+    display: flex;
+    flex-direction: column;
   }
 
   .header-title {
@@ -90,6 +112,44 @@
     margin: 4px 0 0 0;
     font-size: 13px;
     color: var(--text-muted);
+  }
+
+  /* Filter Controls */
+  .filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--brand-accent-bg);
+    padding: 8px 14px;
+    border: 1px solid var(--brand-border);
+    border-radius: 6px;
+  }
+
+  .filter-container label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .filter-container select {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    border: 1px solid var(--brand-border);
+    border-radius: 4px;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .filter-container select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 1px var(--brand-primary);
   }
 
   /* Section Card per Organization */
@@ -261,8 +321,36 @@
     .header-title {
       font-size: 18px;
     }
+    
+    .header-container {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>
+<script>
+function filterData(val) {
+    var contentDiv = document.getElementById("content-area");
+    contentDiv.style.opacity = "0.5";
+    
+    fetch('?ajax=true&orgFilter=' + encodeURIComponent(val), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(response) {
+        return response.text();
+    })
+    .then(function(html) {
+        contentDiv.innerHTML = html;
+        contentDiv.style.opacity = "1";
+    })
+    .catch(function(error) {
+        console.error('Error fetching data:', error);
+        contentDiv.style.opacity = "1";
+    });
+}
+</script>
 </head>
 <body>
 
@@ -270,10 +358,88 @@
 
 <div class="page-wrapper">
 
+<%
+Connection con = null;
+PreparedStatement ps = null;
+ResultSet rs = null;
+
+PreparedStatement psOrg = null;
+ResultSet rsOrg = null;
+java.util.List<String> orgList = new java.util.ArrayList<String>();
+
+try {
+    con = DBUtil.getConnection();
+    
+    boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
+    boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
+
+    // Populate distinct Organization options for the filter based on user role/branch permissions
+    String orgSql = "";
+    if ("Global".equalsIgnoreCase(roles)) {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE org_name IS NOT NULL AND TRIM(org_name) <> '' ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+    } else if (isSandurEducationSociety) {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN (" +
+                 "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+        psOrg.setString(1, "SANDUR EDUCATION SOCIETY");
+        psOrg.setString(2, "SES VIDYAMANDIR PU COLLEGE");
+        psOrg.setString(3, "SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
+        psOrg.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
+        psOrg.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
+        psOrg.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+        psOrg.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
+    } else if (isSandurHatcheries) {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN (" +
+                 "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+        psOrg.setString(1, "SANDUR HATCHERIES PVT LTD");
+        psOrg.setString(2, "SANDUR POULTRY FARM");
+        psOrg.setString(3, "SANDUR POULTRY BREEDERS");
+    } else {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+        psOrg.setString(1, branch != null ? branch.trim() : "");
+    }
+    
+    rsOrg = psOrg.executeQuery();
+    while (rsOrg.next()) {
+        String oName = rsOrg.getString("org");
+        if (oName != null && !oName.trim().isEmpty()) {
+            orgList.add(oName.trim());
+        }
+    }
+} catch(Exception e) {
+    // Exception handled below
+} finally {
+    if(rsOrg!=null) try { rsOrg.close(); } catch(SQLException se) {}
+    if(psOrg!=null) try { psOrg.close(); } catch(SQLException se) {}
+}
+%>
+
   <div class="header-container">
-    <h1 class="header-title">Student Scholarship Document Status</h1>
-    <p class="header-subtitle"> Click on any uploaded document badge to view or download the attachment.</p>
+    <div class="header-title-area">
+      <h1 class="header-title">Student Scholarship Document Status</h1>
+      <p class="header-subtitle"> Click on any uploaded document badge to view or download the attachment.</p>
+    </div>
+    
+    <div class="filter-container">
+      <form id="filterForm" method="GET" action="" onsubmit="return false;">
+        <label for="orgFilter">Filter Organization:</label>
+        <select name="orgFilter" id="orgFilter" onchange="filterData(this.value)">
+          <option value="ALL" <%= "ALL".equals(selectedOrgFilter) ? "selected" : "" %>>All Organizations</option>
+          <% for(String o : orgList) { %>
+            <option value="<%= o %>" <%= o.equalsIgnoreCase(selectedOrgFilter) ? "selected" : "" %>><%= o %></option>
+          <% } %>
+        </select>
+      </form>
+    </div>
   </div>
+
+  <div id="content-area">
+<%
+    } // End of !isAjax check
+%>
 
 <%
 Connection con = null;
@@ -286,6 +452,7 @@ try {
     String sql;
     boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
     boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
+    boolean hasSpecificFilter = selectedOrgFilter != null && !"ALL".equalsIgnoreCase(selectedOrgFilter.trim());
 
     // Ordering by org_name first to ensure grouping works accurately
     if ("Global".equalsIgnoreCase(roles)) {
@@ -297,10 +464,16 @@ try {
               "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
-              "FROM kss_student_scholarship " +
-              "ORDER BY TRIM(org_name), emp_no";
+              "FROM kss_student_scholarship ";
+        if (hasSpecificFilter) {
+            sql += "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
+        if (hasSpecificFilter) {
+            ps.setString(1, selectedOrgFilter.trim());
+        }
     } else if (isSandurEducationSociety) {
         sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
@@ -312,8 +485,11 @@ try {
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
-              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
-              "ORDER BY TRIM(org_name), emp_no";
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
+        if (hasSpecificFilter) {
+            sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, "SANDUR EDUCATION SOCIETY");
@@ -323,6 +499,9 @@ try {
         ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
         ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
         ps.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
+        if (hasSpecificFilter) {
+            ps.setString(8, selectedOrgFilter.trim());
+        }
     
     } else if (isSandurHatcheries) {
         sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
@@ -335,13 +514,19 @@ try {
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
-              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
-              "ORDER BY TRIM(org_name), emp_no";
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
+        if (hasSpecificFilter) {
+            sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, "SANDUR HATCHERIES PVT LTD");
         ps.setString(2, "SANDUR POULTRY FARM");
         ps.setString(3, "SANDUR POULTRY BREEDERS");
+        if (hasSpecificFilter) {
+            ps.setString(4, selectedOrgFilter.trim());
+        }
     } else {
         sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
@@ -352,18 +537,24 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
-              "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) " +
-              "ORDER BY TRIM(org_name), emp_no";
+              "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        if (hasSpecificFilter) {
+            sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, branch != null ? branch.trim() : "");
+        if (hasSpecificFilter) {
+            ps.setString(2, selectedOrgFilter.trim());
+        }
     }
 
     rs = ps.executeQuery();
 
     String currentOrg = null;
     boolean hasData = false;
-
+    int i=0;
     while (rs.next()) {
         hasData = true;
         String orgName = rs.getString("org_name");
@@ -423,7 +614,7 @@ try {
         boolean hasBank = rs.getLong("len_bank") > 0;
 %>
         <tr>
-          <td><%=recId%></td>
+          <td><%=++i%></td>
           <td><span class="emp-badge"><%=rs.getString("emp_no") != null ? rs.getString("emp_no") : ""%></span></td>
           <td><%=rs.getString("emp_name") != null ? rs.getString("emp_name") : ""%></td>
           <td><%=rs.getString("children_name") != null ? rs.getString("children_name") : ""%></td>
@@ -564,7 +755,15 @@ try {
 }
 %>
 
+<%
+    if (!isAjax) {
+%>
+  </div>
+
 </div>
 
 </body>
 </html>
+<%
+    }
+%>

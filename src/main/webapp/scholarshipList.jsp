@@ -1,6 +1,9 @@
 <%@page import="java.util.List"%>
 <%@page import="java.util.Set"%>
 <%@page import="java.util.TreeSet"%>
+<%@page import="java.util.Map"%>
+<%@page import="java.util.LinkedHashMap"%>
+<%@page import="java.util.ArrayList"%>
 <%@page import="com.Bean.ScholarshipBean"%>
 <%
     HttpSession sess = request.getSession(false);
@@ -15,13 +18,22 @@
 <%
 List<ScholarshipBean> list = (List<ScholarshipBean>) request.getAttribute("list");
 
-// Extract unique organization names for the dropdown filter
+// Group list entries by organization and collect unique organization names for dropdown filter
 Set<String> orgSet = new TreeSet<String>();
+Map<String, List<ScholarshipBean>> orgMap = new LinkedHashMap<String, List<ScholarshipBean>>();
+
 if (list != null) {
     for (ScholarshipBean b : list) {
-        if (b.getOrgName() != null && !b.getOrgName().trim().isEmpty()) {
-            orgSet.add(b.getOrgName().trim());
+        String orgName = (b.getOrgName() != null && !b.getOrgName().trim().isEmpty()) 
+                         ? b.getOrgName().trim() 
+                         : "Uncategorized";
+                         
+        orgSet.add(orgName);
+        
+        if (!orgMap.containsKey(orgName)) {
+            orgMap.put(orgName, new ArrayList<ScholarshipBean>());
         }
+        orgMap.get(orgName).add(b);
     }
 }
 %>
@@ -37,29 +49,45 @@ if (list != null) {
 <%@ include file="header.jsp" %>
 
 <style>
-  /* Salesforce Lightning Design System (SLDS) Theme Variables */
+  /* Professional Maroon Theme Variables */
   :root {
-    --slds-brand: #0176d3;
-    --slds-brand-hover: #014486;
-    --slds-bg-page: #f3f5f8;
-    --slds-card-bg: #ffffff;
-    --slds-border: #dddbda;
-    --slds-border-dark: #c9c7c5;
-    --slds-text-primary: #080707;
-    --slds-text-secondary: #444444;
-    --slds-text-label: #514f4d;
-    --slds-table-header-bg: #fafaf9;
-    --slds-table-hover: #f3f3f3;
-    --slds-radius: 4px;
-    --slds-focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0176d3;
+    --brand-primary: #7a1f35;
+    --brand-primary-dark: #5e1627;
+    --brand-accent-bg: #fdf6f7;
+    --brand-border: #e2cece;
+    --brand-border-dark: #c8b1b1;
+    --text-main: #2b2b2b;
+    --text-muted: #666666;
+    --text-label: #514f4d;
+
+    --bg-page: #f8f9fa;
+    --bg-card: #ffffff;
+    --table-header-bg: #faf0f2;
+    --row-hover: #fcf2f4;
+    --radius: 4px;
+    --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #7a1f35;
+
+    /* Status Badges */
+    --badge-success-bg: #e6f4ea;
+    --badge-success-text: #137333;
+    --badge-success-border: #ceead6;
+
+    --badge-missing-bg: #fce8e6;
+    --badge-missing-text: #c5221f;
+    --badge-missing-border: #fad2cf;
+
+    /* Shadows */
+    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
+    --card-shadow-hover: 0 6px 16px rgba(122, 31, 53, 0.15);
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--slds-bg-page);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-page);
     margin: 0;
     padding: 16px 20px 80px 20px;
-    color: var(--slds-text-primary);
+    color: var(--text-main);
+    line-height: 1.5;
   }
 
   .slds-container {
@@ -69,15 +97,16 @@ if (list != null) {
 
   /* Salesforce Page Header Bar */
   .slds-page-header {
-    background-color: var(--slds-card-bg);
-    border: 1px solid var(--slds-border);
-    border-radius: var(--slds-radius);
+    background-color: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-left: 5px solid var(--brand-primary);
+    border-radius: var(--radius);
     padding: 16px 24px;
     margin-bottom: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: var(--card-shadow);
     flex-wrap: wrap;
     gap: 16px;
   }
@@ -97,7 +126,7 @@ if (list != null) {
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    color: var(--slds-text-secondary);
+    color: var(--text-muted);
     letter-spacing: 0.5px;
   }
 
@@ -105,8 +134,9 @@ if (list != null) {
     margin: 2px 0 0 0;
     font-size: 20px;
     font-weight: 700;
-    color: var(--slds-text-primary);
+    color: var(--brand-primary-dark);
     line-height: 1.2;
+    letter-spacing: -0.2px;
   }
 
   /* Header Actions & Filter Controls */
@@ -120,16 +150,16 @@ if (list != null) {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--slds-bg-page);
+    background: var(--brand-accent-bg);
     padding: 6px 12px;
-    border: 1px solid var(--slds-border);
-    border-radius: var(--slds-radius);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
   }
 
   .slds-filter-group label {
     font-size: 12px;
     font-weight: 700;
-    color: var(--slds-text-label);
+    color: var(--text-label);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     white-space: nowrap;
@@ -140,20 +170,20 @@ if (list != null) {
     padding: 0 10px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--slds-text-primary);
-    border: 1px solid var(--slds-border);
-    border-radius: var(--slds-radius);
+    color: var(--text-main);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
     background-color: #ffffff;
     outline: none;
     cursor: pointer;
   }
 
   .slds-filter-group select:focus {
-    border-color: var(--slds-brand);
-    box-shadow: 0 0 0 1px var(--slds-brand);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 1px var(--brand-primary);
   }
 
-  /* Salesforce Standard Buttons */
+  /* Standard Action Buttons */
   .slds-btn {
     display: inline-flex;
     align-items: center;
@@ -162,7 +192,7 @@ if (list != null) {
     height: 32px;
     font-size: 13px;
     font-weight: 600;
-    border-radius: var(--slds-radius);
+    border-radius: var(--radius);
     text-decoration: none;
     cursor: pointer;
     transition: all 0.15s ease-in-out;
@@ -172,47 +202,75 @@ if (list != null) {
   }
 
   .slds-btn-brand {
-    background-color: var(--slds-brand);
+    background-color: var(--brand-primary);
     color: #ffffff;
-    border-color: var(--slds-brand);
+    border-color: var(--brand-primary);
   }
 
   .slds-btn-brand:hover {
-    background-color: var(--slds-brand-hover);
-    border-color: var(--slds-brand-hover);
+    background-color: var(--brand-primary-dark);
+    border-color: var(--brand-primary-dark);
     color: #ffffff;
   }
 
   .slds-btn-neutral {
     background-color: #ffffff;
-    color: var(--slds-brand);
-    border-color: var(--slds-border);
+    color: var(--brand-primary);
+    border-color: var(--brand-border);
   }
 
   .slds-btn-neutral:hover {
-    background-color: #f4f6f9;
-    border-color: var(--slds-border-dark);
-    color: var(--slds-brand-hover);
+    background-color: var(--brand-accent-bg);
+    border-color: var(--brand-border-dark);
+    color: var(--brand-primary-dark);
   }
 
   .slds-btn-danger {
     background-color: #ffffff;
-    color: #ea001e;
-    border-color: var(--slds-border);
+    color: var(--badge-missing-text);
+    border-color: var(--brand-border);
   }
 
   .slds-btn-danger:hover {
-    background-color: #fef1f2;
-    border-color: #ea001e;
+    background-color: var(--badge-missing-bg);
+    border-color: var(--badge-missing-border);
   }
 
-  /* Salesforce Card & Datatable Wrapper */
+  /* Card & Datatable Wrapper */
   .slds-card {
-    background: var(--slds-card-bg);
-    border: 1px solid var(--slds-border);
-    border-radius: var(--slds-radius);
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+    background: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
     overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .slds-org-header {
+    background-color: var(--brand-accent-bg);
+    border-bottom: 2px solid var(--brand-border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .slds-org-header-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .slds-org-count-badge {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
   }
 
   .table-responsive {
@@ -229,16 +287,16 @@ if (list != null) {
   }
 
   .slds-data-table th {
-    background-color: var(--slds-table-header-bg);
-    color: var(--slds-text-label);
+    background-color: var(--table-header-bg);
+    color: var(--brand-primary-dark);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.5px;
     padding: 10px 14px;
     text-align: left;
-    border-bottom: 1px solid var(--slds-border);
-    border-right: 1px solid var(--slds-border);
+    border-bottom: 2px solid var(--brand-border);
+    border-right: 1px solid var(--brand-border);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -246,9 +304,9 @@ if (list != null) {
 
   .slds-data-table td {
     padding: 10px 14px;
-    border-bottom: 1px solid var(--slds-border);
-    border-right: 1px solid var(--slds-border);
-    color: var(--slds-text-primary);
+    border-bottom: 1px solid var(--brand-border);
+    border-right: 1px solid var(--brand-border);
+    color: var(--text-main);
     vertical-align: middle;
   }
 
@@ -266,13 +324,13 @@ if (list != null) {
   .slds-data-table th:first-child {
     position: sticky;
     left: 0;
-    background-color: var(--slds-card-bg);
+    background-color: var(--bg-card);
     z-index: 1;
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.04);
+    box-shadow: 2px 0 4px rgba(122, 31, 53, 0.04);
   }
 
   .slds-data-table th:first-child {
-    background-color: var(--slds-table-header-bg);
+    background-color: var(--table-header-bg);
     z-index: 3;
   }
 
@@ -280,18 +338,18 @@ if (list != null) {
   .slds-data-table th:last-child {
     position: sticky;
     right: 0;
-    background-color: var(--slds-card-bg);
+    background-color: var(--bg-card);
     z-index: 1;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.04);
+    box-shadow: -2px 0 4px rgba(122, 31, 53, 0.04);
   }
 
   .slds-data-table th:last-child {
-    background-color: var(--slds-table-header-bg);
+    background-color: var(--table-header-bg);
     z-index: 3;
   }
 
   .slds-data-table tr:hover td { 
-    background-color: var(--slds-table-hover) !important; 
+    background-color: var(--row-hover) !important; 
   }
 
   .action-cell {
@@ -301,7 +359,7 @@ if (list != null) {
     align-items: center;
   }
 
-  /* Salesforce Style Modal Panel */
+  /* Modal Panel Overlay & Layout */
   .slds-modal-overlay {
     display: none;
     position: fixed;
@@ -309,7 +367,7 @@ if (list != null) {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(8, 7, 7, 0.6);
+    background-color: rgba(43, 43, 43, 0.6);
     backdrop-filter: blur(2px);
     z-index: 1000;
     justify-content: center;
@@ -321,8 +379,8 @@ if (list != null) {
     width: 90%;
     max-width: 920px;
     max-height: 88vh;
-    border-radius: var(--slds-radius);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(122, 31, 53, 0.2);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -343,8 +401,8 @@ if (list != null) {
   }
 
   .slds-modal-header {
-    background-color: #fafaf9;
-    border-bottom: 1px solid var(--slds-border);
+    background-color: var(--brand-accent-bg);
+    border-bottom: 1px solid var(--brand-border);
     padding: 16px 24px;
     display: flex;
     justify-content: space-between;
@@ -356,13 +414,13 @@ if (list != null) {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    color: var(--slds-text-primary);
+    color: var(--brand-primary-dark);
   }
 
   .slds-modal-close {
     background: none;
     border: none;
-    color: var(--slds-text-secondary);
+    color: var(--text-muted);
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
@@ -371,8 +429,8 @@ if (list != null) {
   }
 
   .slds-modal-close:hover {
-    background-color: var(--slds-border);
-    color: var(--slds-text-primary);
+    background-color: var(--brand-border);
+    color: var(--text-main);
   }
 
   .slds-modal-body {
@@ -383,12 +441,12 @@ if (list != null) {
   }
 
   .slds-section-title {
-    background-color: #f3f5f8;
-    color: var(--slds-text-primary);
+    background-color: var(--brand-accent-bg);
+    color: var(--brand-primary-dark);
     padding: 8px 12px;
     font-size: 12px;
     font-weight: 700;
-    border-left: 3px solid var(--slds-brand);
+    border-left: 3px solid var(--brand-primary);
     margin: 20px 0 16px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -417,7 +475,7 @@ if (list != null) {
   .slds-form-element label {
     font-size: 12px;
     font-weight: 600;
-    color: var(--slds-text-label);
+    color: var(--text-label);
     margin-bottom: 4px;
   }
 
@@ -427,31 +485,31 @@ if (list != null) {
     padding: 6px 12px;
     font-size: 13px;
     height: 36px;
-    border: 1px solid var(--slds-border);
-    border-radius: var(--slds-radius);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius);
     outline: none;
     box-sizing: border-box;
-    color: var(--slds-text-primary);
+    color: var(--text-main);
     background-color: #ffffff;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .slds-form-element input:focus,
   .slds-form-element select:focus {
-    border-color: var(--slds-brand);
-    box-shadow: 0 0 0 1px var(--slds-brand);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 1px var(--brand-primary);
   }
 
   .slds-form-element input[readonly] {
-    background-color: #f3f5f8;
-    color: var(--slds-text-secondary);
+    background-color: var(--bg-page);
+    color: var(--text-muted);
     cursor: not-allowed;
   }
 
   .slds-modal-footer {
     padding: 14px 24px;
-    background-color: #fafaf9;
-    border-top: 1px solid var(--slds-border);
+    background-color: var(--brand-accent-bg);
+    border-top: 1px solid var(--brand-border);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -500,10 +558,21 @@ if (list != null) {
     </div>
   </div>
 
-  <!-- DATA TABLE CARD CONTAINER -->
-  <div class="slds-card">
+  <!-- ORGANIZATION WISE TABLES -->
+<%
+if (list != null && !list.isEmpty()) {
+    for (Map.Entry<String, List<ScholarshipBean>> entry : orgMap.entrySet()) {
+        String currentOrg = entry.getKey();
+        List<ScholarshipBean> orgList = entry.getValue();
+%>
+  <div class="slds-card org-block" data-org="<%= currentOrg %>">
+    <div class="slds-org-header">
+      <h3 class="slds-org-header-title"><%= currentOrg %></h3>
+      <span class="slds-org-count-badge"><%= orgList.size() %> Applications</span>
+    </div>
+
     <div class="table-responsive">
-      <table class="slds-data-table" id="scholarshipTable">
+      <table class="slds-data-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -529,12 +598,12 @@ if (list != null) {
         </thead>
         <tbody>
 <%
-if(list != null && !list.isEmpty()){
-    for(ScholarshipBean bean : list){
-        String orgVal = bean.getOrgName() != null ? bean.getOrgName().trim() : "";
+        int i = 0;
+        for (ScholarshipBean bean : orgList) {
+            String orgVal = bean.getOrgName() != null ? bean.getOrgName().trim() : "";
 %>
           <tr class="app-row" data-org="<%= orgVal %>">
-            <td><%=bean.getId()%></td>
+            <td><%= ++i %></td>
             <td><strong><%=bean.getApp_no() != null ? bean.getApp_no() : ""%></strong></td>
             <td><%=orgVal%></td>
             
@@ -597,20 +666,34 @@ if(list != null && !list.isEmpty()){
             </td>
           </tr>
 <%
+        }
+%>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<%
     }
 } else {
 %>
-          <tr id="emptyRow">
+  <div class="slds-card">
+    <div class="table-responsive">
+      <table class="slds-data-table">
+        <tbody>
+          <tr>
             <td colspan="18" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found</td>
-          </tr>
-<%
-}
-%>
-          <tr id="noMatchingRow" style="display: none;">
-            <td colspan="18" style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">No Applications Found for Selected Organization</td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+<%
+}
+%>
+
+  <div id="noMatchingRow" class="slds-card" style="display: none;">
+    <div style="text-align: center; color: var(--slds-text-secondary); padding: 40px;">
+      No Applications Found for Selected Organization
     </div>
   </div>
 
@@ -798,22 +881,22 @@ if(list != null && !list.isEmpty()){
   // Organization Filter Logic
   function filterByOrganization() {
     const selectedOrg = document.getElementById('orgFilter').value;
-    const rows = document.querySelectorAll('.app-row');
+    const orgBlocks = document.querySelectorAll('.org-block');
     const noMatchingRow = document.getElementById('noMatchingRow');
-    let visibleCount = 0;
+    let visibleBlocks = 0;
 
-    rows.forEach(row => {
-      const rowOrg = row.getAttribute('data-org');
-      if (selectedOrg === 'ALL' || rowOrg === selectedOrg) {
-        row.style.display = '';
-        visibleCount++;
+    orgBlocks.forEach(block => {
+      const blockOrg = block.getAttribute('data-org');
+      if (selectedOrg === 'ALL' || blockOrg === selectedOrg) {
+        block.style.display = '';
+        visibleBlocks++;
       } else {
-        row.style.display = 'none';
+        block.style.display = 'none';
       }
     });
 
     if (noMatchingRow) {
-      if (visibleCount === 0 && rows.length > 0) {
+      if (visibleBlocks === 0 && orgBlocks.length > 0) {
         noMatchingRow.style.display = '';
       } else {
         noMatchingRow.style.display = 'none';
