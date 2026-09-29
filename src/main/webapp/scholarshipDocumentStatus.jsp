@@ -67,7 +67,7 @@
     width: 100%;
   }
 
-  /* Header Banner with Left Accent Line */
+  /* Header Banner */
   .header-container {
     background-color: var(--bg-card);
     border: 1px solid var(--brand-border);
@@ -92,12 +92,43 @@
     color: var(--text-muted);
   }
 
-  /* Responsive Table Container */
-  .table-container {
+  /* Section Card per Organization */
+  .org-section {
     background: var(--bg-card);
     border: 1px solid var(--brand-border);
     border-radius: 8px;
     box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+  }
+
+  .org-header {
+    background-color: var(--brand-accent-bg);
+    border-bottom: 2px solid var(--brand-border);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .org-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    margin: 0;
+  }
+
+  .org-badge {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Responsive Table Container */
+  .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -111,19 +142,16 @@
 
   /* Styled Sticky Headers */
   th {
-    background-color: var(--header-bg);
+    background-color: #faf0f2;
     color: var(--brand-primary-dark);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 14px 16px;
+    padding: 12px 16px;
     text-align: left;
     border-bottom: 2px solid var(--brand-border);
     white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 2;
   }
 
   th.center-align, td.center-align {
@@ -202,8 +230,18 @@
     color: var(--brand-primary-dark);
   }
 
+  .no-data-card {
+    background: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    color: var(--text-muted);
+    box-shadow: var(--card-shadow);
+  }
+
   .error-box {
-    margin: 20px;
+    margin: 20px 0;
     padding: 16px;
     background-color: #fdf2e9;
     border: 1px solid #f5c6cb;
@@ -234,27 +272,9 @@
 
   <div class="header-container">
     <h1 class="header-title">Student Scholarship Document Status</h1>
-    <p class="header-subtitle">Click on any uploaded document badge to view or download the attachment.</p>
+    <p class="header-subtitle"> Click on any uploaded document badge to view or download the attachment.</p>
   </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Emp No</th>
-          <th>Employee Name</th>
-          <th>Child Name</th>
-          <th class="center-align">Marks Card</th>
-          <th class="center-align">KSS App</th>
-          <th class="center-align">Fee Structure</th>
-          <th class="center-align">Fee Receipt</th>
-          <th class="center-align">Parent ID</th>
-          <th class="center-align">Student ID</th>
-          <th class="center-align">Bank Passbook</th>
-        </tr>
-      </thead>
-      <tbody>
 <%
 Connection con = null;
 PreparedStatement ps = null;
@@ -267,8 +287,9 @@ try {
     boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
     boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
 
+    // Ordering by org_name first to ensure grouping works accurately
     if ("Global".equalsIgnoreCase(roles)) {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -277,11 +298,11 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
-              "ORDER BY emp_no";
+              "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
     } else if (isSandurEducationSociety) {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -292,7 +313,7 @@ try {
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
               "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
-              "ORDER BY emp_no";
+              "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, "SANDUR EDUCATION SOCIETY");
@@ -304,7 +325,7 @@ try {
         ps.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
     
     } else if (isSandurHatcheries) {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -315,14 +336,14 @@ try {
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
               "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
-              "ORDER BY emp_no";
+              "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, "SANDUR HATCHERIES PVT LTD");
         ps.setString(2, "SANDUR POULTRY FARM");
         ps.setString(3, "SANDUR POULTRY BREEDERS");
     } else {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -332,7 +353,7 @@ try {
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) " +
-              "ORDER BY emp_no";
+              "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, branch != null ? branch.trim() : "");
@@ -340,11 +361,59 @@ try {
 
     rs = ps.executeQuery();
 
+    String currentOrg = null;
     boolean hasData = false;
-    while(rs.next()){
+
+    while (rs.next()) {
         hasData = true;
+        String orgName = rs.getString("org_name");
+        if (orgName == null || orgName.trim().isEmpty()) {
+            orgName = "Uncategorized / Other";
+        } else {
+            orgName = orgName.trim();
+        }
+
+        // Detect change in organization group
+        if (currentOrg == null || !currentOrg.equalsIgnoreCase(orgName)) {
+            if (currentOrg != null) {
+                // Close previous table & section block
+%>
+            </tbody>
+          </table>
+        </div>
+      </div>
+<%
+            }
+            currentOrg = orgName;
+%>
+      <!-- New Organization Block -->
+      <div class="org-section">
+        <div class="org-header">
+          <h2 class="org-title"><%=currentOrg%></h2>
+       
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Emp No</th>
+                <th>Employee Name</th>
+                <th>Child Name</th>
+                <th class="center-align">Marks Card</th>
+                <th class="center-align">KSS App</th>
+                <th class="center-align">Fee Structure</th>
+                <th class="center-align">Fee Receipt</th>
+                <th class="center-align">Parent ID</th>
+                <th class="center-align">Student ID</th>
+                <th class="center-align">Bank Passbook</th>
+              </tr>
+            </thead>
+            <tbody>
+<%
+        }
+
         int recId = rs.getInt("id");
-        
         boolean hasMarks = rs.getLong("len_marks") > 0;
         boolean hasKss = rs.getLong("len_kss") > 0;
         boolean hasFeeStruct = rs.getLong("len_fee_struct") > 0;
@@ -466,20 +535,27 @@ try {
         </tr>
 <%
     }
-    if (!hasData) {
+
+    if (hasData) {
+        // Close last active organization section
 %>
-        <tr>
-          <td colspan="11" style="text-align: center; padding: 24px; color: var(--text-muted);">No scholarship application records available.</td>
-        </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+<%
+    } else {
+%>
+      <div class="no-data-card">
+        No scholarship application records available.
+      </div>
 <%
     }
 } catch(Exception e) {
 %>
-    </table>
     <div class="error-box">
       Error retrieving scholarship document status: <%=e.getMessage()%>
     </div>
-    <table>
 <%
 } finally {
     if(rs!=null) try { rs.close(); } catch(SQLException se) {}
@@ -487,9 +563,7 @@ try {
     if(con!=null) try { con.close(); } catch(SQLException se) {}
 }
 %>
-      </tbody>
-    </table>
-  </div>
+
 </div>
 
 </body>
