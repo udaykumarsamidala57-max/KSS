@@ -33,7 +33,8 @@ public class ScholarshipDocumentDownloadServlet extends HttpServlet {
         // If referer is null (typed directly into address bar) or not coming from authorized pages, reject access
         if (referer == null || (!referer.contains("scholarshipDocumentStatus") && 
                                 !referer.contains("scholarshipView") && 
-                                !referer.contains("ScholarshipViewServlet"))) {
+                                !referer.contains("ScholarshipViewServlet") &&
+                                !referer.contains("VerifyDocumentsServlet"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Direct access is prohibited. Please access files through the application dashboard.");
             return;
         }

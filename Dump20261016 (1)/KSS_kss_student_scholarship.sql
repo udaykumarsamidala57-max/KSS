@@ -48,6 +48,7 @@ CREATE TABLE `kss_student_scholarship` (
   `college_name` varchar(200) DEFAULT NULL,
   `place_college` varchar(450) DEFAULT NULL,
   `course` varchar(150) DEFAULT NULL,
+  `KSS_courses` varchar(150) DEFAULT NULL,
   `present_year` varchar(50) DEFAULT NULL,
   `previous_ay_percentage` decimal(5,2) DEFAULT NULL,
   `fee_amount_current_ay` decimal(12,2) DEFAULT NULL,
@@ -84,4 +85,4 @@ SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-16 10:51:03
+-- Dump completed on 2026-10-16 17:34:22

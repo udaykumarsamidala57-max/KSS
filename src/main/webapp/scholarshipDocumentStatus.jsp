@@ -463,7 +463,9 @@ try {
               "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
               "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
-              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
+              "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
               "FROM kss_student_scholarship ";
         if (hasSpecificFilter) {
             sql += "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
@@ -482,7 +484,9 @@ try {
               "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
               "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
-              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
+              "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
               "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
@@ -511,7 +515,9 @@ try {
               "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
               "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
-              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
+              "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
               "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
@@ -535,7 +541,9 @@ try {
               "OCTET_LENGTH(fee_receipts) AS len_fee_rec, " +
               "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
-              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
+              "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
+              "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
         if (hasSpecificFilter) {
@@ -595,9 +603,11 @@ try {
                 <th class="center-align">KSS App</th>
                 <th class="center-align">Fee Structure</th>
                 <th class="center-align">Fee Receipt</th>
-                <th class="center-align">Parent ID</th>
-                <th class="center-align">Student ID</th>
+                <th class="center-align">Parent ID Doc</th>
+                <th class="center-align">Student ID Doc</th>
                 <th class="center-align">Bank Passbook</th>
+                <th class="center-align">Parent ID Proof</th>
+                <th class="center-align">Student ID Proof</th>
               </tr>
             </thead>
             <tbody>
@@ -612,6 +622,8 @@ try {
         boolean hasParentId = rs.getLong("len_parent_id") > 0;
         boolean hasStudentId = rs.getLong("len_student_id") > 0;
         boolean hasBank = rs.getLong("len_bank") > 0;
+        boolean hasParentProof = rs.getLong("len_parent_proof") > 0;
+        boolean hasStudentProof = rs.getLong("len_student_proof") > 0;
 %>
         <tr>
           <td><%=++i%></td>
@@ -715,6 +727,36 @@ try {
               <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
                 <input type="hidden" name="id" value="<%=recId%>" />
                 <input type="hidden" name="field" value="bankPassbookFirstPage" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
+          </td>
+
+          <!-- Parent Identity Proof -->
+          <td class="center-align">
+            <% if(hasParentProof) { %>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="parentAadhar" />
+                <button type="submit" class="doc-btn" title="View Document">
+                  <span class="status-badge tick">&#10004; View</span>
+                </button>
+              </form>
+            <% } else { %>
+              <span class="status-badge cross">&#10008; Missing</span>
+            <% } %>
+          </td>
+
+          <!-- Student Identity Proof -->
+          <td class="center-align">
+            <% if(hasStudentProof) { %>
+              <form action="ScholarshipDocumentDownloadServlet" method="POST" target="_blank" class="doc-form">
+                <input type="hidden" name="id" value="<%=recId%>" />
+                <input type="hidden" name="field" value="studentAadhar" />
                 <button type="submit" class="doc-btn" title="View Document">
                   <span class="status-badge tick">&#10004; View</span>
                 </button>

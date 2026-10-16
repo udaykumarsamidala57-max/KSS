@@ -196,6 +196,7 @@
   .kss-navbar-scope .dropdown-menu li a {
     color: var(--nav-text-main) !important;
     display: block;
+    white-space: nowrap;
     width: 100%;
     padding: 10px 16px;
     font-size: 13px;
@@ -451,7 +452,12 @@
 
       boolean isApprovalActive = currentURI.contains("approveDocuments.jsp") || 
                                  currentURI.contains("approveScholarship.jsp") || 
-                                 currentURI.contains("approvalAction.jsp");
+                                 currentURI.contains("approvalAction.jsp") ||
+                                 currentURI.contains("KssCourseServlet") ||
+                                 currentURI.contains("kssCourse.jsp") ||
+                                 currentURI.contains("VerifyDocumentsServlet") ||
+                                 currentURI.contains("verifyDocuments.jsp") ||
+                                 currentURI.contains("ApproveScholarshipServlet");
                                  
       boolean isReportsActive = currentURI.contains("approvedList.jsp") || 
                                 currentURI.contains("rejectedList.jsp") || 
@@ -508,13 +514,18 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="approveDocuments.jsp" class="<%= currentURI.contains("approveDocuments.jsp") ? "active" : "" %>">
-              Approve Documents
+            <a href="KssCourseServlet" class="<%= currentURI.contains("KssCourseServlet") || currentURI.contains("kssCourse.jsp") ? "active" : "" %>">
+              Step 1 : Apply KSS Course
             </a>
           </li>
           <li>
-            <a href="approveScholarship.jsp" class="<%= currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
-              Approve Scholarship
+            <a href="VerifyDocumentsServlet" class="<%= currentURI.contains("VerifyDocumentsServlet") || currentURI.contains("verifyDocuments.jsp") ? "active" : "" %>">
+              Step 2 : Verify Documents
+            </a>
+          </li>
+          <li>
+            <a href="ApproveScholarshipServlet" class="<%= currentURI.contains("ApproveScholarshipServlet") || currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
+              Step 3 : Approve Scholarship
             </a>
           </li>
         </ul>
