@@ -538,7 +538,20 @@ if (list != null) {
     <div class="slds-header-title-wrapper">
       <div class="slds-header-details">
         <span class="slds-header-subtitle">Scholarship Management</span>
-        <h1 class="slds-header-title">Applications Master List</h1>
+        <h1 class="slds-header-title">Applications Master List</h1>
+        <%-- TEMP DEBUG (only for Uday): remove after fixing Global role --%>
+        <% if ("Uday".equalsIgnoreCase(users)) {
+             String dbgRole = roles == null ? "null" : roles;
+             StringBuilder hex = new StringBuilder();
+             for (char ch : dbgRole.toCharArray()) hex.append(String.format("%04X ", (int) ch));
+        %>
+        <div style="background:#fff3cd;border:1px solid #e0b100;padding:6px 10px;margin-top:6px;font-size:12px;font-family:monospace;">
+         
+          | branch=[<%= sess.getAttribute("branch") %>] | dept=[<%= depts %>]
+          | records loaded=<%= list != null ? list.size() : 0 %>
+          | isGlobal=<%= "Global".equalsIgnoreCase(dbgRole) %>
+        </div>
+        <% } %>
       </div>
     </div>
 

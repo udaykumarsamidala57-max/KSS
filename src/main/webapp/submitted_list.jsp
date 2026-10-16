@@ -41,7 +41,11 @@ int offset = (pageNum - 1) * limit;
 // Fetch details strictly for "Submitted" applications filtered by Role & Branch/Organization
 List<Map<String, Object>> applications = new ArrayList<>();
 
-StringBuilder sqlSelect = new StringBuilder("SELECT * FROM kss_student_scholarship WHERE submiited = ? ");
+StringBuilder sqlSelect = new StringBuilder("SELECT id, App_no, org_name, emp_no, emp_name, designation, emp_contact, "
+    + "children_name, dob, gender, relationship, child_order, college_name, place_college, course, present_year, "
+    + "previous_ay_percentage, fee_amount_current_ay, actual_fee_paid, employee_name_passbook, "
+    + "bank_account_no, ifsc_code, bank_name, branch_name, submiited "
+    + "FROM kss_student_scholarship WHERE submiited = ? "); // no BLOB document columns
 List<Object> params = new ArrayList<>();
 params.add("Submitted");
 
