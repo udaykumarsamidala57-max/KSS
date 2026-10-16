@@ -71,6 +71,7 @@ public class ScholarshipListServelt extends HttpServlet {
             default:
                 List<ScholarshipBean> list = dao.getAllScholarships(branch, roles, depts, users);
                 request.setAttribute("list", list);
+                request.setAttribute("dbError", dao.getLastError());
                 RequestDispatcher listPage = request.getRequestDispatcher("/scholarshipList.jsp");
                 listPage.forward(request, response);
                 break;

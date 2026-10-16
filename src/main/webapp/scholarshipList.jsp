@@ -539,7 +539,7 @@ if (list != null) {
       <div class="slds-header-details">
         <span class="slds-header-subtitle">Scholarship Management</span>
         <h1 class="slds-header-title">Applications Master List</h1>
-        <%-- TEMP DEBUG (only for Uday): remove after fixing Global role --%>
+        <%-- TEMP DEBUG: remove after fixing Global role --%>
         <% if ("Uday".equalsIgnoreCase(users)) {
              String dbgRole = roles == null ? "null" : roles;
              StringBuilder hex = new StringBuilder();
@@ -550,6 +550,7 @@ if (list != null) {
           | branch=[<%= sess.getAttribute("branch") %>] | dept=[<%= depts %>]
           | records loaded=<%= list != null ? list.size() : 0 %>
           | isGlobal=<%= "Global".equalsIgnoreCase(dbgRole) %>
+          | dbError=[<%= request.getAttribute("dbError") %>]
         </div>
         <% } %>
       </div>

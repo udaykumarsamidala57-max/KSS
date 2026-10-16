@@ -15,6 +15,21 @@ import com.Bean.ScholarshipBean;
 
 public class scholarshipListDAO {
 
+    // Only the columns the list/edit screens need. Do NOT use SELECT * here:
+    // the table also holds the uploaded documents (BLOBs), and loading them for
+    // every row (Global role = all rows) runs the server out of memory.
+    // Last error from getAllScholarships (shown on the list page for debugging)
+    private String lastError;
+    public String getLastError() { return lastError; }
+
+    private static final String LIST_COLUMNS =
+          "id, App_no, org_name, emp_no, emp_name, designation, emp_contact, "
+        + "children_name, dob, gender, relationship, child_order, "
+        + "spouse_working_smiore, spouse_working_group_companies, "
+        + "college_name, place_college, course, present_year, "
+        + "previous_ay_percentage, fee_amount_current_ay, actual_fee_paid, "
+        + "employee_name_passbook, bank_account_no, ifsc_code, bank_name, branch_name, submiited";
+
     // Helper method to map ResultSet row to ScholarshipBean
     private ScholarshipBean mapResultSetToBean(ResultSet rs) throws Exception {
         ScholarshipBean bean = new ScholarshipBean();
@@ -93,21 +108,22 @@ public class scholarshipListDAO {
         boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
 
         if ("Global".equalsIgnoreCase(role)) {
-            sql = "SELECT * FROM kss_student_scholarship ORDER BY id DESC";
+            sql = "SELECT " + LIST_COLUMNS + " FROM kss_student_scholarship ORDER BY id DESC";
         } else if ("HR".equalsIgnoreCase(role)) {
-            sql = "SELECT * FROM kss_student_scholarship WHERE department=? ORDER BY id DESC";
+            sql = "SELECT " + LIST_COLUMNS + " FROM kss_student_scholarship WHERE department=? ORDER BY id DESC";
         } else if (isSandurEducationSociety) {
-            sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
+            sql = "SELECT " + LIST_COLUMNS + " FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
                 + "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) "
                 + "ORDER BY id DESC";
         } else if (isSandurHatcheries) {
-            sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
+            sql = "SELECT " + LIST_COLUMNS + " FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN ("
                 + "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) "
                 + "ORDER BY id DESC";
         } else {
-            sql = "SELECT * FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY id DESC";
+            sql = "SELECT " + LIST_COLUMNS + " FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY id DESC";
         }
 
+        lastError = null;
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -135,7 +151,8 @@ public class scholarshipListDAO {
                     list.add(mapResultSetToBean(rs));
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            lastError = e.toString();
             e.printStackTrace();
         }
         return list;
@@ -144,7 +161,7 @@ public class scholarshipListDAO {
     // Get Record By ID
     public ScholarshipBean getScholarshipById(int id) {
         ScholarshipBean bean = null;
-        String sql = "SELECT * FROM kss_student_scholarship WHERE id=?";
+        String sql = "SELECT " + LIST_COLUMNS + " FROM kss_student_scholarship WHERE id=?";
 
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
