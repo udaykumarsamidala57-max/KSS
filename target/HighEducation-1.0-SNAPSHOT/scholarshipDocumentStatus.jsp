@@ -10,6 +10,18 @@
     String roles = (String) sess.getAttribute("role");
     String depts = (String) sess.getAttribute("department");
     String branch = (String) sess.getAttribute("branch");
+    
+    // Retrieve filter selection
+    String selectedOrgFilter = request.getParameter("orgFilter");
+    if (selectedOrgFilter == null) {
+        selectedOrgFilter = "ALL";
+    }
+
+    // Check if request is an AJAX request
+    boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With")) 
+                     || "true".equalsIgnoreCase(request.getParameter("ajax"));
+
+    if (!isAjax) {
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,82 +31,187 @@
 <title>Scholarship Document Upload Status</title>
 
 <style>
+  /* Professional Maroon Color Scheme & Elevation Variables */
   :root {
-    --primary-color: #7a1f35;
-    --primary-hover: #5e1627;
-    --accent-bg: #fdf6f7;
-    --border-color: #e2cece;
+    --brand-primary: #7a1f35;       
+    --brand-primary-dark: #5e1627;  
+    --brand-accent-bg: #fdf6f7;     
+    --brand-border: #e2cece;        
     --text-main: #2b2b2b;
     --text-muted: #666666;
-    --success-color: #27ae60;
-    --danger-color: #c0392b;
+
+    --bg-page: #f8f9fa;
+    --bg-card: #ffffff;
+    --header-bg: #fdf6f7;
+    --row-hover: #fcf2f4;
+
+    /* Status Badges */
+    --badge-success-bg: #e6f4ea;
+    --badge-success-text: #137333;
+    --badge-success-border: #ceead6;
+    
+    --badge-missing-bg: #fce8e6;
+    --badge-missing-text: #c5221f;
+    --badge-missing-border: #fad2cf;
+
+    /* Shadows */
+    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
+    --card-shadow-hover: 0 6px 16px rgba(122, 31, 53, 0.15);
+  }
+
+  * {
+    box-sizing: border-box;
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f4f6f8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-page);
     margin: 0;
     padding: 24px;
+    padding-bottom: 70px;
     color: var(--text-main);
+    line-height: 1.5;
   }
 
-  .container {
+  .page-wrapper {
     max-width: 1600px;
     margin: 0 auto;
-    background: #ffffff;
+    width: 100%;
+  }
+
+  /* Header Banner */
+  .header-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-left: 5px solid var(--brand-primary);
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e1e4e8;
-    overflow: hidden;
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
   }
 
-  .header-bar {
-    padding: 16px 24px;
-    background-color: var(--accent-bg);
-    border-bottom: 1px solid var(--border-color);
+  .header-title-area {
+    display: flex;
+    flex-direction: column;
   }
 
-  .header-bar h2 {
+  .header-title {
     margin: 0;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--brand-primary-dark);
+    letter-spacing: -0.2px;
   }
-  
-  .header-bar p {
+
+  .header-subtitle {
     margin: 4px 0 0 0;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
   }
 
-  .table-responsive {
+  /* Filter Controls */
+  .filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--brand-accent-bg);
+    padding: 8px 14px;
+    border: 1px solid var(--brand-border);
+    border-radius: 6px;
+  }
+
+  .filter-container label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .filter-container select {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    border: 1px solid var(--brand-border);
+    border-radius: 4px;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .filter-container select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 1px var(--brand-primary);
+  }
+
+  /* Section Card per Organization */
+  .org-section {
+    background: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+  }
+
+  .org-header {
+    background-color: var(--brand-accent-bg);
+    border-bottom: 2px solid var(--brand-border);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .org-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brand-primary-dark);
+    margin: 0;
+  }
+
+  .org-badge {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Responsive Table Container */
+  .table-container {
     overflow-x: auto;
-    padding: 20px;
+    -webkit-overflow-scrolling: touch;
   }
 
   table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 12px;
-    white-space: nowrap;
+    border-collapse: collapse;
+    min-width: 900px;
+    font-size: 13px;
   }
 
+  /* Styled Sticky Headers */
   th {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    font-weight: 600;
-    text-transform: uppercase;
+    background-color: #faf0f2;
+    color: var(--brand-primary-dark);
     font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 12px 10px;
+    padding: 12px 16px;
     text-align: left;
-    border-bottom: 2px solid var(--primary-hover);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    border-bottom: 2px solid var(--brand-border);
+    white-space: nowrap;
   }
 
   th.center-align, td.center-align {
@@ -102,23 +219,18 @@
   }
 
   td {
-    padding: 10px;
-    border-bottom: 1px solid #eef1f4;
-    border-right: 1px solid #f0f0f0;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--brand-border);
     color: var(--text-main);
     vertical-align: middle;
   }
 
-  tr:last-child td {
-    border-bottom: 1px solid #eef1f4;
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 
-  tr:nth-child(even) td {
-    background-color: #fafbfc;
-  }
-
-  tr:hover td {
-    background-color: #f7e8ec;
+  tbody tr:hover {
+    background-color: var(--row-hover);
   }
 
   /* Interactive Form & Badge Styling */
@@ -142,77 +254,193 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 5px 10px;
+    padding: 4px 12px;
     font-size: 11px;
-    font-weight: 600;
-    border-radius: 4px;
-    min-width: 90px;
+    font-weight: 700;
+    border-radius: 12px;
+    min-width: 85px;
     text-align: center;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
   }
 
+  /* Green badge for uploaded documents */
   .tick {
-    background-color: #e2f0d9;
-    color: #2e5b1e;
-    border: 1px solid #a9d18e;
+    background-color: var(--badge-success-bg);
+    color: var(--badge-success-text);
+    border: 1px solid var(--badge-success-border);
     cursor: pointer;
   }
 
   .tick:hover {
-    background-color: #d4e8c4;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    background-color: #d2e3d6;
     transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
+  /* Red badge for missing documents */
   .cross {
-    background-color: #fce8e6;
-    color: #a51d24;
-    border: 1px solid #f5c2c1;
+    background-color: var(--badge-missing-bg);
+    color: var(--badge-missing-text);
+    border: 1px solid var(--badge-missing-border);
     cursor: default;
   }
 
   .emp-badge {
-    font-weight: bold;
+    font-weight: 600;
+    color: var(--brand-primary-dark);
   }
-  
+
+  .no-data-card {
+    background: var(--bg-card);
+    border: 1px solid var(--brand-border);
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    color: var(--text-muted);
+    box-shadow: var(--card-shadow);
+  }
+
   .error-box {
-    margin: 20px;
+    margin: 20px 0;
     padding: 16px;
-    background-color: #fce8e6;
-    border: 1px solid #f5c2c1;
-    color: #a51d24;
-    border-radius: 4px;
+    background-color: #fdf2e9;
+    border: 1px solid #f5c6cb;
+    color: #a93226;
+    border-radius: 6px;
     font-size: 13px;
+    font-weight: 600;
+    box-shadow: var(--card-shadow);
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding: 12px;
+      padding-bottom: 80px;
+    }
+
+    .header-title {
+      font-size: 18px;
+    }
+    
+    .header-container {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>
+<script>
+function filterData(val) {
+    var contentDiv = document.getElementById("content-area");
+    contentDiv.style.opacity = "0.5";
+    
+    fetch('?ajax=true&orgFilter=' + encodeURIComponent(val), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(response) {
+        return response.text();
+    })
+    .then(function(html) {
+        contentDiv.innerHTML = html;
+        contentDiv.style.opacity = "1";
+    })
+    .catch(function(error) {
+        console.error('Error fetching data:', error);
+        contentDiv.style.opacity = "1";
+    });
+}
+</script>
 </head>
 <body>
+
 <%@ include file="header.jsp" %>
-<div class="container">
-  
-  <div class="header-bar">
-    <h2>Student Scholarship Document Status</h2>
-    <p>Click on any uploaded document badge to view or download the attachment.</p>
+
+<div class="page-wrapper">
+
+<%
+Connection con = null;
+PreparedStatement ps = null;
+ResultSet rs = null;
+
+PreparedStatement psOrg = null;
+ResultSet rsOrg = null;
+java.util.List<String> orgList = new java.util.ArrayList<String>();
+
+try {
+    con = DBUtil.getConnection();
+    
+    boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
+    boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
+
+    // Populate distinct Organization options for the filter based on user role/branch permissions
+    String orgSql = "";
+    if ("Global".equalsIgnoreCase(roles)) {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE org_name IS NOT NULL AND TRIM(org_name) <> '' ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+    } else if (isSandurEducationSociety) {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN (" +
+                 "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+        psOrg.setString(1, "SANDUR EDUCATION SOCIETY");
+        psOrg.setString(2, "SES VIDYAMANDIR PU COLLEGE");
+        psOrg.setString(3, "SMIORE PRIMARY ENGLISH MEDIUM SCHOOL, DEOGIRI");
+        psOrg.setString(4, "SMIORE HIGHER PRIMARY SCHOOL, DEOGIRI");
+        psOrg.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
+        psOrg.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
+        psOrg.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
+    } else if (isSandurHatcheries) {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) IN (" +
+                 "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+        psOrg.setString(1, "SANDUR HATCHERIES PVT LTD");
+        psOrg.setString(2, "SANDUR POULTRY FARM");
+        psOrg.setString(3, "SANDUR POULTRY BREEDERS");
+    } else {
+        orgSql = "SELECT DISTINCT TRIM(org_name) AS org FROM kss_student_scholarship WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ORDER BY TRIM(org_name)";
+        psOrg = con.prepareStatement(orgSql);
+        psOrg.setString(1, branch != null ? branch.trim() : "");
+    }
+    
+    rsOrg = psOrg.executeQuery();
+    while (rsOrg.next()) {
+        String oName = rsOrg.getString("org");
+        if (oName != null && !oName.trim().isEmpty()) {
+            orgList.add(oName.trim());
+        }
+    }
+} catch(Exception e) {
+    // Exception handled below
+} finally {
+    if(rsOrg!=null) try { rsOrg.close(); } catch(SQLException se) {}
+    if(psOrg!=null) try { psOrg.close(); } catch(SQLException se) {}
+}
+%>
+
+  <div class="header-container">
+    <div class="header-title-area">
+      <h1 class="header-title">Student Scholarship Document Status</h1>
+      <p class="header-subtitle"> Click on any uploaded document badge to view or download the attachment.</p>
+    </div>
+    
+    <div class="filter-container">
+      <form id="filterForm" method="GET" action="" onsubmit="return false;">
+        <label for="orgFilter">Filter Organization:</label>
+        <select name="orgFilter" id="orgFilter" onchange="filterData(this.value)">
+          <option value="ALL" <%= "ALL".equals(selectedOrgFilter) ? "selected" : "" %>>All Organizations</option>
+          <% for(String o : orgList) { %>
+            <option value="<%= o %>" <%= o.equalsIgnoreCase(selectedOrgFilter) ? "selected" : "" %>><%= o %></option>
+          <% } %>
+        </select>
+      </form>
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Emp No</th>
-          <th>Employee Name</th>
-          <th>Child Name</th>
-          <th class="center-align">Marks Card</th>
-          <th class="center-align">KSS App</th>
-          <th class="center-align">Fee Structure</th>
-          <th class="center-align">Fee Receipt</th>
-          <th class="center-align">Parent ID</th>
-          <th class="center-align">Student ID</th>
-          <th class="center-align">Bank Passbook</th>
-        </tr>
-      </thead>
-      <tbody>
+  <div id="content-area">
+<%
+    } // End of !isAjax check
+%>
+
 <%
 Connection con = null;
 PreparedStatement ps = null;
@@ -224,9 +452,11 @@ try {
     String sql;
     boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
     boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
+    boolean hasSpecificFilter = selectedOrgFilter != null && !"ALL".equalsIgnoreCase(selectedOrgFilter.trim());
 
+    // Ordering by org_name first to ensure grouping works accurately
     if ("Global".equalsIgnoreCase(roles)) {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -234,12 +464,18 @@ try {
               "OCTET_LENGTH(parent_aadhar_copy) AS len_parent_id, " +
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
-              "FROM kss_student_scholarship " +
-              "ORDER BY emp_no";
+              "FROM kss_student_scholarship ";
+        if (hasSpecificFilter) {
+            sql += "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
+        if (hasSpecificFilter) {
+            ps.setString(1, selectedOrgFilter.trim());
+        }
     } else if (isSandurEducationSociety) {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -249,8 +485,11 @@ try {
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
-              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
-              "ORDER BY emp_no";
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
+        if (hasSpecificFilter) {
+            sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, "SANDUR EDUCATION SOCIETY");
@@ -260,8 +499,12 @@ try {
         ps.setString(5, "SMIORE HIGH SCHOOL, DEOGIRI");
         ps.setString(6, "SMIORE VYASAPURI HIGHER PRIMARY SCHOOL");
         ps.setString(7, "SANDUR EDUCATION SOCIETY, SANDUR");
+        if (hasSpecificFilter) {
+            ps.setString(8, selectedOrgFilter.trim());
+        }
+    
     } else if (isSandurHatcheries) {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -271,15 +514,21 @@ try {
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
-              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) " +
-              "ORDER BY emp_no";
+              "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
+        if (hasSpecificFilter) {
+            sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, "SANDUR HATCHERIES PVT LTD");
         ps.setString(2, "SANDUR POULTRY FARM");
         ps.setString(3, "SANDUR POULTRY BREEDERS");
+        if (hasSpecificFilter) {
+            ps.setString(4, selectedOrgFilter.trim());
+        }
     } else {
-        sql = "SELECT id, emp_no, emp_name, children_name, " +
+        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -288,20 +537,74 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank " +
               "FROM kss_student_scholarship " +
-              "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) " +
-              "ORDER BY emp_no";
+              "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        if (hasSpecificFilter) {
+            sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
+        }
+        sql += "ORDER BY TRIM(org_name), emp_no";
 
         ps = con.prepareStatement(sql);
         ps.setString(1, branch != null ? branch.trim() : "");
+        if (hasSpecificFilter) {
+            ps.setString(2, selectedOrgFilter.trim());
+        }
     }
 
     rs = ps.executeQuery();
 
+    String currentOrg = null;
     boolean hasData = false;
-    while(rs.next()){
+    int i=0;
+    while (rs.next()) {
         hasData = true;
+        String orgName = rs.getString("org_name");
+        if (orgName == null || orgName.trim().isEmpty()) {
+            orgName = "Uncategorized / Other";
+        } else {
+            orgName = orgName.trim();
+        }
+
+        // Detect change in organization group
+        if (currentOrg == null || !currentOrg.equalsIgnoreCase(orgName)) {
+            if (currentOrg != null) {
+                // Close previous table & section block
+%>
+            </tbody>
+          </table>
+        </div>
+      </div>
+<%
+            }
+            currentOrg = orgName;
+%>
+      <!-- New Organization Block -->
+      <div class="org-section">
+        <div class="org-header">
+          <h2 class="org-title"><%=currentOrg%></h2>
+       
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Emp No</th>
+                <th>Employee Name</th>
+                <th>Child Name</th>
+                <th class="center-align">Marks Card</th>
+                <th class="center-align">KSS App</th>
+                <th class="center-align">Fee Structure</th>
+                <th class="center-align">Fee Receipt</th>
+                <th class="center-align">Parent ID</th>
+                <th class="center-align">Student ID</th>
+                <th class="center-align">Bank Passbook</th>
+              </tr>
+            </thead>
+            <tbody>
+<%
+        }
+
         int recId = rs.getInt("id");
-        
         boolean hasMarks = rs.getLong("len_marks") > 0;
         boolean hasKss = rs.getLong("len_kss") > 0;
         boolean hasFeeStruct = rs.getLong("len_fee_struct") > 0;
@@ -311,7 +614,7 @@ try {
         boolean hasBank = rs.getLong("len_bank") > 0;
 %>
         <tr>
-          <td><%=recId%></td>
+          <td><%=++i%></td>
           <td><span class="emp-badge"><%=rs.getString("emp_no") != null ? rs.getString("emp_no") : ""%></span></td>
           <td><%=rs.getString("emp_name") != null ? rs.getString("emp_name") : ""%></td>
           <td><%=rs.getString("children_name") != null ? rs.getString("children_name") : ""%></td>
@@ -423,20 +726,27 @@ try {
         </tr>
 <%
     }
-    if (!hasData) {
+
+    if (hasData) {
+        // Close last active organization section
 %>
-        <tr>
-          <td colspan="11" style="text-align: center; padding: 32px; color: var(--text-muted);">No scholarship application records available.</td>
-        </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+<%
+    } else {
+%>
+      <div class="no-data-card">
+        No scholarship application records available.
+      </div>
 <%
     }
 } catch(Exception e) {
 %>
-    </table>
     <div class="error-box">
-      <strong>Database Error:</strong> <%=e.getMessage()%>
+      Error retrieving scholarship document status: <%=e.getMessage()%>
     </div>
-    <table>
 <%
 } finally {
     if(rs!=null) try { rs.close(); } catch(SQLException se) {}
@@ -444,10 +754,16 @@ try {
     if(con!=null) try { con.close(); } catch(SQLException se) {}
 }
 %>
-      </tbody>
-    </table>
+
+<%
+    if (!isAjax) {
+%>
   </div>
+
 </div>
 
 </body>
 </html>
+<%
+    }
+%>

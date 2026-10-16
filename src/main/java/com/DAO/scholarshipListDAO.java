@@ -108,7 +108,7 @@ public class scholarshipListDAO {
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            if ("HR".equalsIgnoreCase(role)) {
+            if ("Gloabl".equalsIgnoreCase(role)) {
                 ps.setString(1, department);
             } else if (!"Global".equalsIgnoreCase(role)) {
                 if (isSandurEducationSociety) {
