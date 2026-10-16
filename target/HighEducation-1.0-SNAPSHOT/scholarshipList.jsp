@@ -36,6 +36,12 @@ if (list != null) {
         orgMap.get(orgName).add(b);
     }
 }
+
+// Gmail-style: NOT submitted on top, submitted at the bottom (keeps newest-first order within each group)
+for (List<ScholarshipBean> grp : orgMap.values()) {
+    grp.sort(java.util.Comparator.comparingInt((ScholarshipBean x) ->
+        (x.getSubmitted() != null && "Submitted".equalsIgnoreCase(x.getSubmitted().trim())) ? 1 : 0));
+}
 %>
 
 <!DOCTYPE html>
@@ -515,6 +521,33 @@ if (list != null) {
     gap: 12px;
     flex-shrink: 0;
   }
+
+  /* ===== Submitted applications: dull row + badge ===== */
+  .app-row.row-submitted td {
+    background-color: #f3f3f3 !important;
+    color: #9a9a9a !important;
+  }
+  .app-row.row-submitted td strong { color: #8a8a8a; }
+  .app-row.row-submitted:hover td { background-color: #ececec !important; }
+  .app-row.row-submitted .action-cell { opacity: 1; }
+
+  .badge-submitted {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #137333 !important;
+    background-color: #ffffff !important;
+    border: 2px solid #1e8e3e !important;
+    box-shadow: 0 0 0 1px rgba(30, 142, 62, 0.15);
+    padding: 2px 9px;
+    border-radius: 10px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
 </style>
 </head>
 
@@ -617,11 +650,13 @@ if (list != null && !list.isEmpty()) {
             String orgVal = bean.getOrgName() != null ? bean.getOrgName().trim() : "";
             
             // Check submission status (handles String or Boolean getter safely)
-            boolean isSubmitted = "Submitted".equalsIgnoreCase(String.valueOf(bean.getSubmitted()));
+            boolean isSubmitted = bean.getSubmitted() != null && "Submitted".equalsIgnoreCase(bean.getSubmitted().trim());
 %>
           <tr class="app-row <%= isSubmitted ? "row-submitted" : "" %>" data-org="<%= orgVal %>">
             <td><%= ++i %></td>
-            <td><strong><%=bean.getApp_no() != null ? bean.getApp_no() : ""%></strong></td>
+            <td><strong><%=bean.getApp_no() != null ? bean.getApp_no() : ""%></strong>
+              <% if (isSubmitted) { %><span class="badge-submitted">Submitted</span><% } %>
+            </td>
             <td><%=orgVal%></td>
             
             <td><strong><%=bean.getEmpNo() != null ? bean.getEmpNo() : ""%></strong></td>
