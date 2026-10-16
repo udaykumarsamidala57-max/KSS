@@ -86,6 +86,9 @@ public class scholarshipListDAO {
         List<ScholarshipBean> list = new ArrayList<>();
         String sql;
 
+        // Normalize role (handles stray spaces / non-breaking spaces from DB)
+        role = role != null ? role.replace(' ', ' ').strip() : null;
+
         boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
         boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());
 
@@ -108,7 +111,7 @@ public class scholarshipListDAO {
         try (Connection con = DBUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            if ("Gloabl".equalsIgnoreCase(role)) {
+            if ("HR".equalsIgnoreCase(role)) {
                 ps.setString(1, department);
             } else if (!"Global".equalsIgnoreCase(role)) {
                 if (isSandurEducationSociety) {

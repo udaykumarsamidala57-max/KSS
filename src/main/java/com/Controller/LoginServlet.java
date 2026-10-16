@@ -17,6 +17,12 @@ import com.Bean.DBUtil;
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
 
+    // Removes leading/trailing whitespace including non-breaking spaces ( )
+    private static String clean(String value) {
+        if (value == null) return null;
+        return value.replace(' ', ' ').strip();
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Redirect to login page if accessed with GET
@@ -46,9 +52,11 @@ public class LoginServlet extends HttpServlet {
             rs = ps.executeQuery();
 
             if (rs.next()) {
-                String role = rs.getString("role");
-                String department = rs.getString("department");
-                String branch = rs.getString("branch"); // Retrieve branch from DB
+                // Clean values: strip normal + non-breaking spaces so checks like
+                // "Global".equalsIgnoreCase(role) work on every page
+                String role = clean(rs.getString("role"));
+                String department = clean(rs.getString("department"));
+                String branch = clean(rs.getString("branch")); // Retrieve branch from DB
 
                 HttpSession session = request.getSession();
                 session.setAttribute("username", uname);
