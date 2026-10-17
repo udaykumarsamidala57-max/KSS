@@ -1,5 +1,25 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="com.Bean.DBUtil" %>
+<%!
+    // Verification status badge for one document (from kss_scholarship_approval)
+    private static String vstat(java.sql.ResultSet rs, String key) {
+        try {
+            String st = rs.getString("vs_" + key);
+            if (st == null) return "";
+            String rm = rs.getString("vr_" + key);
+            String head = "<div class=\"vbox\"><div class=\"vlabel\">Verification</div>";
+            if ("Verified".equals(st)) return head + "<div class=\"vstat v-ok\">&#10003; Verified</div></div>";
+            if ("Rejected".equals(st)) {
+                String r = rm == null ? "" : rm.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+                return head + "<div class=\"vstat v-bad\" title=\"" + r + "\">&#10007; Rejected</div>"
+                     + (r.isEmpty() ? "" : "<div class=\"vstat-rm\">" + r + "</div>") + "</div>";
+            }
+            return head + "<div class=\"vstat v-pend\">Pending</div></div>";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+%>
 <%
     HttpSession sess = request.getSession(false);
     if (sess == null || sess.getAttribute("username") == null) {
@@ -327,6 +347,15 @@
       align-items: flex-start;
     }
   }
+
+  /* Verification status (from Verify Documents) */
+  .vbox { margin: 7px auto 0; padding-top: 5px; border-top: 1px solid #ecdade; max-width: 110px; }
+  .vlabel { font-size: 9px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: #a08890; margin-bottom: 2px; }
+  .vstat { margin-top: 0; font-size: 10px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+  .v-ok   { color: #137333; }
+  .v-bad  { color: #c5221f; cursor: help; }
+  .v-pend { color: #9a7a82; }
+  .vstat-rm { font-size: 10px; color: #c5221f; max-width: 120px; margin: 2px auto 0; line-height: 1.25; }
 </style>
 <script>
 function filterData(val) {
@@ -448,6 +477,7 @@ ResultSet rs = null;
 
 try {
     con = DBUtil.getConnection();
+    try { com.Controller.VerifyDocumentsServlet.ensureDocColumns(con); } catch (Exception ignore) { }
     
     String sql;
     boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
@@ -456,7 +486,7 @@ try {
 
     // Ordering by org_name first to ensure grouping works accurately
     if ("Global".equalsIgnoreCase(roles)) {
-        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
+        sql = "SELECT s.id AS id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -465,8 +495,18 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
               "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
-              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
-              "FROM kss_student_scholarship ";
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof, " +
+              "a.marks_card_status AS vs_marks_card, a.marks_card_remarks AS vr_marks_card, " +
+              "a.kss_application_status AS vs_kss_application, a.kss_application_remarks AS vr_kss_application, " +
+              "a.fee_structure_status AS vs_fee_structure, a.fee_structure_remarks AS vr_fee_structure, " +
+              "a.fee_receipts_status AS vs_fee_receipts, a.fee_receipts_remarks AS vr_fee_receipts, " +
+              "a.parent_aadhar_status AS vs_parent_aadhar, a.parent_aadhar_remarks AS vr_parent_aadhar, " +
+              "a.student_aadhar_status AS vs_student_aadhar, a.student_aadhar_remarks AS vr_student_aadhar, " +
+              "a.bank_passbook_status AS vs_bank_passbook, a.bank_passbook_remarks AS vr_bank_passbook, " +
+              "a.parent_id_proof_status AS vs_parent_id_proof, a.parent_id_proof_remarks AS vr_parent_id_proof, " +
+              "a.student_id_proof_status AS vs_student_id_proof, a.student_id_proof_remarks AS vr_student_id_proof, " +
+              "a.final_status AS v_final " +
+              "FROM kss_student_scholarship s LEFT JOIN kss_scholarship_approval a ON a.scholarship_id = s.id ";
         if (hasSpecificFilter) {
             sql += "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
         }
@@ -477,7 +517,7 @@ try {
             ps.setString(1, selectedOrgFilter.trim());
         }
     } else if (isSandurEducationSociety) {
-        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
+        sql = "SELECT s.id AS id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -486,8 +526,18 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
               "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
-              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
-              "FROM kss_student_scholarship " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof, " +
+              "a.marks_card_status AS vs_marks_card, a.marks_card_remarks AS vr_marks_card, " +
+              "a.kss_application_status AS vs_kss_application, a.kss_application_remarks AS vr_kss_application, " +
+              "a.fee_structure_status AS vs_fee_structure, a.fee_structure_remarks AS vr_fee_structure, " +
+              "a.fee_receipts_status AS vs_fee_receipts, a.fee_receipts_remarks AS vr_fee_receipts, " +
+              "a.parent_aadhar_status AS vs_parent_aadhar, a.parent_aadhar_remarks AS vr_parent_aadhar, " +
+              "a.student_aadhar_status AS vs_student_aadhar, a.student_aadhar_remarks AS vr_student_aadhar, " +
+              "a.bank_passbook_status AS vs_bank_passbook, a.bank_passbook_remarks AS vr_bank_passbook, " +
+              "a.parent_id_proof_status AS vs_parent_id_proof, a.parent_id_proof_remarks AS vr_parent_id_proof, " +
+              "a.student_id_proof_status AS vs_student_id_proof, a.student_id_proof_remarks AS vr_student_id_proof, " +
+              "a.final_status AS v_final " +
+              "FROM kss_student_scholarship s LEFT JOIN kss_scholarship_approval a ON a.scholarship_id = s.id " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
               "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
         if (hasSpecificFilter) {
@@ -508,7 +558,7 @@ try {
         }
     
     } else if (isSandurHatcheries) {
-        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
+        sql = "SELECT s.id AS id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -517,8 +567,18 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
               "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
-              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
-              "FROM kss_student_scholarship " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof, " +
+              "a.marks_card_status AS vs_marks_card, a.marks_card_remarks AS vr_marks_card, " +
+              "a.kss_application_status AS vs_kss_application, a.kss_application_remarks AS vr_kss_application, " +
+              "a.fee_structure_status AS vs_fee_structure, a.fee_structure_remarks AS vr_fee_structure, " +
+              "a.fee_receipts_status AS vs_fee_receipts, a.fee_receipts_remarks AS vr_fee_receipts, " +
+              "a.parent_aadhar_status AS vs_parent_aadhar, a.parent_aadhar_remarks AS vr_parent_aadhar, " +
+              "a.student_aadhar_status AS vs_student_aadhar, a.student_aadhar_remarks AS vr_student_aadhar, " +
+              "a.bank_passbook_status AS vs_bank_passbook, a.bank_passbook_remarks AS vr_bank_passbook, " +
+              "a.parent_id_proof_status AS vs_parent_id_proof, a.parent_id_proof_remarks AS vr_parent_id_proof, " +
+              "a.student_id_proof_status AS vs_student_id_proof, a.student_id_proof_remarks AS vr_student_id_proof, " +
+              "a.final_status AS v_final " +
+              "FROM kss_student_scholarship s LEFT JOIN kss_scholarship_approval a ON a.scholarship_id = s.id " +
               "WHERE LOWER(TRIM(org_name)) IN (" +
               "LOWER(TRIM(?)), LOWER(TRIM(?)), LOWER(TRIM(?))) ";
         if (hasSpecificFilter) {
@@ -534,7 +594,7 @@ try {
             ps.setString(4, selectedOrgFilter.trim());
         }
     } else {
-        sql = "SELECT id, org_name, emp_no, emp_name, children_name, " +
+        sql = "SELECT s.id AS id, org_name, emp_no, emp_name, children_name, " +
               "OCTET_LENGTH(previous_ay_marks_card) AS len_marks, " +
               "OCTET_LENGTH(kss_application) AS len_kss, " +
               "OCTET_LENGTH(fee_structure) AS len_fee_struct, " +
@@ -543,8 +603,18 @@ try {
               "OCTET_LENGTH(student_aadhar_copy) AS len_student_id, " +
               "OCTET_LENGTH(bank_passbook_first_page) AS len_bank, " +
               "OCTET_LENGTH(parent_aadhar) AS len_parent_proof, " +
-              "OCTET_LENGTH(student_aadhar) AS len_student_proof " +
-              "FROM kss_student_scholarship " +
+              "OCTET_LENGTH(student_aadhar) AS len_student_proof, " +
+              "a.marks_card_status AS vs_marks_card, a.marks_card_remarks AS vr_marks_card, " +
+              "a.kss_application_status AS vs_kss_application, a.kss_application_remarks AS vr_kss_application, " +
+              "a.fee_structure_status AS vs_fee_structure, a.fee_structure_remarks AS vr_fee_structure, " +
+              "a.fee_receipts_status AS vs_fee_receipts, a.fee_receipts_remarks AS vr_fee_receipts, " +
+              "a.parent_aadhar_status AS vs_parent_aadhar, a.parent_aadhar_remarks AS vr_parent_aadhar, " +
+              "a.student_aadhar_status AS vs_student_aadhar, a.student_aadhar_remarks AS vr_student_aadhar, " +
+              "a.bank_passbook_status AS vs_bank_passbook, a.bank_passbook_remarks AS vr_bank_passbook, " +
+              "a.parent_id_proof_status AS vs_parent_id_proof, a.parent_id_proof_remarks AS vr_parent_id_proof, " +
+              "a.student_id_proof_status AS vs_student_id_proof, a.student_id_proof_remarks AS vr_student_id_proof, " +
+              "a.final_status AS v_final " +
+              "FROM kss_student_scholarship s LEFT JOIN kss_scholarship_approval a ON a.scholarship_id = s.id " +
               "WHERE LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
         if (hasSpecificFilter) {
             sql += "AND LOWER(TRIM(org_name)) = LOWER(TRIM(?)) ";
@@ -644,6 +714,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "marks_card") %>
           </td>
 
           <!-- KSS Application -->
@@ -659,6 +730,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "kss_application") %>
           </td>
 
           <!-- Fee Structure -->
@@ -674,6 +746,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "fee_structure") %>
           </td>
 
           <!-- Fee Receipts -->
@@ -689,6 +762,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "fee_receipts") %>
           </td>
 
           <!-- Parent ID Copy -->
@@ -704,6 +778,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "parent_aadhar") %>
           </td>
 
           <!-- Student ID Copy -->
@@ -719,6 +794,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "student_aadhar") %>
           </td>
 
           <!-- Bank Passbook -->
@@ -734,6 +810,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "bank_passbook") %>
           </td>
 
           <!-- Parent Identity Proof -->
@@ -749,6 +826,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "parent_id_proof") %>
           </td>
 
           <!-- Student Identity Proof -->
@@ -764,6 +842,7 @@ try {
             <% } else { %>
               <span class="status-badge cross">&#10008; Missing</span>
             <% } %>
+            <%= vstat(rs, "student_id_proof") %>
           </td>
         </tr>
 <%
