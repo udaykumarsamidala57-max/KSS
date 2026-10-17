@@ -7,6 +7,7 @@
     }
     String userss = (String) sesso.getAttribute("username");
     String roless = (String) sesso.getAttribute("role");
+    boolean isGlobalUser = roless != null && "Global".equalsIgnoreCase(roless.replace('\u00A0', ' ').trim());
     String deptss = (String) sesso.getAttribute("department");
     String branchs = (String) sesso.getAttribute("branch");
 %>
@@ -430,6 +431,12 @@
       text-align: center;
     }
   }
+
+  /* Gear (settings) menu */
+  .kss-navbar-scope .gear-icon { font-size: 19px; line-height: 1; display: inline-block; transition: transform .3s ease; }
+  .kss-navbar-scope .nav-gear:hover .gear-icon { transform: rotate(60deg); }
+  .kss-navbar-scope .gear-toggle::after { content: '' !important; }
+  .kss-navbar-scope .nav-gear .dropdown-menu { left: auto; right: 0; }
 </style>
 
 <!-- TOP NAVIGATION BAR -->
@@ -499,15 +506,8 @@
         </a>
       </li>
 
-      <% if ("Global".equalsIgnoreCase(roless)) { %>
-      <li>
-        <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
-          Organization Master
-        </a>
-      </li>
-      <% } %>
       
-      <% if ("Global".equalsIgnoreCase(roless)) { %>
+      <% if (isGlobalUser) { %>
       <li>
         <a href="#" class="dropdown-toggle <%= isApprovalActive ? "active" : "" %>" onclick="return false;">
           Approvals
@@ -543,6 +543,7 @@
               Submitted List
             </a>
           </li>
+          <% if (isGlobalUser) { %>
           <li>
             <a href="#" class="<%= currentURI.contains("approvedList.jsp") ? "active" : "" %>">
               Approved List
@@ -558,8 +559,30 @@
               Reimbursement
             </a>
           </li>
+          <% } %>
         </ul>
       </li>
+      <% if (isGlobalUser) { %>
+      <!-- Settings (gear): masters, Global only -->
+      <li class="nav-gear">
+        <a href="#" class="dropdown-toggle gear-toggle <%= (currentURI.contains("organization.jsp") || currentURI.contains("KssCourseMaster") || currentURI.contains("kssCourseMaster.jsp")) ? "active" : "" %>"
+           onclick="return false;" title="Settings">
+          <span class="gear-icon">&#9881;</span>
+        </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
+              Organization Master
+            </a>
+          </li>
+          <li>
+            <a href="KssCourseMasterServlet" class="<%= currentURI.contains("KssCourseMasterServlet") || currentURI.contains("kssCourseMaster.jsp") ? "active" : "" %>">
+              KSS Course Master
+            </a>
+          </li>
+        </ul>
+      </li>
+      <% } %>
     </ul>
 
     <!-- Right Side: User Details & Logout Button -->

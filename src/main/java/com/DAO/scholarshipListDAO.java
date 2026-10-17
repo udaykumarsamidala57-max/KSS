@@ -102,7 +102,7 @@ public class scholarshipListDAO {
         String sql;
 
         // Normalize role (handles stray spaces / non-breaking spaces from DB)
-        role = role != null ? role.replace(' ', ' ').strip() : null;
+        role = role != null ? role.replace('\u00A0', ' ').strip() : null;
 
         boolean isSandurEducationSociety = branch != null && "SANDUR EDUCATION SOCIETY".equalsIgnoreCase(branch.trim());
         boolean isSandurHatcheries = branch != null && "SANDUR HATCHERIES PVT LTD".equalsIgnoreCase(branch.trim());

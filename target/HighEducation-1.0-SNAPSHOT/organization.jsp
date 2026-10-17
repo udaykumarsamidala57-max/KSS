@@ -7,6 +7,12 @@
         response.sendRedirect("login.jsp");
         return;
     }
+    // Organization Master is for Global users only
+    String orgRole = (String) sess.getAttribute("role");
+    if (orgRole == null || !"Global".equalsIgnoreCase(orgRole.replace('\u00A0', ' ').trim())) {
+        response.sendRedirect("Dashboard.jsp");
+        return;
+    }
     %>
 <%
 Connection con = null;
@@ -100,10 +106,13 @@ try{
 
   /* Header Section */
   .form-header {
-    background: linear-gradient(135deg, var(--primary-color), #a8324e);
-    color: #ffffff;
+    background: #ffffff;
+    color: var(--primary-color);
     padding: 16px 20px;
     text-align: center;
+    border-bottom: 1px solid #f0e2e5;
+    box-shadow: 0 4px 12px rgba(139, 38, 62, 0.08);
+    position: relative;
   }
 
   .form-header h2 {
@@ -116,7 +125,7 @@ try{
   .form-header p {
     font-size: 12px;
     margin-top: 3px;
-    opacity: 0.9;
+    color: #666666;
   }
 
   .form-body {
@@ -223,26 +232,34 @@ try{
   /* Corporate PF Data Table */
   .data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 10px;
     font-size: 13px;
+    background: #ffffff;
+    border: 1px solid #ecdade;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(139, 38, 62, 0.08);
   }
 
   .data-table th {
-    background-color: var(--primary-color);
-    color: #ffffff;
+    background-color: #faf0f2;
+    color: var(--primary-color);
     font-weight: 600;
     text-transform: uppercase;
     font-size: 12px;
     letter-spacing: 0.5px;
     padding: 8px 12px;
     text-align: left;
-    border: 1px solid var(--primary-color);
+    border: none;
+    border-bottom: 1px solid #ecdade;
   }
 
   .data-table td {
     padding: 8px 12px;
-    border: 1px solid #e8d0d0;
+    border: none;
+    border-bottom: 1px solid #f3e7ea;
     color: var(--text-main);
   }
 
@@ -250,8 +267,12 @@ try{
     background-color: #fffafb;
   }
 
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+
   .data-table tr:hover {
-    background-color: #f7e8ec;
+    background-color: #fcf2f4;
   }
 
   /* Status Badges */

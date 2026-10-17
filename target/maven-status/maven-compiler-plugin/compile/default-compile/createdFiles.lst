@@ -1,6 +1,7 @@
 com\DAO\ScholarshipDocumentsDAO.class
 com\DAO\SholrarshipDAO.class
 com\Controller\ScholarshipListServelt.class
+com\Controller\KssCourseMasterServlet.class
 com\Controller\LoginServlet.class
 com\Bean\DBUtil.class
 com\Controller\UpdateStatusServlet.class

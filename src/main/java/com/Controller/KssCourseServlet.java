@@ -32,7 +32,8 @@ public class KssCourseServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    // ===== Dropdown options: edit this list to change the KSS courses =====
+    // Fallback list, used only if the kss_course_master table is missing or empty.
+    // The real list is managed on the KSS Course Master page.
     public static final List<String> KSS_COURSES = Arrays.asList(
         "2 YEAR DIPLOMA/DEGREE IN EDUCATION",
         "2 YEAR PG DEGREE",
@@ -48,10 +49,24 @@ public class KssCourseServlet extends HttpServlet {
         "PUC BANGALORE"
     );
 
+    /** Active courses from kss_course_master (in sort order); falls back to KSS_COURSES. */
+    public static List<String> loadCourses() {
+        List<String> list = new java.util.ArrayList<>();
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "SELECT course_name FROM kss_course_master WHERE is_active = 1 ORDER BY sort_order, course_name");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(rs.getString(1));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list.isEmpty() ? KSS_COURSES : list;
+    }
+
     /** Only Global users may use this page. */
     private boolean isGlobal(HttpSession sess) {
         String role = (String) sess.getAttribute("role");
-        return role != null && "Global".equalsIgnoreCase(role.replace(' ', ' ').strip());
+        return role != null && "Global".equalsIgnoreCase(role.replace('\u00A0', ' ').strip());
     }
 
     @Override
@@ -101,7 +116,7 @@ public class KssCourseServlet extends HttpServlet {
         }
 
         request.setAttribute("rows", rows);
-        request.setAttribute("courses", KSS_COURSES);
+        request.setAttribute("courses", loadCourses());
         request.getRequestDispatcher("/kssCourse.jsp").forward(request, response);
     }
 
@@ -136,7 +151,7 @@ public class KssCourseServlet extends HttpServlet {
 
         if (idParam == null || !idParam.trim().matches("\\d+")) {
             msg = "Invalid application.";
-        } else if (!kssCourse.isEmpty() && !KSS_COURSES.contains(kssCourse)) {
+        } else if (!kssCourse.isEmpty() && !loadCourses().contains(kssCourse)) {
             msg = "Please choose a course from the list.";
         } else {
             int id = Integer.parseInt(idParam.trim());

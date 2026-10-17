@@ -102,7 +102,7 @@ public class VerifyDocumentsServlet extends HttpServlet {
 
     private boolean isGlobal(HttpSession sess) {
         String role = (String) sess.getAttribute("role");
-        return role != null && "Global".equalsIgnoreCase(role.replace(' ', ' ').strip());
+        return role != null && "Global".equalsIgnoreCase(role.replace('\u00A0', ' ').strip());
     }
 
     // ------------------------------------------------------------------ GET : load page

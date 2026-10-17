@@ -17,10 +17,10 @@ import com.Bean.DBUtil;
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
 
-    // Removes leading/trailing whitespace including non-breaking spaces ( )
+    // Removes leading/trailing whitespace including non-breaking spaces (U+00A0)
     private static String clean(String value) {
         if (value == null) return null;
-        return value.replace(' ', ' ').strip();
+        return value.replace('\u00A0', ' ').strip();
     }
 
     @Override
