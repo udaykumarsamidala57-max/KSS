@@ -32,6 +32,7 @@ import com.google.gson.JsonObject;
  *
  *  GET  CsrLetterServlet                    -> list page (csrLetters.jsp)
  *  GET  CsrLetterServlet?action=form[&id=N] -> add / edit form (csrLetterForm.jsp)
+ *  GET  CsrLetterServlet?action=view&id=N   -> one letter with its WOs, invoices, FRLs, receipts (csrLetterView.jsp)
  *  GET  CsrLetterServlet?action=pdf&id=N    -> open the PDF
  *  POST action=save   (multipart, AJAX)     -> add / update (PDF required when adding)
  *  POST action=delete (AJAX)                -> delete
@@ -90,6 +91,10 @@ public class CsrLetterServlet extends HttpServlet {
             showForm(request, response);
             return;
         }
+        if ("view".equals(request.getParameter("action"))) {
+            showView(request, response);
+            return;
+        }
 
         List<Map<String, String>> rows = new ArrayList<>();
         try (Connection con = DBUtil.getConnection();
@@ -105,6 +110,87 @@ public class CsrLetterServlet extends HttpServlet {
 
         request.setAttribute("rows", rows);
         request.getRequestDispatcher("/csrLetters.jsp").forward(request, response);
+    }
+
+    /** One approval letter with everything raised against it. */
+    private void showView(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String idParam = request.getParameter("id");
+        if (idParam == null || !idParam.matches("\\d+")) {
+            response.sendRedirect("CsrLetterServlet");
+            return;
+        }
+        int id = Integer.parseInt(idParam);
+        Map<String, String> letter = null;
+        try (Connection con = DBUtil.getConnection()) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT " + LIST_COLUMNS + " FROM kss_csr_approval_letter WHERE id = ?")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) letter = toMap(rs); }
+            }
+            if (letter == null) {
+                response.sendRedirect("CsrLetterServlet");
+                return;
+            }
+            request.setAttribute("workOrders", rows(con,
+                    "SELECT w.id, w.wo_number, DATE_FORMAT(w.wo_date, '%d-%m-%Y') AS wo_date, w.vendor_name, w.vendor_phone, "
+                  + "w.vendor_gstin, w.subtotal, w.gst_total, w.total_amount, w.attachment_size, "
+                  + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i WHERE i.work_order_id = w.id) AS invoiced, "
+                  + "(SELECT COUNT(*) FROM kss_csr_invoice i WHERE i.work_order_id = w.id) AS inv_count "
+                  + "FROM kss_csr_work_order w WHERE w.letter_id = ? ORDER BY w.wo_date, w.id", id));
+            request.setAttribute("invoices", rows(con,
+                    "SELECT i.id, i.invoice_type, i.invoice_number, DATE_FORMAT(i.invoice_date, '%d-%m-%Y') AS invoice_date, "
+                  + "i.price, i.gst_percent, i.gst_amount, i.amount, i.attachment_size, w.id AS wo_id, w.wo_number, w.vendor_name, "
+                  + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
+                  + " WHERE fi.invoice_id = i.id) AS frl_number "
+                  + "FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+                  + "WHERE w.letter_id = ? ORDER BY i.invoice_date, i.id", id));
+            request.setAttribute("frls", rows(con,
+                    "SELECT r.id, r.frl_number, DATE_FORMAT(r.frl_date, '%d-%m-%Y') AS frl_date, r.amount, r.remarks, r.attachment_size, "
+                  + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS received, "
+                  + "(SELECT COUNT(*) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS rcpt_count, "
+                  + "(SELECT GROUP_CONCAT(CONCAT(IF(i.invoice_type = 'Proforma', 'PI ', ''), i.invoice_number) "
+                  + "  ORDER BY i.invoice_date, i.id SEPARATOR ', ') FROM kss_csr_frl_invoice fi "
+                  + "  JOIN kss_csr_invoice i ON i.id = fi.invoice_id WHERE fi.frl_id = r.id) AS invoice_numbers "
+                  + "FROM kss_csr_fund_request r WHERE r.letter_id = ? ORDER BY r.frl_date, r.id", id));
+            request.setAttribute("receipts", rows(con,
+                    "SELECT f.id, DATE_FORMAT(f.receipt_date, '%d-%m-%Y') AS receipt_date, f.amount, f.payment_mode, f.reference_no, "
+                  + "f.bank_name, f.remarks, f.attachment_size, f.frl_id, r.frl_number "
+                  + "FROM kss_csr_fund_receipt f LEFT JOIN kss_csr_fund_request r ON r.id = f.frl_id "
+                  + "WHERE f.letter_id = ? ORDER BY f.receipt_date, f.id", id));
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Database error: " + e.getMessage());
+        }
+        if (letter == null) {
+            response.sendRedirect("CsrLetterServlet");
+            return;
+        }
+        request.setAttribute("letter", letter);
+        request.getRequestDispatcher("/csrLetterView.jsp").forward(request, response);
+    }
+
+    /** Runs a query with one int parameter; every column becomes a string (money with 2 decimals). */
+    private static List<Map<String, String>> rows(Connection con, String sql, int param) throws Exception {
+        List<Map<String, String>> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, param);
+            try (ResultSet rs = ps.executeQuery()) {
+                java.sql.ResultSetMetaData md = rs.getMetaData();
+                while (rs.next()) {
+                    Map<String, String> m = new LinkedHashMap<>();
+                    for (int c = 1; c <= md.getColumnCount(); c++) {
+                        Object v = rs.getObject(c);
+                        String val;
+                        if (v == null) val = null;
+                        else if (v instanceof BigDecimal) val = ((BigDecimal) v).setScale(2, RoundingMode.HALF_UP).toPlainString();
+                        else val = String.valueOf(v);
+                        m.put(md.getColumnLabel(c), val);
+                    }
+                    list.add(m);
+                }
+            }
+        }
+        return list;
     }
 
     /** Add (no id) or edit (with id) form page. */

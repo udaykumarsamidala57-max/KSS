@@ -119,3 +119,5 @@ input[type=submit] { padding: 6px 22px !important; font-size: 12px !important; }
 .csr-badge-pi { color: #b45309 !important; background: #fffbeb !important; border-color: #fde68a !important; }
 .csr-inv-pick { max-height: 280px; overflow-y: auto; border: 1px solid var(--fin-line); border-radius: 4px; }
 .csr-inv-pick .csr-subtable { border: none !important; }
+.csr-open { color: var(--fin-teal) !important; text-decoration: none; border-bottom: 1px dashed currentColor; }
+.csr-open:hover { border-bottom-style: solid; }

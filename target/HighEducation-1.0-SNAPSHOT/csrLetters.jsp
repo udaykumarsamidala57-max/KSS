@@ -115,7 +115,8 @@ $(function () {
     var $tr = $('<tr class="csr-row"></tr>').attr('data-id', r.id);
     $tr.append($('<td></td>').text(n));
     $tr.append($('<td></td>')
-      .append($('<div class="csr-strong"></div>').text(r.letterNumber))
+      .append($('<a class="csr-strong csr-open"></a>').attr('href', 'CsrLetterServlet?action=view&id=' + r.id)
+        .attr('title', 'Open this approval letter with its work orders, invoices, FRLs and receipts').text(r.letterNumber))
       .append($('<div class="csr-small"></div>').text(r.letterName)));
     $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(r.activityKind))
       .append($('<div class="csr-small" style="margin-top:3px;"></div>').text(r.place)));
