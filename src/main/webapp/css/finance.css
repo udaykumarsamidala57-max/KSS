@@ -116,3 +116,6 @@ input[type=submit] { padding: 6px 22px !important; font-size: 12px !important; }
 .as-table td:nth-child(2), .vd-table td:nth-child(2), .kc-table td:nth-child(2) { white-space: nowrap; }
 .csr-pdf { white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
 .csr-particulars { max-width: 220px !important; }
+.csr-badge-pi { color: #b45309 !important; background: #fffbeb !important; border-color: #fde68a !important; }
+.csr-inv-pick { max-height: 280px; overflow-y: auto; border: 1px solid var(--fin-line); border-radius: 4px; }
+.csr-inv-pick .csr-subtable { border: none !important; }

@@ -46,13 +46,17 @@ public class CsrInvoiceServlet extends HttpServlet {
     private static final int MAX_FILE_BYTES = 10 * 1024 * 1024;
     private static final char NBSP = (char) 160;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
+    public static final List<String> TYPES = java.util.Arrays.asList("Tax Invoice", "Proforma");
 
     private static final String INV_COLUMNS =
-            "i.id, i.work_order_id, i.invoice_number, DATE_FORMAT(i.invoice_date, '%Y-%m-%d') AS inv_date_iso, "
+            "i.id, i.work_order_id, i.invoice_type, i.invoice_number, DATE_FORMAT(i.invoice_date, '%Y-%m-%d') AS inv_date_iso, "
           + "DATE_FORMAT(i.invoice_date, '%d-%m-%Y') AS inv_date_txt, i.price, i.gst_percent, i.gst_amount, i.amount, "
           + "i.attachment_name, i.attachment_type, i.attachment_size, i.created_by, "
           + "DATE_FORMAT(i.created_at, '%d-%m-%Y') AS created_txt, "
-          + "w.wo_number, w.vendor_name, w.total_amount AS wo_total, l.letter_number";
+          + "w.wo_number, w.vendor_name, w.total_amount AS wo_total, w.letter_id, l.letter_number, l.letter_name, "
+          + "(SELECT fi.frl_id FROM kss_csr_frl_invoice fi WHERE fi.invoice_id = i.id) AS frl_id, "
+          + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
+          + "WHERE fi.invoice_id = i.id) AS frl_number";
 
     private static final String INV_FROM =
             " FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
@@ -111,6 +115,7 @@ public class CsrInvoiceServlet extends HttpServlet {
             request.setAttribute("inv", inv);
             request.setAttribute("workOrders", workOrders);
             request.setAttribute("presetWoId", presetWo);
+            request.setAttribute("types", TYPES);
             request.getRequestDispatcher("/csrInvoiceForm.jsp").forward(request, response);
             return;
         }
@@ -206,7 +211,9 @@ public class CsrInvoiceServlet extends HttpServlet {
         String invDate = trim(request.getParameter("invoiceDate"));
         String priceS = trim(request.getParameter("price"));
         String gstS = trim(request.getParameter("gst"));
+        String type = trim(request.getParameter("invoiceType"));
 
+        if (!TYPES.contains(type)) { sendJson(response, 400, fail("Please select the Invoice Type (Proforma / Tax Invoice).")); return; }
         if (!woParam.matches("\\d+"))  { sendJson(response, 400, fail("Please select the Work Order.")); return; }
         if (invNumber.isEmpty())       { sendJson(response, 400, fail("Please enter the Invoice Number.")); return; }
         if (invNumber.length() > 100)  { sendJson(response, 400, fail("Invoice Number is too long.")); return; }
@@ -257,6 +264,22 @@ public class CsrInvoiceServlet extends HttpServlet {
         int woId = Integer.parseInt(woParam);
         int id = isNew ? 0 : Integer.parseInt(idParam);
 
+        // ---- an invoice already covered by an FRL keeps its work order and amount
+        if (!isNew) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT i.work_order_id, i.amount, r.frl_number FROM kss_csr_invoice i "
+                  + "JOIN kss_csr_frl_invoice fi ON fi.invoice_id = i.id JOIN kss_csr_fund_request r ON r.id = fi.frl_id WHERE i.id = ?")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && (rs.getInt(1) != woId || rs.getBigDecimal(2).compareTo(amount) != 0)) {
+                        sendJson(response, 400, fail("This invoice is included in FRL " + rs.getString(3)
+                                + ", so its work order and amount cannot be changed. Remove it from the FRL first."));
+                        return;
+                    }
+                }
+            }
+        }
+
         // ---- budget check: invoices of a work order must not exceed the work order total
         BigDecimal woTotal = null;
         String woNumber = null;
@@ -282,11 +305,12 @@ public class CsrInvoiceServlet extends HttpServlet {
         try {
             if (isNew) {
                 try (PreparedStatement ps = con.prepareStatement(
-                        "INSERT INTO kss_csr_invoice (work_order_id, invoice_number, invoice_date, price, gst_percent, gst_amount, amount, "
-                      + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        "INSERT INTO kss_csr_invoice (work_order_id, invoice_type, invoice_number, invoice_date, price, gst_percent, gst_amount, amount, "
+                      + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS)) {
                     int i = 1;
                     ps.setInt(i++, woId);
+                    ps.setString(i++, type);
                     ps.setString(i++, invNumber);
                     ps.setDate(i++, Date.valueOf(date));
                     ps.setBigDecimal(i++, price);
@@ -303,13 +327,14 @@ public class CsrInvoiceServlet extends HttpServlet {
                     try (ResultSet keys = ps.getGeneratedKeys()) { keys.next(); id = keys.getInt(1); }
                 }
             } else {
-                String sql = "UPDATE kss_csr_invoice SET work_order_id=?, invoice_number=?, invoice_date=?, price=?, gst_percent=?, "
+                String sql = "UPDATE kss_csr_invoice SET work_order_id=?, invoice_type=?, invoice_number=?, invoice_date=?, price=?, gst_percent=?, "
                            + "gst_amount=?, amount=?, updated_by=?"
                            + (file != null ? ", attachment=?, attachment_name=?, attachment_type=?, attachment_size=?" : "")
                            + " WHERE id=?";
                 try (PreparedStatement ps = con.prepareStatement(sql)) {
                     int i = 1;
                     ps.setInt(i++, woId);
+                    ps.setString(i++, type);
                     ps.setString(i++, invNumber);
                     ps.setDate(i++, Date.valueOf(date));
                     ps.setBigDecimal(i++, price);
@@ -338,7 +363,7 @@ public class CsrInvoiceServlet extends HttpServlet {
         JsonObject json = new JsonObject();
         json.addProperty("ok", true);
         json.addProperty("id", id);
-        json.addProperty("message", (isNew ? "Invoice added: " : "Invoice updated: ") + invNumber + " (Rs " + amount.toPlainString() + ")");
+        json.addProperty("message", (isNew ? type + " added: " : type + " updated: ") + invNumber + " (Rs " + amount.toPlainString() + ")");
         sendJson(response, 200, json);
     }
 
@@ -346,12 +371,18 @@ public class CsrInvoiceServlet extends HttpServlet {
         String idParam = trim(request.getParameter("id"));
         if (!idParam.matches("\\d+")) { sendJson(response, 400, fail("Invalid invoice.")); return; }
         int id = Integer.parseInt(idParam);
-        String number = null;
-        try (PreparedStatement ps = con.prepareStatement("SELECT invoice_number FROM kss_csr_invoice WHERE id = ?")) {
+        String number = null, frl = null;
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT i.invoice_number, (SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
+              + "WHERE fi.invoice_id = i.id) FROM kss_csr_invoice i WHERE i.id = ?")) {
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) number = rs.getString(1); }
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) { number = rs.getString(1); frl = rs.getString(2); } }
         }
         if (number == null) { sendJson(response, 404, fail("Invoice not found. Please reload the page.")); return; }
+        if (frl != null) {
+            sendJson(response, 409, fail("Cannot delete " + number + ": it is included in FRL " + frl + ". Remove it from the FRL first."));
+            return;
+        }
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM kss_csr_invoice WHERE id = ?")) {
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -391,10 +422,27 @@ public class CsrInvoiceServlet extends HttpServlet {
         return list;
     }
 
+    /** All invoices with their letter and FRL link (used by the FRL form). */
+    static List<Map<String, String>> loadInvoices(Connection con) throws Exception {
+        List<Map<String, String>> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT " + INV_COLUMNS + INV_FROM + " ORDER BY i.invoice_date, i.id");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(invMap(rs));
+        }
+        return list;
+    }
+
     private static Map<String, String> invMap(ResultSet rs) throws Exception {
         Map<String, String> r = new LinkedHashMap<>();
         r.put("id", String.valueOf(rs.getInt("id")));
         r.put("woId", String.valueOf(rs.getInt("work_order_id")));
+        r.put("invoiceType", rs.getString("invoice_type"));
+        r.put("letterId", String.valueOf(rs.getInt("letter_id")));
+        r.put("letterName", rs.getString("letter_name"));
+        int frlId = rs.getInt("frl_id");
+        r.put("frlId", rs.wasNull() ? "" : String.valueOf(frlId));
+        r.put("frlNumber", rs.getString("frl_number"));
         r.put("invoiceNumber", rs.getString("invoice_number"));
         r.put("invoiceDate", rs.getString("inv_date_iso"));
         r.put("invoiceDateTxt", rs.getString("inv_date_txt"));

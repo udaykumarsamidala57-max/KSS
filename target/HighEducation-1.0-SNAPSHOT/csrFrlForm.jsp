@@ -46,6 +46,7 @@
   <form id="frlForm" enctype="multipart/form-data" autocomplete="off">
     <input type="hidden" name="action" value="save">
     <input type="hidden" name="id" id="fId" value="">
+    <input type="hidden" name="invoiceIds" id="fInvoiceIds" value="">
 
     <div class="csr-card">
       <div class="csr-card-head"><div class="csr-card-title">Funds Request Letter</div></div>
@@ -53,10 +54,24 @@
         <div class="csr-field span-3">
           <label for="fLetter">Against Approval Letter <span class="req">*</span></label>
           <select id="fLetter" name="letterId" class="csr-input"></select>
-          <div class="csr-budget" id="budgetBox" style="display:none;">
-            <span>Approved <b id="bApproved"></b></span>
-            <span>Requested in other FRLs <b id="bOthers"></b></span>
-            <span>Can request <b id="bAvail"></b></span>
+        </div>
+
+        <div class="csr-field span-3">
+          <label>Invoices in this FRL <span class="req">*</span></label>
+          <div class="csr-table-wrap csr-inv-pick">
+            <table class="csr-subtable" style="width:100%;">
+              <thead>
+                <tr>
+                  <th style="width:34px;"><input type="checkbox" id="tickAll" title="Tick all"></th>
+                  <th>Type</th>
+                  <th>Invoice No</th>
+                  <th>Date</th>
+                  <th>Work Order / Vendor</th>
+                  <th class="csr-num">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="invBody"></tbody>
+            </table>
           </div>
         </div>
 
@@ -69,8 +84,8 @@
           <input type="date" id="fDate" name="frlDate" class="csr-input">
         </div>
         <div class="csr-field">
-          <label for="fAmount">Amount Requested (&#8377;) <span class="req">*</span></label>
-          <input type="number" id="fAmount" name="amount" class="csr-input csr-amount" min="0.01" step="0.01" placeholder="0.00">
+          <label>Amount Requested (&#8377;)</label>
+          <div class="csr-readonly csr-num" id="vAmount">-</div>
         </div>
 
         <div class="csr-field span-3">
@@ -100,7 +115,9 @@
 $(function () {
   var frl       = <%= gson.toJson(frl) %>;                     // null when adding
   var letters   = <%= gson.toJson(request.getAttribute("letters")) %>;
+  var invoices  = <%= gson.toJson(request.getAttribute("invoices")) %>;
   var preset    = <%= gson.toJson(request.getAttribute("presetLetterId")) %>;
+  var presetInv = <%= gson.toJson(request.getAttribute("presetInvoiceId")) %>;
   var loadError = <%= gson.toJson(request.getAttribute("error")) %>;
   var RS = String.fromCharCode(8377);
 
@@ -122,40 +139,53 @@ $(function () {
     $('html, body').animate({ scrollTop: 0 }, 150);
   }
 
+  var myIds = frl && frl.invoiceIds ? String(frl.invoiceIds).split(',') : [];
   var $sel = $('#fLetter').append('<option value="">-- Select approval letter --</option>');
-  function othersFor(l) {
-    return Number(l.requested) - (frl && String(frl.letterId) === String(l.id) ? Number(frl.amount) : 0);
-  }
   letters.forEach(function (l) {
-    $sel.append($('<option></option>').attr('value', l.id)
-      .text(l.letterNumber + '  |  ' + l.letterName + '  |  Can request ' + money(Number(l.amount) - othersFor(l))));
+    $sel.append($('<option></option>').attr('value', l.id).text(l.letterNumber + '  |  ' + l.letterName));
   });
-  function current() {
-    var id = $sel.val();
-    for (var i = 0; i < letters.length; i++) if (String(letters[i].id) === String(id)) return letters[i];
-    return null;
+
+  // invoices of the chosen letter that are free, or already in this FRL
+  function renderInvoices(keepTicks) {
+    var ticked = keepTicks ? $('.inv-tick:checked').map(function () { return this.value; }).get() : null;
+    var lid = $sel.val(), $b = $('#invBody').empty(), n = 0;
+    invoices.forEach(function (v) {
+      if (!lid || String(v.letterId) !== String(lid)) return;
+      var mine = myIds.indexOf(String(v.id)) !== -1;
+      if (v.frlId && !mine) return;
+      var on = ticked ? ticked.indexOf(String(v.id)) !== -1 : (mine || String(v.id) === String(presetInv));
+      var $tr = $('<tr></tr>');
+      $tr.append($('<td></td>').append($('<input type="checkbox" class="inv-tick">').val(v.id).prop('checked', on)));
+      $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(v.invoiceType === 'Proforma' ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', v.invoiceType === 'Proforma')));
+      $tr.append($('<td class="csr-strong"></td>').text(v.invoiceNumber));
+      $tr.append($('<td></td>').text(v.invoiceDateTxt));
+      $tr.append($('<td></td>').append($('<div></div>').text(v.woNumber)).append($('<div class="csr-small"></div>').text(v.vendorName)));
+      $tr.append($('<td class="csr-num csr-strong"></td>').text(money(v.amount)).attr('data-amt', v.amount));
+      $b.append($tr); n++;
+    });
+    if (!lid) $b.append('<tr><td colspan="6" class="csr-empty">Select the approval letter to see its invoices.</td></tr>');
+    else if (!n) $b.append('<tr><td colspan="6" class="csr-empty">No invoices waiting for an FRL on this approval letter. Add the invoice first (KSS CSR &gt; Invoices).</td></tr>');
+    total();
   }
-  function budget() {
-    var l = current();
-    if (!l) return null;
-    return { approved: Number(l.amount), others: othersFor(l), avail: r2(Number(l.amount) - othersFor(l)) };
-  }
-  function check() {
-    var b = budget(), amt = r2($('#fAmount').val());
-    if (b) {
-      $('#bApproved').text(money(b.approved)); $('#bOthers').text(money(b.others)); $('#bAvail').text(money(b.avail));
-      $('#budgetBox').show();
-    } else {
-      $('#budgetBox').hide();
-    }
+  function total() {
+    var sum = 0, ids = [];
+    $('.inv-tick:checked').each(function () {
+      ids.push(this.value);
+      sum += Number($(this).closest('tr').find('[data-amt]').attr('data-amt'));
+    });
+    sum = r2(sum);
+    $('#fInvoiceIds').val(ids.join(','));
+    $('#vAmount').text(ids.length ? money(sum) : '-');
+    $('#tickAll').prop('checked', ids.length > 0 && ids.length === $('.inv-tick').length);
     var msg = '';
-    if (b && amt > b.avail) msg = 'Amount ' + money(amt) + ' is more than the ' + money(b.avail) + ' still available to request on this approval letter.';
-    else if (frl && amt && amt < Number(frl.received)) msg = 'Amount cannot be less than the ' + money(frl.received) + ' already received against this FRL.';
+    if (frl && ids.length && sum < Number(frl.received))
+      msg = 'The ticked invoices total ' + money(sum) + ', less than the ' + money(frl.received) + ' already received against this FRL.';
     if (msg) $('#overWarn').text(msg).show(); else $('#overWarn').hide();
-    return msg;
+    return { ids: ids, sum: sum, msg: msg };
   }
-  $sel.on('change', check);
-  $('#fAmount').on('input', check);
+  $sel.on('change', function () { presetInv = ''; renderInvoices(false); });
+  $(document).on('change', '.inv-tick', total);
+  $('#tickAll').on('change', function () { $('.inv-tick').prop('checked', this.checked); total(); });
 
   if (frl) {
     $('#pageTitle').text('Edit Funds Request Letter');
@@ -165,7 +195,6 @@ $(function () {
     if (Number(frl.rcptCount) > 0) $sel.prop('disabled', true).after($('<input type="hidden" name="letterId">').val(frl.letterId));
     $('#fNumber').val(frl.frlNumber);
     $('#fDate').val(frl.frlDate);
-    $('#fAmount').val(frl.amount);
     $('#fRemarks').val(frl.remarks || '');
     $('#fileReq').hide();
     $('#fileKeepHint').show();
@@ -181,17 +210,17 @@ $(function () {
     var d = new Date();
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
-  check();
+  renderInvoices(false);
   if (!letters.length && !loadError) $('#csrError').text('No approval letters yet. Add an approval letter first.').show();
 
   $('#frlForm').on('submit', function (e) {
     e.preventDefault();
     if (!$sel.val()) { showToast(false, 'Please select the Approval Letter.'); return; }
+    var t = total();
+    if (!t.ids.length) { showToast(false, 'Please tick at least one invoice for this FRL.'); return; }
+    if (t.msg) { showToast(false, t.msg); return; }
     if ($.trim($('#fNumber').val()) === '') { showToast(false, 'Please enter the FRL Number.'); $('#fNumber').trigger('focus'); return; }
     if (!$('#fDate').val()) { showToast(false, 'Please enter the FRL Date.'); return; }
-    if (!(Number($('#fAmount').val()) > 0)) { showToast(false, 'Please enter a valid Amount.'); $('#fAmount').trigger('focus'); return; }
-    var msg = check();
-    if (msg) { showToast(false, msg); return; }
     var file = $('#fFile')[0].files[0];
     if (!file && !frl) { showToast(false, 'Please attach the Funds Request Letter copy.'); return; }
     if (file) {

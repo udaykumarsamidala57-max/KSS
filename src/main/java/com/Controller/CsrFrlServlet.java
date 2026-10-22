@@ -30,12 +30,12 @@ import com.Bean.DBUtil;
 import com.google.gson.JsonObject;
 
 /**
- * KSS CSR Amount Spending : Funds Request Letters (FRL) against Approval Letters (Global role only).
- * Approval Letter -> many FRLs -> many Fund Receipts per FRL.
- * Total requested for a letter may not exceed the approved amount.
+ * KSS CSR Amount Spending : Funds Request Letters (FRL) (Global role only).
+ * Approval Letter -> Work Orders -> Proforma / Tax Invoices -> FRL (one or more invoices of the
+ * same approval letter) -> Fund Receipts. The FRL amount is the total of its invoices.
  *
  *  GET  CsrFrlServlet[?letterId=N]                    -> list page (csrFrls.jsp)
- *  GET  CsrFrlServlet?action=form[&id=N|&letterId=N]  -> add / edit form (csrFrlForm.jsp)
+ *  GET  CsrFrlServlet?action=form[&id=N|&letterId=N[&invoiceId=N]] -> add / edit form (csrFrlForm.jsp)
  *  GET  CsrFrlServlet?action=file&id=N                -> open the FRL copy
  *  POST action=save   (multipart, AJAX)               -> add / update
  *  POST action=delete (AJAX)                          -> delete
@@ -54,7 +54,10 @@ public class CsrFrlServlet extends HttpServlet {
           + "r.created_by, DATE_FORMAT(r.created_at, '%d-%m-%Y') AS created_txt, "
           + "l.letter_number, l.letter_name, l.activity_kind, l.amount AS letter_amount, "
           + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS received, "
-          + "(SELECT COUNT(*) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS rcpt_count";
+          + "(SELECT COUNT(*) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS rcpt_count, "
+          + "(SELECT GROUP_CONCAT(CONCAT(IF(i.invoice_type = 'Proforma', 'PI ', ''), i.invoice_number) ORDER BY i.invoice_date, i.id SEPARATOR ', ') "
+          + " FROM kss_csr_frl_invoice fi JOIN kss_csr_invoice i ON i.id = fi.invoice_id WHERE fi.frl_id = r.id) AS inv_numbers, "
+          + "(SELECT GROUP_CONCAT(fi.invoice_id) FROM kss_csr_frl_invoice fi WHERE fi.frl_id = r.id) AS inv_ids";
 
     private static final String FRL_FROM =
             " FROM kss_csr_fund_request r JOIN kss_csr_approval_letter l ON l.id = r.letter_id";
@@ -91,7 +94,9 @@ public class CsrFrlServlet extends HttpServlet {
 
         if ("form".equals(action)) {
             String idParam = request.getParameter("id");
+            String invParam = request.getParameter("invoiceId");
             Map<String, String> frl = null;
+            List<Map<String, String>> invoices = new ArrayList<>();
             try (Connection con = DBUtil.getConnection()) {
                 if (idParam != null && idParam.matches("\\d+")) {
                     try (PreparedStatement ps = con.prepareStatement("SELECT " + FRL_COLUMNS + FRL_FROM + " WHERE r.id = ?")) {
@@ -104,12 +109,15 @@ public class CsrFrlServlet extends HttpServlet {
                     }
                 }
                 letters = loadLetters(con);
+                invoices = CsrInvoiceServlet.loadInvoices(con);
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("error", "Database error: " + e.getMessage()
-                        + " (Has the kss_csr_fund_request table been created?)");
+                        + " (Have the kss_csr_fund_request and kss_csr_frl_invoice tables been created?)");
             }
             request.setAttribute("frl", frl);
+            request.setAttribute("invoices", invoices);
+            request.setAttribute("presetInvoiceId", invParam != null && invParam.matches("\\d+") ? invParam : "");
             request.setAttribute("letters", letters);
             request.setAttribute("presetLetterId", presetLetter);
             request.getRequestDispatcher("/csrFrlForm.jsp").forward(request, response);
@@ -205,7 +213,7 @@ public class CsrFrlServlet extends HttpServlet {
         String letterParam = trim(request.getParameter("letterId"));
         String number = trim(request.getParameter("frlNumber"));
         String dateS = trim(request.getParameter("frlDate"));
-        String amountS = trim(request.getParameter("amount"));
+        String invoiceIdsS = trim(request.getParameter("invoiceIds"));
         String remarks = trim(request.getParameter("remarks"));
 
         if (!letterParam.matches("\\d+")) { sendJson(response, 400, fail("Please select the Approval Letter.")); return; }
@@ -218,17 +226,15 @@ public class CsrFrlServlet extends HttpServlet {
             sendJson(response, 400, fail("Please enter a valid FRL Date."));
             return;
         }
-        BigDecimal amount;
-        try {
-            amount = new BigDecimal(amountS.replace(",", ""));
-        } catch (NumberFormatException e) {
-            amount = null;
+        List<Integer> invoiceIds = new ArrayList<>();
+        for (String part : invoiceIdsS.split(",")) {
+            String t = part.trim();
+            if (t.isEmpty()) continue;
+            if (!t.matches("\\d+")) { sendJson(response, 400, fail("Invalid invoice selection.")); return; }
+            Integer v = Integer.valueOf(t);
+            if (!invoiceIds.contains(v)) invoiceIds.add(v);
         }
-        if (amount == null || amount.signum() <= 0 || amount.compareTo(new BigDecimal("999999999999")) > 0) {
-            sendJson(response, 400, fail("Please enter a valid Amount."));
-            return;
-        }
-        amount = amount.setScale(2, RoundingMode.HALF_UP);
+        if (invoiceIds.isEmpty()) { sendJson(response, 400, fail("Please tick at least one invoice for this FRL.")); return; }
         if (remarks.length() > 500) { sendJson(response, 400, fail("Remarks are too long (maximum 500 characters).")); return; }
 
         // ---- attachment (required when adding)
@@ -251,6 +257,32 @@ public class CsrFrlServlet extends HttpServlet {
         int letterId = Integer.parseInt(letterParam);
         int id = isNew ? 0 : Integer.parseInt(idParam);
 
+        // ---- the ticked invoices: must exist, belong to this approval letter, and not be in another FRL
+        BigDecimal amount = BigDecimal.ZERO;
+        for (Integer invId : invoiceIds) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT i.invoice_number, i.amount, w.letter_id, "
+                  + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
+                  + " WHERE fi.invoice_id = i.id AND fi.frl_id <> ?) AS other_frl "
+                  + "FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id WHERE i.id = ?")) {
+                ps.setInt(1, id);
+                ps.setInt(2, invId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) { sendJson(response, 400, fail("An invoice was not found. Please reload the page.")); return; }
+                    if (rs.getInt("letter_id") != letterId) {
+                        sendJson(response, 400, fail("Invoice " + rs.getString("invoice_number") + " does not belong to the selected approval letter."));
+                        return;
+                    }
+                    if (rs.getString("other_frl") != null) {
+                        sendJson(response, 400, fail("Invoice " + rs.getString("invoice_number") + " is already in FRL " + rs.getString("other_frl") + "."));
+                        return;
+                    }
+                    amount = amount.add(rs.getBigDecimal("amount"));
+                }
+            }
+        }
+        amount = amount.setScale(2, RoundingMode.HALF_UP);
+
         // ---- editing: cannot go below what is already received, cannot move to another letter once funds came
         if (!isNew) {
             Integer oldLetter = null;
@@ -270,7 +302,7 @@ public class CsrFrlServlet extends HttpServlet {
                 return;
             }
             if (amount.compareTo(received) < 0) {
-                sendJson(response, 400, fail("Amount cannot be less than the funds already received against this FRL (Rs "
+                sendJson(response, 400, fail("The ticked invoices total Rs " + amount.toPlainString() + ", which is less than the funds already received against this FRL (Rs "
                         + received.setScale(2, RoundingMode.HALF_UP).toPlainString() + ")."));
                 return;
             }
@@ -299,6 +331,8 @@ public class CsrFrlServlet extends HttpServlet {
             return;
         }
 
+        boolean auto = con.getAutoCommit();
+        con.setAutoCommit(false);
         try {
             if (isNew) {
                 try (PreparedStatement ps = con.prepareStatement(
@@ -342,9 +376,30 @@ public class CsrFrlServlet extends HttpServlet {
                     ps.executeUpdate();
                 }
             }
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM kss_csr_frl_invoice WHERE frl_id = ?")) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = con.prepareStatement("INSERT INTO kss_csr_frl_invoice (frl_id, invoice_id) VALUES (?, ?)")) {
+                for (Integer invId : invoiceIds) {
+                    ps.setInt(1, id);
+                    ps.setInt(2, invId);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            con.commit();
         } catch (SQLIntegrityConstraintViolationException dup) {
-            sendJson(response, 409, fail("FRL Number \"" + number + "\" already exists."));
+            con.rollback();
+            sendJson(response, 409, fail(dup.getMessage() != null && dup.getMessage().contains("uq_csr_frl_invoice")
+                    ? "One of the invoices was just added to another FRL. Please reload the page."
+                    : "FRL Number \"" + number + "\" already exists."));
             return;
+        } catch (Exception e) {
+            con.rollback();
+            throw e;
+        } finally {
+            con.setAutoCommit(auto);
         }
 
         JsonObject json = new JsonObject();
@@ -430,6 +485,8 @@ public class CsrFrlServlet extends HttpServlet {
         r.put("frlDateTxt", rs.getString("fdate_txt"));
         r.put("amount", money2(rs.getBigDecimal("amount")));
         r.put("remarks", rs.getString("remarks"));
+        r.put("invoiceNumbers", rs.getString("inv_numbers"));
+        r.put("invoiceIds", rs.getString("inv_ids"));
         r.put("received", money2(rs.getBigDecimal("received")));
         r.put("rcptCount", String.valueOf(rs.getInt("rcpt_count")));
         r.put("attachmentName", rs.getString("attachment_name"));

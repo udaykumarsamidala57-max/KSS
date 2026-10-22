@@ -48,6 +48,11 @@
     <div class="csr-card-head">
       <div class="csr-card-title">Invoices <small id="listCount"></small></div>
       <div class="csr-controls">
+        <select id="typeFilter">
+          <option value="ALL">All Types</option>
+          <option value="Tax Invoice">Tax Invoices</option>
+          <option value="Proforma">Proforma Invoices</option>
+        </select>
         <select id="woFilter"><option value="ALL">All Work Orders</option></select>
         <input type="text" id="searchBox" placeholder="Search invoice no / WO / vendor">
         <a href="CsrInvoiceServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New Invoice</a>
@@ -58,12 +63,13 @@
         <thead>
           <tr>
             <th>#</th>
+            <th>Type</th>
             <th>Invoice No / Date</th>
-            <th>Work Order</th>
-            <th>Vendor</th>
+            <th>Work Order / Vendor</th>
             <th class="csr-num">Price</th>
             <th class="csr-num">GST</th>
             <th class="csr-num">Amount</th>
+            <th>FRL</th>
             <th>Invoice Copy</th>
             <th>Added</th>
             <th>Action</th>
@@ -76,7 +82,7 @@
             <td class="csr-num" id="sumPrice">-</td>
             <td class="csr-num" id="sumGst">-</td>
             <td class="csr-num" id="sumAmount">-</td>
-            <td colspan="3"></td>
+            <td colspan="4"></td>
           </tr>
         </tfoot>
       </table>
@@ -118,17 +124,27 @@ $(function () {
   function rowHtml(r, n) {
     var $tr = $('<tr class="csr-row inv-row"></tr>').attr('data-id', r.id);
     $tr.append($('<td></td>').text(n));
+    $tr.append($('<td></td>').append($('<span class="csr-badge"></span>')
+      .text(r.invoiceType === 'Proforma' ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', r.invoiceType === 'Proforma')));
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.invoiceNumber))
       .append($('<div class="csr-small"></div>').text(r.invoiceDateTxt)));
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.woNumber))
-      .append($('<div class="csr-small"></div>').text('Letter ' + r.letterNumber)));
-    $tr.append($('<td></td>').text(r.vendorName));
+      .append($('<div class="csr-small"></div>').text(r.vendorName + ' | ' + r.letterNumber)));
     $tr.append($('<td class="csr-num"></td>').text(money(r.price)));
     $tr.append($('<td class="csr-num"></td>').append($('<div></div>').text(money(r.gstAmount)))
       .append($('<div class="csr-small"></div>').text(r.gst + ' %')));
     $tr.append($('<td class="csr-num csr-strong"></td>').text(money(r.amount)));
+    var $f = $('<td></td>');
+    if (r.frlId) {
+      $f.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrFrlServlet?letterId=' + r.letterId).text(r.frlNumber));
+    } else {
+      $f.append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ FRL</a>')
+        .attr('href', 'CsrFrlServlet?action=form&letterId=' + r.letterId + '&invoiceId=' + r.id)
+        .attr('title', 'Raise a funds request letter for this invoice'));
+    }
+    $tr.append($f);
     var $a = $('<td></td>');
     if (r.attachmentSize) {
       $a.append($('<a class="csr-pdf" target="_blank"></a>').attr('href', 'CsrInvoiceServlet?action=file&id=' + r.id).html('&#128206; View'))
@@ -148,17 +164,17 @@ $(function () {
   }
 
   function render() {
-    var wf = $('#woFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
+    var tf = $('#typeFilter').val(), wf = $('#woFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
     var $body = $('#invBody').empty(), n = 0, sp = 0, sg = 0, sa = 0;
     rows.forEach(function (r) {
-      var hay = [r.invoiceNumber, r.woNumber, r.vendorName, r.letterNumber].join(' ').toLowerCase();
-      if ((wf === 'ALL' || String(r.woId) === String(wf)) && (q === '' || hay.indexOf(q) !== -1)) {
+      var hay = [r.invoiceNumber, r.woNumber, r.vendorName, r.letterNumber, r.frlNumber].join(' ').toLowerCase();
+      if ((tf === 'ALL' || (r.invoiceType || 'Tax Invoice') === tf) && (wf === 'ALL' || String(r.woId) === String(wf)) && (q === '' || hay.indexOf(q) !== -1)) {
         $body.append(rowHtml(r, ++n));
         sp += Number(r.price); sg += Number(r.gstAmount); sa += Number(r.amount);
       }
     });
     if (n === 0) {
-      $body.append('<tr><td colspan="10" class="csr-empty">' + (rows.length ? 'No invoices match the filter.'
+      $body.append('<tr><td colspan="12" class="csr-empty">' + (rows.length ? 'No invoices match the filter.'
         : 'No invoices yet. Click <b>+ New Invoice</b> to add the first one.') + '</td></tr>');
     }
     $('#sumPrice').text(money(sp)); $('#sumGst').text(money(sg)); $('#sumAmount').text(money(sa));
@@ -205,7 +221,7 @@ $(function () {
     });
   });
 
-  $('#woFilter').on('change', render);
+  $('#woFilter, #typeFilter').on('change', render);
   $('#searchBox').on('input keyup', render);
   render();
 

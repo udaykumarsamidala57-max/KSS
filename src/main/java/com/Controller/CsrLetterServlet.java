@@ -52,7 +52,15 @@ public class CsrLetterServlet extends HttpServlet {
           + "(SELECT COUNT(*) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id) AS fund_count, "
           + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id) AS fund_total, "
           + "(SELECT COUNT(*) FROM kss_csr_fund_request r WHERE r.letter_id = kss_csr_approval_letter.id) AS frl_count, "
-          + "(SELECT COALESCE(SUM(r.amount), 0) FROM kss_csr_fund_request r WHERE r.letter_id = kss_csr_approval_letter.id) AS frl_total";
+          + "(SELECT COALESCE(SUM(r.amount), 0) FROM kss_csr_fund_request r WHERE r.letter_id = kss_csr_approval_letter.id) AS frl_total, "
+          + "(SELECT COUNT(*) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+          + " WHERE w.letter_id = kss_csr_approval_letter.id) AS inv_count, "
+          + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+          + " WHERE w.letter_id = kss_csr_approval_letter.id) AS inv_total, "
+          + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+          + " JOIN kss_csr_frl_invoice fi ON fi.invoice_id = i.id WHERE w.letter_id = kss_csr_approval_letter.id) AS inv_in_frl, "
+          + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id "
+          + " AND f.frl_id IS NOT NULL) AS fund_frl_total";
 
     private boolean isGlobal(HttpSession sess) {
         String role = (String) sess.getAttribute("role");
@@ -430,6 +438,12 @@ public class CsrLetterServlet extends HttpServlet {
         r.put("woTotal", woTotal == null ? "0.00" : woTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
         r.put("fundCount", String.valueOf(rs.getInt("fund_count")));
         r.put("frlCount", String.valueOf(rs.getInt("frl_count")));
+        r.put("invCount", String.valueOf(rs.getInt("inv_count")));
+        BigDecimal fundFrl = rs.getBigDecimal("fund_frl_total");
+        r.put("fundFrlTotal", fundFrl == null ? "0.00" : fundFrl.setScale(2, RoundingMode.HALF_UP).toPlainString());
+        BigDecimal invTotal = rs.getBigDecimal("inv_total"), invInFrl = rs.getBigDecimal("inv_in_frl");
+        r.put("invTotal", invTotal == null ? "0.00" : invTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
+        r.put("invInFrl", invInFrl == null ? "0.00" : invInFrl.setScale(2, RoundingMode.HALF_UP).toPlainString());
         BigDecimal frlTotal = rs.getBigDecimal("frl_total");
         r.put("frlTotal", frlTotal == null ? "0.00" : frlTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
         BigDecimal fundTotal = rs.getBigDecimal("fund_total");

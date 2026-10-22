@@ -50,7 +50,7 @@
       <div class="csr-card-title">Funds Request Letters <small id="listCount"></small></div>
       <div class="csr-controls">
         <select id="letterFilter"><option value="ALL">All Approval Letters</option></select>
-        <input type="text" id="searchBox" placeholder="Search FRL no / letter / remarks">
+        <input type="text" id="searchBox" placeholder="Search FRL / letter / invoice / remarks">
         <a href="CsrFrlServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New FRL</a>
       </div>
     </div>
@@ -61,6 +61,7 @@
             <th>#</th>
             <th>FRL No / Date</th>
             <th>Approval Letter</th>
+            <th>Invoices</th>
             <th class="csr-num">Requested</th>
             <th class="csr-num">Received</th>
             <th class="csr-num">Yet to Receive</th>
@@ -73,7 +74,7 @@
         <tbody id="frlBody"></tbody>
         <tfoot>
           <tr class="csr-total-row" id="totalRow">
-            <td colspan="3">Total (shown)</td>
+            <td colspan="4">Total (shown)</td>
             <td class="csr-num" id="sumReq">-</td>
             <td class="csr-num" id="sumRec">-</td>
             <td class="csr-num" id="sumDue">-</td>
@@ -126,6 +127,7 @@ $(function () {
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.letterNumber))
       .append($('<div class="csr-small"></div>').text(r.letterName)));
+    $tr.append($('<td class="csr-small"></td>').css('max-width', '220px').text(r.invoiceNumbers || '-'));
     $tr.append($('<td class="csr-num"></td>').text(money(r.amount)));
     var $rec = $('<td class="csr-num"></td>');
     if (cnt) {
@@ -163,14 +165,14 @@ $(function () {
     var lf = $('#letterFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
     var $body = $('#frlBody').empty(), n = 0, sr = 0, sc = 0;
     rows.forEach(function (r) {
-      var hay = [r.frlNumber, r.letterNumber, r.letterName, r.remarks].join(' ').toLowerCase();
+      var hay = [r.frlNumber, r.letterNumber, r.letterName, r.remarks, r.invoiceNumbers].join(' ').toLowerCase();
       if ((lf === 'ALL' || String(r.letterId) === String(lf)) && (q === '' || hay.indexOf(q) !== -1)) {
         $body.append(rowHtml(r, ++n));
         sr += Number(r.amount); sc += Number(r.received);
       }
     });
     if (n === 0) {
-      $body.append('<tr><td colspan="10" class="csr-empty">' + (rows.length ? 'No request letters match the filter.'
+      $body.append('<tr><td colspan="11" class="csr-empty">' + (rows.length ? 'No request letters match the filter.'
         : 'No funds request letters yet. Click <b>+ New FRL</b> to add the first one.') + '</td></tr>');
     }
     $('#sumReq').text(money(sr)); $('#sumRec').text(money(sc)); $('#sumDue').text(money(sr - sc));

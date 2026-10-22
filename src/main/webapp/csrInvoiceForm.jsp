@@ -61,6 +61,13 @@
         </div>
 
         <div class="csr-field">
+          <label for="fType">Invoice Type <span class="req">*</span></label>
+          <select id="fType" name="invoiceType" class="csr-input">
+            <option value="Tax Invoice">Tax Invoice</option>
+            <option value="Proforma">Proforma Invoice</option>
+          </select>
+        </div>
+        <div class="csr-field">
           <label for="fNumber">Invoice Number <span class="req">*</span></label>
           <input type="text" id="fNumber" name="invoiceNumber" class="csr-input" maxlength="100">
         </div>
@@ -68,7 +75,6 @@
           <label for="fDate">Invoice Date <span class="req">*</span></label>
           <input type="date" id="fDate" name="invoiceDate" class="csr-input">
         </div>
-        <div class="csr-field"></div>
 
         <div class="csr-field">
           <label for="fPrice">Price (&#8377;) <span class="req">*</span></label>
@@ -187,6 +193,15 @@ $(function () {
     $('#btnSave').text('Update Invoice');
     $('#fId').val(inv.id);
     $wo.val(inv.woId);
+    $('#fType').val(inv.invoiceType || 'Tax Invoice');
+    if (inv.frlId) {
+      // already in an FRL: work order and amount are locked
+      $('#csrError').removeClass('csr-alert-err').addClass('csr-alert-ok')
+        .text('This invoice is included in FRL ' + inv.frlNumber + '. Work order, price and GST cannot be changed.').show();
+      $wo.prop('disabled', true).after($('<input type="hidden" name="woId">').val(inv.woId));
+      $('#fPrice').prop('readonly', true);
+      $('#fGst').prop('disabled', true).after($('<input type="hidden" name="gst">').val(inv.gst));
+    }
     $('#fNumber').val(inv.invoiceNumber);
     $('#fDate').val(inv.invoiceDate);
     $('#fPrice').val(inv.price);

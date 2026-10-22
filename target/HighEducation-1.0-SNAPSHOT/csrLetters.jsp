@@ -62,13 +62,14 @@
           <tr>
             <th>#</th>
             <th>Letter No / Name</th>
-            <th>Kind of CSR Activity</th>
-            <th>Place</th>
+            <th>CSR Activity / Place</th>
             <th>Particulars</th>
             <th class="csr-num">Amount</th>
             <th>PDF</th>
-            <th>Funds</th>
             <th>Work Orders</th>
+            <th>Invoices</th>
+            <th>FRLs</th>
+            <th>Funds Received</th>
             <th>Added</th>
             <th>Action</th>
           </tr>
@@ -76,9 +77,9 @@
         <tbody id="csrBody"></tbody>
         <tfoot>
           <tr class="csr-total-row" id="totalRow">
-            <td colspan="5">Total (shown)</td>
+            <td colspan="4">Total (shown)</td>
             <td class="csr-num" id="totalShown">-</td>
-            <td colspan="5"></td>
+            <td colspan="7"></td>
           </tr>
         </tfoot>
       </table>
@@ -116,8 +117,8 @@ $(function () {
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.letterNumber))
       .append($('<div class="csr-small"></div>').text(r.letterName)));
-    $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(r.activityKind)));
-    $tr.append($('<td></td>').text(r.place));
+    $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(r.activityKind))
+      .append($('<div class="csr-small" style="margin-top:3px;"></div>').text(r.place)));
     $tr.append($('<td class="csr-particulars"></td>').text(r.particulars || ''));
     $tr.append($('<td class="csr-num csr-strong"></td>').text(money(r.amount)));
     var $pdf = $('<td></td>');
@@ -128,35 +129,36 @@ $(function () {
       $pdf.append('<span class="csr-small">No PDF</span>');
     }
     $tr.append($pdf);
-    var frlCount = parseInt(r.frlCount, 10) || 0, fundCount = parseInt(r.fundCount, 10) || 0;
-    var $fd = $('<td class="csr-wo-cell"></td>');
-    if (frlCount) {
-      $fd.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrFrlServlet?letterId=' + r.id)
-                   .text(frlCount + ' FRL' + (frlCount === 1 ? '' : 's') + ': ' + money(r.frlTotal)));
-    } else {
-      $fd.append('<div class="csr-small">No FRL yet</div>');
+    // flow: Work Orders -> Invoices -> FRLs -> Funds Received
+    function flowCell(count, href, mainText, subLabel, subValue, neg) {
+      var $c = $('<td class="csr-wo-cell"></td>');
+      if (count) $c.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', href).text(mainText));
+      else $c.append($('<div class="csr-small"></div>').text(mainText));
+      if (subLabel) $c.append($('<div class="csr-small"></div>').append(subLabel + ' ')
+        .append($('<b></b>').text(subValue).toggleClass('csr-neg', !!neg)));
+      return $c;
     }
-    var $rcv = $('<div class="csr-small"></div>').append('Received ');
-    if (fundCount) $rcv.append($('<a style="color:inherit"></a>').attr('href', 'CsrFundServlet?letterId=' + r.id).append($('<b></b>').text(money(r.fundTotal))));
-    else $rcv.append($('<b></b>').text(money(0)));
-    $fd.append($rcv);
-    $tr.append($fd);
     var woCount = parseInt(r.woCount, 10) || 0, bal = Number(r.amount) - Number(r.woTotal || 0);
-    var $wo = $('<td class="csr-wo-cell"></td>');
-    if (woCount) {
-      $wo.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrWorkOrderServlet?letterId=' + r.id)
-                   .text(woCount + ' WO' + (woCount === 1 ? '' : 's') + ': ' + money(r.woTotal)));
-    } else {
-      $wo.append('<div class="csr-small">No work orders</div>');
-    }
-    $wo.append($('<div class="csr-small"></div>').append('Balance ').append($('<b></b>').text(money(bal)).toggleClass('csr-neg', bal < 0)));
-    $tr.append($wo);
+    $tr.append(flowCell(woCount, 'CsrWorkOrderServlet?letterId=' + r.id,
+      woCount ? woCount + ' WO' + (woCount === 1 ? '' : 's') + ': ' + money(r.woTotal) : 'No work orders',
+      'Balance', money(bal), bal < 0));
+    var invCount = parseInt(r.invCount, 10) || 0, notInFrl = Number(r.invTotal || 0) - Number(r.invInFrl || 0);
+    $tr.append(flowCell(invCount, 'CsrInvoiceServlet',
+      invCount ? invCount + ' invoice' + (invCount === 1 ? '' : 's') + ': ' + money(r.invTotal) : 'No invoices',
+      invCount ? 'Not in FRL' : '', money(notInFrl)));
+    var frlCount = parseInt(r.frlCount, 10) || 0, due = Number(r.frlTotal || 0) - Number(r.fundFrlTotal || 0);
+    $tr.append(flowCell(frlCount, 'CsrFrlServlet?letterId=' + r.id,
+      frlCount ? frlCount + ' FRL' + (frlCount === 1 ? '' : 's') + ': ' + money(r.frlTotal) : 'No FRL yet',
+      frlCount ? 'Yet to receive' : '', money(due), due < 0));
+    var fundCount = parseInt(r.fundCount, 10) || 0;
+    $tr.append(flowCell(fundCount, 'CsrFundServlet?letterId=' + r.id,
+      fundCount ? money(r.fundTotal) : 'Nothing received',
+      fundCount ? fundCount + ' receipt' + (fundCount === 1 ? '' : 's') : '', ''));
     $tr.append($('<td></td>')
       .append($('<div></div>').text(r.createdAt || ''))
       .append($('<div class="csr-small"></div>').text(r.createdBy ? 'by ' + r.createdBy : '')));
     $tr.append($('<td></td>').append(
       $('<div class="csr-actions"></div>')
-        .append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ FRL</a>').attr('href', 'CsrFrlServlet?action=form&letterId=' + r.id).attr('title', 'New funds request letter against this approval letter'))
         .append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ WO</a>').attr('href', 'CsrWorkOrderServlet?action=form&letterId=' + r.id).attr('title', 'New work order against this letter'))
         .append($('<a class="csr-btn csr-btn-sm csr-btn-outline csr-link-btn">&#9998; Edit</a>').attr('href', 'CsrLetterServlet?action=form&id=' + r.id))
         .append('<button type="button" class="csr-btn csr-btn-sm csr-btn-bad js-del">Delete</button>')));
@@ -175,7 +177,7 @@ $(function () {
       }
     });
     if (n === 0) {
-      $body.append('<tr><td colspan="11" class="csr-empty">' + (rows.length ? 'No letters match the filter.'
+      $body.append('<tr><td colspan="12" class="csr-empty">' + (rows.length ? 'No letters match the filter.'
         : 'No approval letters yet. Click <b>+ New Approval Letter</b> to add the first one.') + '</td></tr>');
     }
     $('#totalShown').text(money(shownTotal));
