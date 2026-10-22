@@ -432,17 +432,74 @@
     }
   }
 
-  /* Gear (settings) menu */
-  .kss-navbar-scope .gear-icon { font-size: 19px; line-height: 1; display: inline-block; transition: transform .3s ease; }
-  .kss-navbar-scope .nav-gear:hover .gear-icon { transform: rotate(60deg); }
-  .kss-navbar-scope .gear-toggle::after { content: '' !important; }
-  .kss-navbar-scope .nav-gear .dropdown-menu { left: auto; right: 0; }
+  /* 9-dots launcher (Global only) */
+  .kss-navbar-scope .kss-apps { position: relative; flex-shrink: 0; margin-left: auto; }
+  .kss-navbar-scope .kss-apps-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+    background: transparent; color: #f6e3e8; display: inline-flex; align-items: center; justify-content: center;
+    transition: background .15s ease, color .15s ease;
+  }
+  .kss-navbar-scope .kss-apps-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+  .kss-navbar-scope .kss-apps-btn.is-active { background: rgba(255,255,255,.18); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+  .kss-navbar-scope .kss-apps-btn.open { background: #fff; color: var(--nav-primary); }
+  .kss-navbar-scope .kss-apps-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,.4); }
+  .kss-navbar-scope .kss-apps-panel {
+    display: none; position: absolute; top: calc(100% + 10px); right: -6px; z-index: 10050;
+    width: 400px; max-width: calc(100vw - 16px); background: #fff; color: var(--nav-text-main);
+    border-radius: 14px; border: 1px solid #ecdfe2; overflow: hidden;
+    box-shadow: 0 10px 28px rgba(122,31,53,.16), 0 2px 6px rgba(122,31,53,.08);
+  }
+  .kss-navbar-scope .kss-apps-panel.open { display: block; animation: kssAppsIn .14s ease-out; }
+  @keyframes kssAppsIn { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+  .kss-navbar-scope .kss-apps-search { padding: 12px 14px 6px; }
+  .kss-navbar-scope .kss-apps-search input {
+    width: 100%; height: 36px; border-radius: 18px; border: 1px solid #efe4e7; background: #faf6f7;
+    padding: 0 14px; font: inherit; font-size: 13px; color: var(--nav-text-main); outline: none;
+  }
+  .kss-navbar-scope .kss-apps-search input:focus { background: #fff; border-color: #d9b9c1; box-shadow: 0 0 0 3px rgba(122,31,53,.08); }
+  .kss-navbar-scope .kss-apps-body { max-height: min(70vh, 540px); overflow-y: auto; padding: 0 10px 10px; }
+  .kss-navbar-scope .kss-apps-sec { padding: 6px 0 2px; }
+  .kss-navbar-scope .kss-apps-sec + .kss-apps-sec { border-top: 1px solid #f3eaec; }
+  .kss-navbar-scope .kss-apps-sec h4 {
+    margin: 6px 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: var(--nav-primary);
+  }
+  .kss-navbar-scope .kss-apps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .kss-navbar-scope .kss-apps-panel a.kss-app-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 11px 4px 9px;
+    border-radius: 10px; border: 1px solid transparent; text-decoration: none; color: #3c3c3c;
+    background: transparent; min-width: 0; transition: background .12s ease, border-color .12s ease;
+  }
+  .kss-navbar-scope .kss-apps-panel a.kss-app-tile:hover { background: #fbf4f6; border-color: #f0e1e5; color: #3c3c3c; }
+  .kss-navbar-scope .kss-apps-panel a.kss-app-tile.is-current { background: #fbf1f3; border-color: #e6c9d0; }
+  .kss-navbar-scope .kss-app-icon {
+    width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; line-height: 1; background: #f8eaee; color: var(--nav-primary);
+  }
+  .kss-navbar-scope .kss-app-icon.tone-b { background: #fdf1e6; color: #a8540f; }
+  .kss-navbar-scope .kss-app-icon.tone-c { background: #e9f6ee; color: #1e7e46; }
+  .kss-navbar-scope .kss-app-icon.tone-d { background: #eaf2fb; color: #2a63a3; }
+  .kss-navbar-scope .kss-app-icon.tone-e { background: #f1edfb; color: #5f4bb6; }
+  .kss-navbar-scope .kss-app-icon.tone-f { background: #f1f1f2; color: #55595f; }
+  .kss-navbar-scope .kss-app-label {
+    font-size: 12px; line-height: 1.3; text-align: center; color: #3c3c3c;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%;
+  }
+  .kss-navbar-scope .kss-apps-panel a.kss-app-tile.is-current .kss-app-label { color: var(--nav-primary); font-weight: 600; }
+  .kss-navbar-scope .kss-apps-none { padding: 18px; text-align: center; color: #888; font-size: 13px; }
+  @media (max-width: 1100px) {
+    .kss-navbar-scope .kss-apps { margin-left: 0; }
+    .kss-navbar-scope .kss-apps-panel { position: fixed; top: 70px; left: 8px; right: 8px; width: auto; max-width: none; }
+  }
+  @media (max-width: 420px) {
+    .kss-navbar-scope .kss-apps-grid { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 
 <!-- TOP NAVIGATION BAR -->
 <nav class="kss-navbar-scope navbar">
   <div class="navbar-container">
-    <a href="ScholarshipApplication.jsp" class="navbar-brand">
+    <a href="Dashboard.jsp" class="navbar-brand">
       <div class="brand-text-group">
         <span class="brand-title">Karnataka Seva Sangha</span>
         <span class="brand-subtitle">Higher Education Scholarship Portal</span>
@@ -483,12 +540,7 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="ScholarshipApplication.jsp" class="<%= currentURI.contains("ScholarshipApplication.jsp") ? "active" : "" %>">
-              Apply
-            </a>
-          </li>
-          <li>
-            <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") ? "active" : "" %>">
+            <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") || currentURI.contains("scholarshipList.jsp") || currentURI.contains("ScholarshipApplication.jsp") ? "active" : "" %>">
               Scholarship List
             </a>
           </li>
@@ -507,31 +559,6 @@
       </li>
 
       
-      <% if (isGlobalUser) { %>
-      <li>
-        <a href="#" class="dropdown-toggle <%= isApprovalActive ? "active" : "" %>" onclick="return false;">
-          Approvals
-        </a>
-        <ul class="dropdown-menu">
-          <li>
-            <a href="KssCourseServlet" class="<%= currentURI.contains("KssCourseServlet") || currentURI.contains("kssCourse.jsp") ? "active" : "" %>">
-              Step 1 : Apply KSS Course
-            </a>
-          </li>
-          <li>
-            <a href="VerifyDocumentsServlet" class="<%= currentURI.contains("VerifyDocumentsServlet") || currentURI.contains("verifyDocuments.jsp") ? "active" : "" %>">
-              Step 2 : Verify Documents
-            </a>
-          </li>
-          <li>
-            <a href="ApproveScholarshipServlet" class="<%= currentURI.contains("ApproveScholarshipServlet") || currentURI.contains("approveScholarship.jsp") ? "active" : "" %>">
-              Step 3 : Approve Scholarship
-            </a>
-          </li>
-        </ul>
-      </li>
-      <% } %>
-
       <!-- Dropdown Item: Status Summaries & Lists Reports -->
       <li>
         <a href="#" class="dropdown-toggle <%= isReportsActive ? "active" : "" %>" onclick="return false;">
@@ -562,28 +589,55 @@
           <% } %>
         </ul>
       </li>
-      <% if (isGlobalUser) { %>
-      <!-- Settings (gear): masters, Global only -->
-      <li class="nav-gear">
-        <a href="#" class="dropdown-toggle gear-toggle <%= (currentURI.contains("organization.jsp") || currentURI.contains("KssCourseMaster") || currentURI.contains("kssCourseMaster.jsp")) ? "active" : "" %>"
-           onclick="return false;" title="Settings">
-          <span class="gear-icon">&#9881;</span>
-        </a>
-        <ul class="dropdown-menu">
-          <li>
-            <a href="organization.jsp" class="<%= currentURI.contains("organization.jsp") ? "active" : "" %>">
-              Organization Master
-            </a>
-          </li>
-          <li>
-            <a href="KssCourseMasterServlet" class="<%= currentURI.contains("KssCourseMasterServlet") || currentURI.contains("kssCourseMaster.jsp") ? "active" : "" %>">
-              KSS Course Master
-            </a>
-          </li>
-        </ul>
-      </li>
-      <% } %>
     </ul>
+
+    <% if (isGlobalUser) {
+         // 9-dots launcher, Global only: { section, label, href, icon entity, tone, active-match... }
+         String[][] apps = {
+           { "Approvals", "Step 1 : Apply KSS Course",   "KssCourseServlet",          "1",        "a", "KssCourseServlet", "kssCourse.jsp" },
+           { "Approvals", "Step 2 : Verify Documents",   "VerifyDocumentsServlet",    "2",        "a", "VerifyDocumentsServlet", "verifyDocuments.jsp" },
+           { "Approvals", "Step 3 : Approve Scholarship","ApproveScholarshipServlet", "3",        "a", "ApproveScholarshipServlet", "approveScholarship.jsp" },
+           { "KSS CSR",   "Approval Letters",            "CsrLetterServlet",          "&#9993;",  "b", "CsrLetterServlet", "csrLetter" },
+           { "KSS CSR",   "Fund Receipts",               "CsrFundServlet",            "&#8377;",  "c", "CsrFundServlet", "csrFund" },
+           { "KSS CSR",   "Work Orders",                 "CsrWorkOrderServlet",       "&#9998;",  "d", "CsrWorkOrderServlet", "csrWorkOrder" },
+           { "KSS CSR",   "Invoices",                    "CsrInvoiceServlet",         "&#9783;",  "e", "CsrInvoiceServlet", "csrInvoice" },
+           { "Masters",   "Organization Master",         "organization.jsp",          "&#9873;",  "f", "organization.jsp" },
+           { "Masters",   "KSS Course Master",           "KssCourseMasterServlet",    "&#9881;",  "f", "KssCourseMasterServlet", "kssCourseMaster.jsp" }
+         };
+         boolean appsActive = false;
+         for (String[] a : apps) for (int k = 5; k < a.length; k++) if (currentURI.contains(a[k])) appsActive = true;
+    %>
+    <!-- Gmail-style 9-dots launcher: Approvals, KSS CSR, Masters (Global only) -->
+    <div class="kss-apps">
+      <button type="button" class="kss-apps-btn <%= appsActive ? "is-active" : "" %>" id="kssAppsBtn" aria-label="Apps" aria-haspopup="true" aria-expanded="false" title="Approvals, KSS CSR &amp; Masters">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+      </button>
+      <div class="kss-apps-panel" id="kssAppsPanel" role="dialog" aria-label="Apps">
+        <div class="kss-apps-search">
+          <input type="search" id="kssAppsSearch" placeholder="Search menus" autocomplete="off">
+        </div>
+        <div class="kss-apps-body">
+        <%
+          String lastSec = null;
+          for (String[] a : apps) {
+            boolean on = false;
+            for (int k = 5; k < a.length; k++) if (currentURI.contains(a[k])) on = true;
+            if (!a[0].equals(lastSec)) {
+              if (lastSec != null) { %></div></div><% }
+              lastSec = a[0]; %>
+          <div class="kss-apps-sec"><h4><%= a[0] %></h4><div class="kss-apps-grid">
+        <%  } %>
+            <a href="<%= a[2] %>" class="kss-app-tile <%= on ? "is-current" : "" %>" data-search="<%= (a[0] + " " + a[1]).toLowerCase() %>">
+              <span class="kss-app-icon tone-<%= a[4] %>"><%= a[3] %></span>
+              <span class="kss-app-label"><%= a[1] %></span>
+            </a>
+        <% } %>
+          </div></div>
+          <div class="kss-apps-none" id="kssAppsNone" style="display:none;">No menu matches</div>
+        </div>
+      </div>
+    </div>
+    <% } %>
 
     <!-- Right Side: User Details & Logout Button -->
     <div class="user-profile-section">
@@ -605,6 +659,43 @@
 
   </div>
 </nav>
+<% if (isGlobalUser) { %>
+<script>
+(function () {
+  var btn = document.getElementById('kssAppsBtn'), panel = document.getElementById('kssAppsPanel');
+  var search = document.getElementById('kssAppsSearch'), none = document.getElementById('kssAppsNone');
+  if (!btn || !panel) return;
+  function filter(q) {
+    q = (q || '').trim().toLowerCase(); var shown = 0;
+    panel.querySelectorAll('.kss-apps-sec').forEach(function (sec) {
+      var n = 0;
+      sec.querySelectorAll('.kss-app-tile').forEach(function (t) {
+        var ok = !q || t.getAttribute('data-search').indexOf(q) > -1;
+        t.style.display = ok ? '' : 'none'; if (ok) n++;
+      });
+      sec.style.display = n ? '' : 'none'; shown += n;
+    });
+    none.style.display = shown ? 'none' : '';
+  }
+  function open(v) {
+    panel.classList.toggle('open', v); btn.classList.toggle('open', v);
+    btn.setAttribute('aria-expanded', v ? 'true' : 'false');
+    if (v) { search.value = ''; filter(''); setTimeout(function () { search.focus(); }, 30); }
+  }
+  btn.addEventListener('click', function (e) { e.stopPropagation(); open(!panel.classList.contains('open')); });
+  panel.addEventListener('click', function (e) { e.stopPropagation(); });
+  search.addEventListener('input', function () { filter(search.value); });
+  search.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      var first = Array.prototype.filter.call(panel.querySelectorAll('.kss-app-tile'), function (t) { return t.style.display !== 'none'; })[0];
+      if (first) location.href = first.href;
+    }
+  });
+  document.addEventListener('click', function () { open(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') open(false); });
+})();
+</script>
+<% } %>
 
 <!-- FOOTER COMPONENT -->
 <footer class="kss-footer-scope">

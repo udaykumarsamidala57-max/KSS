@@ -72,13 +72,14 @@ try{
 <title>Organization Master</title>
 
 <style>
+
   :root {
-    --primary-color: #8b263e;       /* Deep Classic Crimson/Burgundy */
-    --primary-hover: #6e1c2f;       /* Darker shade for buttons */
-    --accent-bg: #fff5f5;           /* Very light soft red for section headers */
-    --border-color: #d8b8b8;        /* Soft reddish-gray border */
-    --text-main: #333333;
-    --bg-main: #fcf8f8;              
+    --primary-color: #0f766e;       /* Deep Classic Crimson/Burgundy */
+    --primary-hover: #115e59;       /* Darker shade for buttons */
+    --accent-bg: #f0fdfa;           /* Very light blue for section headers */
+    --border-color: #cbd5e1;        /* Soft reddish-gray border */
+    --text-main: #0f172a;
+    --bg-main: #f1f5f9;              
   }
 
   * {
@@ -88,7 +89,7 @@ try{
   }
 
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', 'Salesforce Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums; 
     background-color: var(--bg-main);
     color: var(--text-main);
     padding: 20px 10px;
@@ -99,7 +100,7 @@ try{
     margin: 0 auto;
     background: #ffffff;
     border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(139, 38, 62, 0.08);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
     border: 1px solid var(--border-color);
     overflow: hidden;
   }
@@ -110,8 +111,8 @@ try{
     color: var(--primary-color);
     padding: 16px 20px;
     text-align: center;
-    border-bottom: 1px solid #f0e2e5;
-    box-shadow: 0 4px 12px rgba(139, 38, 62, 0.08);
+    border-bottom: 1px solid #eef2f6;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     position: relative;
   }
 
@@ -125,7 +126,7 @@ try{
   .form-header p {
     font-size: 12px;
     margin-top: 3px;
-    color: #666666;
+    color: #64748b;
   }
 
   .form-body {
@@ -169,7 +170,7 @@ try{
   label {
     font-size: 12px;
     font-weight: 600;
-    color: #4a4a4a;
+    color: #334155;
     margin-bottom: 3px;
   }
 
@@ -196,7 +197,7 @@ try{
   input[type=text]:focus,
   select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(139, 38, 62, 0.15);
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
   }
 
   /* Submit Button Styling */
@@ -204,7 +205,7 @@ try{
     text-align: center;
     margin-top: 15px;
     padding-top: 12px;
-    border-top: 1px solid #f0e6e6;
+    border-top: 1px solid #e2e8f0;
   }
 
   input[type=submit] {
@@ -237,14 +238,14 @@ try{
     margin-top: 10px;
     font-size: 13px;
     background: #ffffff;
-    border: 1px solid #ecdade;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(139, 38, 62, 0.08);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
   }
 
   .data-table th {
-    background-color: #faf0f2;
+    background-color: #f8fafc;
     color: var(--primary-color);
     font-weight: 600;
     text-transform: uppercase;
@@ -253,18 +254,18 @@ try{
     padding: 8px 12px;
     text-align: left;
     border: none;
-    border-bottom: 1px solid #ecdade;
+    border-bottom: 1px solid #e2e8f0;
   }
 
   .data-table td {
     padding: 8px 12px;
     border: none;
-    border-bottom: 1px solid #f3e7ea;
+    border-bottom: 1px solid #eef2f6;
     color: var(--text-main);
   }
 
   .data-table tr:nth-child(even) {
-    background-color: #fffafb;
+    background-color: #f1f5f9;
   }
 
   .data-table tr:last-child td {
@@ -272,7 +273,7 @@ try{
   }
 
   .data-table tr:hover {
-    background-color: #fcf2f4;
+    background-color: #f0fdfa;
   }
 
   /* Status Badges */
@@ -285,13 +286,13 @@ try{
   }
 
   .badge-active {
-    background-color: #e6f4ea;
-    color: #137333;
+    background-color: #ecfdf5;
+    color: #047857;
   }
 
   .badge-inactive {
-    background-color: #fce8e6;
-    color: #c5221f;
+    background-color: #fef2f2;
+    color: #b91c1c;
   }
 
   /* Action Links */
@@ -337,6 +338,9 @@ try{
       margin: 5px;
     }
   }
+</style>
+<style>
+<%@ include file="css/finance.css" %>
 </style>
 </head>
 

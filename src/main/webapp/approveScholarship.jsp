@@ -66,25 +66,26 @@
 <%@ include file="header.jsp" %>
 
 <style>
+
   :root {
-    --brand-primary: #7a1f35;
-    --brand-primary-dark: #5e1627;
-    --brand-accent-bg: #fdf6f7;
-    --brand-border: #e2cece;
-    --brand-border-dark: #c8b1b1;
-    --text-main: #2b2b2b;
-    --text-muted: #666666;
-    --bg-page: #f8f9fa;
+    --brand-primary: #0f766e;
+    --brand-primary-dark: #115e59;
+    --brand-accent-bg: #f0fdfa;
+    --brand-border: #e2e8f0;
+    --brand-border-dark: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --bg-page: #f1f5f9;
     --bg-card: #ffffff;
-    --table-header-bg: #faf0f2;
-    --row-hover: #fcf2f4;
+    --table-header-bg: #f8fafc;
+    --row-hover: #f0fdfa;
     --radius: 4px;
-    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
-    --ok: #137333;  --ok-bg: #e6f4ea;  --ok-bd: #ceead6;
-    --bad: #c5221f; --bad-bg: #fce8e6; --bad-bd: #fad2cf;
+    --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --ok: #047857;  --ok-bg: #ecfdf5;  --ok-bd: #a7f3d0;
+    --bad: #b91c1c; --bad-bg: #fef2f2; --bad-bd: #fecaca;
   }
   body { background: var(--bg-page); color: var(--text-main);
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+         font-family: 'Inter', 'Salesforce Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums;  }
 
   .as-page { padding: 20px 24px; }
   .as-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 14px; }
@@ -112,10 +113,10 @@
   table.as-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .as-table th { background: var(--table-header-bg); color: var(--brand-primary); text-align: left; font-size: 11px;
       text-transform: uppercase; letter-spacing: .4px; padding: 10px; border-bottom: 1px solid var(--brand-border); white-space: nowrap; }
-  .as-table td { padding: 9px 10px; border-bottom: 1px solid #f1e6e8; vertical-align: middle; }
+  .as-table td { padding: 9px 10px; border-bottom: 1px solid #eef2f6; vertical-align: middle; }
   .as-table tr.as-app:hover > td { background: var(--row-hover); }
   .as-table tr.as-app.as-open > td { background: var(--brand-accent-bg); border-bottom-color: transparent; }
-  .as-table tr.as-app.as-flash > td { background: #fdf0f3; transition: background .6s; }
+  .as-table tr.as-app.as-flash > td { background: #ccfbef; transition: background .6s; }
   .as-num { text-align: right; white-space: nowrap; }
   .as-small { font-size: 11px; color: var(--text-muted); }
   .as-remarks { font-size: 12px; color: var(--text-muted); }
@@ -124,7 +125,7 @@
   .as-badge { display: inline-block; padding: 2px 9px; font-size: 10px; font-weight: 700; letter-spacing: .3px;
               text-transform: uppercase; border-radius: 10px; white-space: nowrap; border: 1px solid; }
   .as-b-pending  { color: var(--brand-primary); background: var(--brand-accent-bg); border-color: var(--brand-border-dark);
-                   box-shadow: 0 1px 4px rgba(122, 31, 53, 0.15); }
+                   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
   .as-b-approved { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-bd); }
   .as-b-rejected { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-bd); }
   .as-b-muted    { color: var(--text-muted); background: #f3f3f3; border-color: #dcdcdc; }
@@ -135,7 +136,7 @@
   .as-btn:hover { background: var(--brand-primary-dark); }
   .as-btn:disabled { opacity: .45; cursor: default; }
   .as-btn-outline { background: #fff; color: var(--brand-primary); border-color: var(--brand-border-dark);
-                    box-shadow: 0 1px 4px rgba(122, 31, 53, 0.15); }
+                    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
   .as-btn-outline:hover { background: var(--brand-accent-bg); border-color: var(--brand-primary); }
   .as-btn-ok  { background: #fff; color: var(--ok); border-color: var(--ok-bd); }
   .as-btn-ok:hover  { background: var(--ok-bg); border-color: var(--ok); }
@@ -157,6 +158,9 @@
   .as-form-title.ok { color: var(--ok); } .as-form-title.bad { color: var(--bad); } .as-form-title.rev { color: var(--brand-primary); }
 
   .as-empty { text-align: center; color: var(--text-muted); padding: 40px; }
+</style>
+<style>
+<%@ include file="css/finance.css" %>
 </style>
 </head>
 <body>

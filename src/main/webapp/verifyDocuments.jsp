@@ -57,25 +57,26 @@
 <%@ include file="header.jsp" %>
 
 <style>
+
   :root {
-    --brand-primary: #7a1f35;
-    --brand-primary-dark: #5e1627;
-    --brand-accent-bg: #fdf6f7;
-    --brand-border: #e2cece;
-    --brand-border-dark: #c8b1b1;
-    --text-main: #2b2b2b;
-    --text-muted: #666666;
-    --bg-page: #f8f9fa;
+    --brand-primary: #0f766e;
+    --brand-primary-dark: #115e59;
+    --brand-accent-bg: #f0fdfa;
+    --brand-border: #e2e8f0;
+    --brand-border-dark: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --bg-page: #f1f5f9;
     --bg-card: #ffffff;
-    --table-header-bg: #faf0f2;
-    --row-hover: #fcf2f4;
+    --table-header-bg: #f8fafc;
+    --row-hover: #f0fdfa;
     --radius: 4px;
-    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
-    --ok: #137333;  --ok-bg: #e6f4ea;  --ok-bd: #ceead6;
-    --bad: #c5221f; --bad-bg: #fce8e6; --bad-bd: #fad2cf;
+    --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --ok: #047857;  --ok-bg: #ecfdf5;  --ok-bd: #a7f3d0;
+    --bad: #b91c1c; --bad-bg: #fef2f2; --bad-bd: #fecaca;
   }
   body { background: var(--bg-page); color: var(--text-main);
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+         font-family: 'Inter', 'Salesforce Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums;  }
 
   .vd-page { padding: 20px 24px; }
   .vd-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 14px; }
@@ -103,22 +104,22 @@
   table.vd-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .vd-table > thead th { background: var(--table-header-bg); color: var(--brand-primary); text-align: left; font-size: 11px;
       text-transform: uppercase; letter-spacing: .4px; padding: 10px; border-bottom: 1px solid var(--brand-border); white-space: nowrap; }
-  .vd-table > tbody > tr.vd-app > td { padding: 9px 10px; border-bottom: 1px solid #f1e6e8; vertical-align: middle; }
+  .vd-table > tbody > tr.vd-app > td { padding: 9px 10px; border-bottom: 1px solid #eef2f6; vertical-align: middle; }
   .vd-table > tbody > tr.vd-app:hover > td { background: var(--row-hover); }
   .vd-table > tbody > tr.vd-app.vd-open > td { background: var(--brand-accent-bg); border-bottom-color: transparent; }
 
   /* progress */
   .vd-progress { display: flex; align-items: center; gap: 8px; min-width: 150px; }
   .vd-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; display: flex; }
-  .vd-bar-ok { background: #2e7d32; height: 100%; }
-  .vd-bar-bad { background: #c62828; height: 100%; }
+  .vd-bar-ok { background: #047857; height: 100%; }
+  .vd-bar-bad { background: #b91c1c; height: 100%; }
   .vd-progress-txt { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 
   /* badges */
   .vd-badge { display: inline-block; padding: 2px 9px; font-size: 10px; font-weight: 700; letter-spacing: .3px;
               text-transform: uppercase; border-radius: 10px; white-space: nowrap; border: 1px solid; }
   .vd-b-pending  { color: var(--brand-primary); background: var(--brand-accent-bg); border-color: var(--brand-border-dark);
-                   box-shadow: 0 1px 4px rgba(122, 31, 53, 0.15); }
+                   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
   .vd-b-verified { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-bd); }
   .vd-b-rejected { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-bd); }
   .vd-b-muted    { color: var(--text-muted); background: #f3f3f3; border-color: #dcdcdc; }
@@ -129,7 +130,7 @@
   .vd-btn:hover { background: var(--brand-primary-dark); }
   .vd-btn:disabled { opacity: .45; cursor: default; }
   .vd-btn-outline { background: #fff; color: var(--brand-primary); border-color: var(--brand-border-dark);
-                    box-shadow: 0 1px 4px rgba(122, 31, 53, 0.15); }
+                    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
   .vd-btn-outline:hover { background: var(--brand-accent-bg); border-color: var(--brand-primary); }
   .vd-btn-ok  { background: #fff; color: var(--ok); border-color: var(--ok-bd); }
   .vd-btn-ok:hover  { background: var(--ok-bg); border-color: var(--ok); }
@@ -142,9 +143,9 @@
   .vd-docs { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--brand-border); border-radius: var(--radius); }
   .vd-docs th { font-size: 11px; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); text-align: left;
                 padding: 8px 10px; background: #fff; border-bottom: 1px solid var(--brand-border); }
-  .vd-docs td { padding: 8px 10px; border-bottom: 1px solid #f3eaec; vertical-align: middle; font-size: 13px; }
+  .vd-docs td { padding: 8px 10px; border-bottom: 1px solid #eef2f6; vertical-align: middle; font-size: 13px; }
   .vd-docs tr:last-child td { border-bottom: none; }
-  .vd-docs tr.vd-flash td { background: #fdf0f3; transition: background .6s; }
+  .vd-docs tr.vd-flash td { background: #ccfbef; transition: background .6s; }
   .vd-doc-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .vd-reject-box { display: none; gap: 6px; align-items: center; margin-top: 6px; }
   .vd-reject-box input { height: 28px; width: 260px; padding: 0 8px; border: 1px solid var(--bad-bd); border-radius: var(--radius); font-size: 12px; }
@@ -157,6 +158,9 @@
   .vd-locked { font-size: 12px; color: var(--text-muted); }
 
   .vd-empty { text-align: center; color: var(--text-muted); padding: 40px; }
+</style>
+<style>
+<%@ include file="css/finance.css" %>
 </style>
 </head>
 <body>

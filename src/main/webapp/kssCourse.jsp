@@ -55,24 +55,25 @@
 <%@ include file="header.jsp" %>
 
 <style>
+
   :root {
-    --brand-primary: #7a1f35;
-    --brand-primary-dark: #5e1627;
-    --brand-accent-bg: #fdf6f7;
-    --brand-border: #e2cece;
-    --brand-border-dark: #c8b1b1;
-    --text-main: #2b2b2b;
-    --text-muted: #666666;
-    --bg-page: #f8f9fa;
+    --brand-primary: #0f766e;
+    --brand-primary-dark: #115e59;
+    --brand-accent-bg: #f0fdfa;
+    --brand-border: #e2e8f0;
+    --brand-border-dark: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --bg-page: #f1f5f9;
     --bg-card: #ffffff;
-    --table-header-bg: #faf0f2;
-    --row-hover: #fcf2f4;
+    --table-header-bg: #f8fafc;
+    --row-hover: #f0fdfa;
     --radius: 4px;
-    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
+    --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
   }
 
   body { background: var(--bg-page); color: var(--text-main);
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+         font-family: 'Inter', 'Salesforce Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums;  }
 
   .kc-page { padding: 20px 24px; }
 
@@ -92,9 +93,9 @@
   .kc-controls select:focus, .kc-controls input:focus { outline: none; border-color: var(--brand-primary); }
 
   .kc-alert { padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; }
-  .kc-alert-ok  { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
-  .kc-alert-err { background: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
-  .kc-row.kc-saved td { background: #fdf6f7 !important; transition: background .6s; }
+  .kc-alert-ok  { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .kc-alert-err { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+  .kc-row.kc-saved td { background: #f0fdfa !important; transition: background .6s; }
   .kc-btn.kc-busy { opacity: .6; cursor: progress; }
 
   .kc-card { background: var(--bg-card); border: 1px solid var(--brand-border); border-radius: var(--radius);
@@ -104,7 +105,7 @@
   .kc-table th { background: var(--table-header-bg); color: var(--brand-primary); text-align: left;
                  font-size: 11px; text-transform: uppercase; letter-spacing: .4px; padding: 10px;
                  border-bottom: 1px solid var(--brand-border); white-space: nowrap; }
-  .kc-table td { padding: 8px 10px; border-bottom: 1px solid #f1e6e8; vertical-align: middle; }
+  .kc-table td { padding: 8px 10px; border-bottom: 1px solid #eef2f6; vertical-align: middle; }
   .kc-table tr:hover td { background: var(--row-hover); }
 
   .kc-form { display: flex; gap: 6px; align-items: center; margin: 0; }
@@ -116,16 +117,19 @@
   .kc-btn:hover { background: var(--brand-primary-dark); }
   .kc-btn:disabled { opacity: .45; cursor: default; }
   .kc-btn-outline { background: #fff; color: var(--brand-primary); border: 1px solid var(--brand-border-dark);
-                    box-shadow: 0 1px 4px rgba(122, 31, 53, 0.15); }
+                    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
   .kc-btn-outline:hover { background: var(--brand-accent-bg); border-color: var(--brand-primary); }
 
   .kc-badge { display: inline-block; padding: 2px 9px; font-size: 10px; font-weight: 700; letter-spacing: .3px;
               text-transform: uppercase; border-radius: 10px; white-space: nowrap;
               color: var(--brand-primary); background: var(--brand-accent-bg);
-              border: 1px solid var(--brand-border-dark); box-shadow: 0 1px 4px rgba(122, 31, 53, 0.15); }
+              border: 1px solid var(--brand-border-dark); box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15); }
   .kc-badge-muted { color: var(--text-muted); background: #f3f3f3; border-color: #dcdcdc; box-shadow: none; }
 
   .kc-empty { text-align: center; color: var(--text-muted); padding: 40px; }
+</style>
+<style>
+<%@ include file="css/finance.css" %>
 </style>
 </head>
 <body>

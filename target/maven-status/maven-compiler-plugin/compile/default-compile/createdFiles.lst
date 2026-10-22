@@ -1,8 +1,10 @@
+com\Controller\CsrInvoiceServlet.class
 com\DAO\ScholarshipDocumentsDAO.class
 com\DAO\SholrarshipDAO.class
 com\Controller\ScholarshipListServelt.class
 com\Controller\KssCourseMasterServlet.class
 com\Controller\LoginServlet.class
+com\Controller\CsrFundServlet.class
 com\Bean\DBUtil.class
 com\Controller\UpdateStatusServlet.class
 com\Controller\KssCourseServlet.class
@@ -12,7 +14,9 @@ com\DAO\scholarshipViewDAO.class
 com\Bean\ScholarshipBean.class
 com\Controller\SholarshipServelt.class
 com\DAO\scholarshipListDAO.class
+com\Controller\CsrLetterServlet.class
 com\Controller\ApproveScholarshipServlet.class
 com\Controller\ScholarshipDocumentDownloadServlet.class
 com\Controller\VerifyDocumentsServlet.class
 com\Bean\AuditUtil.class
+com\Controller\CsrWorkOrderServlet.class

@@ -15,7 +15,7 @@ public class DBUtil {
 	private static final String URL = "jdbc:mysql://shuttle.proxy.rlwy.net:26985/KSS?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&tcpKeepAlive=true";
 	   private static final String USER = "root";
 	  
-	   private static final String PASSWORD = System.getenv("MYSQLPASSWORD");
+	   private static final String PASSWORD = "JKaqOrLeYxQdfhgbJoQdmvJOlbYvQyhi";
 	
 	
 	
