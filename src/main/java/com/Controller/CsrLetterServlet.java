@@ -57,9 +57,10 @@ public class CsrLetterServlet extends HttpServlet {
           + "(SELECT COUNT(*) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
           + " WHERE w.letter_id = kss_csr_approval_letter.id) AS inv_count, "
           + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
-          + " WHERE w.letter_id = kss_csr_approval_letter.id) AS inv_total, "
-          + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
-          + " JOIN kss_csr_frl_invoice fi ON fi.invoice_id = i.id WHERE w.letter_id = kss_csr_approval_letter.id) AS inv_in_frl, "
+          + " WHERE w.letter_id = kss_csr_approval_letter.id AND i.invoice_type = 'Tax Invoice') AS inv_total, "
+          + "(SELECT COALESCE(SUM(" + CsrInvoiceServlet.claimable("i") + "), 0) FROM kss_csr_invoice i "
+          + " JOIN kss_csr_work_order w ON w.id = i.work_order_id WHERE w.letter_id = kss_csr_approval_letter.id "
+          + " AND NOT EXISTS (SELECT 1 FROM kss_csr_frl_invoice fi WHERE fi.invoice_id = i.id)) AS inv_unclaimed, "
           + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id "
           + " AND f.frl_id IS NOT NULL) AS fund_frl_total";
 
@@ -134,12 +135,23 @@ public class CsrLetterServlet extends HttpServlet {
             request.setAttribute("workOrders", rows(con,
                     "SELECT w.id, w.wo_number, DATE_FORMAT(w.wo_date, '%d-%m-%Y') AS wo_date, w.vendor_name, w.vendor_phone, "
                   + "w.vendor_gstin, w.subtotal, w.gst_total, w.total_amount, w.attachment_size, "
-                  + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i WHERE i.work_order_id = w.id) AS invoiced, "
+                  + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i WHERE i.work_order_id = w.id "
+                  + " AND i.invoice_type = 'Tax Invoice') AS tax_billed, "
+                  + "(SELECT COALESCE(SUM(" + CsrInvoiceServlet.counted("i") + "), 0) FROM kss_csr_invoice i WHERE i.work_order_id = w.id "
+                  + " AND i.invoice_type = 'Proforma') AS pi_open, "
+                  + "(SELECT COALESCE(SUM(fi.claim_amount), 0) FROM kss_csr_invoice i JOIN kss_csr_frl_invoice fi ON fi.invoice_id = i.id "
+                  + " WHERE i.work_order_id = w.id) AS claimed, "
+                  + "(SELECT COALESCE(SUM(" + CsrInvoiceServlet.claimable("i") + "), 0) FROM kss_csr_invoice i WHERE i.work_order_id = w.id "
+                  + " AND NOT EXISTS (SELECT 1 FROM kss_csr_frl_invoice fi WHERE fi.invoice_id = i.id)) AS unclaimed, "
                   + "(SELECT COUNT(*) FROM kss_csr_invoice i WHERE i.work_order_id = w.id) AS inv_count "
                   + "FROM kss_csr_work_order w WHERE w.letter_id = ? ORDER BY w.wo_date, w.id", id));
             request.setAttribute("invoices", rows(con,
                     "SELECT i.id, i.invoice_type, i.invoice_number, DATE_FORMAT(i.invoice_date, '%d-%m-%Y') AS invoice_date, "
                   + "i.price, i.gst_percent, i.gst_amount, i.amount, i.attachment_size, w.id AS wo_id, w.wo_number, w.vendor_name, "
+                  + "(SELECT p.invoice_number FROM kss_csr_invoice p WHERE p.id = i.proforma_id) AS proforma_number, "
+                  + "(SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id) AS settled_by, "
+                  + "(SELECT fi.claim_amount FROM kss_csr_frl_invoice fi WHERE fi.invoice_id = i.id) AS claim_amount, "
+                  + CsrInvoiceServlet.claimable("i") + " AS claimable, "
                   + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
                   + " WHERE fi.invoice_id = i.id) AS frl_number "
                   + "FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
@@ -527,9 +539,9 @@ public class CsrLetterServlet extends HttpServlet {
         r.put("invCount", String.valueOf(rs.getInt("inv_count")));
         BigDecimal fundFrl = rs.getBigDecimal("fund_frl_total");
         r.put("fundFrlTotal", fundFrl == null ? "0.00" : fundFrl.setScale(2, RoundingMode.HALF_UP).toPlainString());
-        BigDecimal invTotal = rs.getBigDecimal("inv_total"), invInFrl = rs.getBigDecimal("inv_in_frl");
+        BigDecimal invTotal = rs.getBigDecimal("inv_total"), invUnclaimed = rs.getBigDecimal("inv_unclaimed");
         r.put("invTotal", invTotal == null ? "0.00" : invTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
-        r.put("invInFrl", invInFrl == null ? "0.00" : invInFrl.setScale(2, RoundingMode.HALF_UP).toPlainString());
+        r.put("invUnclaimed", invUnclaimed == null ? "0.00" : invUnclaimed.setScale(2, RoundingMode.HALF_UP).toPlainString());
         BigDecimal frlTotal = rs.getBigDecimal("frl_total");
         r.put("frlTotal", frlTotal == null ? "0.00" : frlTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
         BigDecimal fundTotal = rs.getBigDecimal("fund_total");

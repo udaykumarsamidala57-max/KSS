@@ -258,15 +258,21 @@ public class CsrFrlServlet extends HttpServlet {
         int id = isNew ? 0 : Integer.parseInt(idParam);
 
         // ---- the ticked invoices: must exist, belong to this approval letter, and not be in another FRL
+        //      claim per invoice: already in this FRL -> keep what was claimed; otherwise what is still claimable
+        //      (proforma = advance; tax invoice = amount minus the advance already claimed on its proforma)
         BigDecimal amount = BigDecimal.ZERO;
+        Map<Integer, BigDecimal> claims = new LinkedHashMap<>();
         for (Integer invId : invoiceIds) {
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT i.invoice_number, i.amount, w.letter_id, "
                   + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
-                  + " WHERE fi.invoice_id = i.id AND fi.frl_id <> ?) AS other_frl "
+                  + " WHERE fi.invoice_id = i.id AND fi.frl_id <> ?) AS other_frl, "
+                  + "(SELECT fi.claim_amount FROM kss_csr_frl_invoice fi WHERE fi.invoice_id = i.id AND fi.frl_id = ?) AS own_claim, "
+                  + CsrInvoiceServlet.claimable("i") + " AS claimable "
                   + "FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id WHERE i.id = ?")) {
                 ps.setInt(1, id);
-                ps.setInt(2, invId);
+                ps.setInt(2, id);
+                ps.setInt(3, invId);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next()) { sendJson(response, 400, fail("An invoice was not found. Please reload the page.")); return; }
                     if (rs.getInt("letter_id") != letterId) {
@@ -277,7 +283,35 @@ public class CsrFrlServlet extends HttpServlet {
                         sendJson(response, 400, fail("Invoice " + rs.getString("invoice_number") + " is already in FRL " + rs.getString("other_frl") + "."));
                         return;
                     }
-                    amount = amount.add(rs.getBigDecimal("amount"));
+                    BigDecimal claim = rs.getBigDecimal("own_claim");
+                    if (claim == null) {
+                        claim = rs.getBigDecimal("claimable");
+                        if (claim == null || claim.signum() <= 0) {
+                            sendJson(response, 400, fail("Nothing is left to claim on invoice " + rs.getString("invoice_number")
+                                    + " (already covered by the proforma advance, or the proforma is settled)."));
+                            return;
+                        }
+                    }
+                    claim = claim.setScale(2, RoundingMode.HALF_UP);
+                    claims.put(invId, claim);
+                    amount = amount.add(claim);
+                }
+            }
+        }
+        // a proforma already settled by a tax invoice cannot be taken out of its FRL (the tax invoice was claimed net of it)
+        if (!isNew) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT p.id, p.invoice_number, s.invoice_number FROM kss_csr_frl_invoice fi JOIN kss_csr_invoice p ON p.id = fi.invoice_id "
+                  + "JOIN kss_csr_invoice s ON s.proforma_id = p.id WHERE fi.frl_id = ?")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        if (!invoiceIds.contains(rs.getInt(1))) {
+                            sendJson(response, 400, fail("Proforma " + rs.getString(2) + " is settled by tax invoice " + rs.getString(3)
+                                    + ", so it cannot be removed from this FRL."));
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -380,10 +414,11 @@ public class CsrFrlServlet extends HttpServlet {
                 ps.setInt(1, id);
                 ps.executeUpdate();
             }
-            try (PreparedStatement ps = con.prepareStatement("INSERT INTO kss_csr_frl_invoice (frl_id, invoice_id) VALUES (?, ?)")) {
+            try (PreparedStatement ps = con.prepareStatement("INSERT INTO kss_csr_frl_invoice (frl_id, invoice_id, claim_amount) VALUES (?, ?, ?)")) {
                 for (Integer invId : invoiceIds) {
                     ps.setInt(1, id);
                     ps.setInt(2, invId);
+                    ps.setBigDecimal(3, claims.get(invId));
                     ps.addBatch();
                 }
                 ps.executeBatch();

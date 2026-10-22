@@ -57,7 +57,7 @@ public class CsrWorkOrderServlet extends HttpServlet {
           + "w.attachment_name, w.attachment_type, w.attachment_size, w.created_by, "
           + "DATE_FORMAT(w.created_at, '%d-%m-%Y') AS created_txt, "
           + "l.letter_number, l.letter_name, l.activity_kind, l.place, l.amount AS letter_amount, "
-          + "(SELECT COALESCE(SUM(x.amount), 0) FROM kss_csr_invoice x WHERE x.work_order_id = w.id) AS invoiced, "
+          + "(SELECT COALESCE(SUM(" + CsrInvoiceServlet.counted("x") + "), 0) FROM kss_csr_invoice x WHERE x.work_order_id = w.id) AS invoiced, "
           + "(SELECT COUNT(*) FROM kss_csr_invoice x WHERE x.work_order_id = w.id) AS inv_count";
 
     private boolean isGlobal(HttpSession sess) {
@@ -379,7 +379,7 @@ public class CsrWorkOrderServlet extends HttpServlet {
         if (!isNew) {
             BigDecimal invoiced;
             try (PreparedStatement ps = con.prepareStatement(
-                    "SELECT COALESCE(SUM(amount), 0) FROM kss_csr_invoice WHERE work_order_id = ?")) {
+                    "SELECT COALESCE(SUM(" + CsrInvoiceServlet.counted("x") + "), 0) FROM kss_csr_invoice x WHERE x.work_order_id = ?")) {
                 ps.setInt(1, id);
                 try (ResultSet rs = ps.executeQuery()) { rs.next(); invoiced = rs.getBigDecimal(1); }
             }

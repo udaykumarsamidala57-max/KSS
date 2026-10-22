@@ -137,8 +137,9 @@
       <div class="csr-table-wrap">
         <table class="csr-table">
           <thead><tr>
-            <th>WO No</th><th>Vendor</th><th class="csr-num">WO Value</th><th class="csr-num">Billed</th>
-            <th class="csr-num">To be Billed</th><th class="csr-num">Claimed (FRL)</th><th class="csr-num">Bills not Claimed</th>
+            <th>WO No</th><th>Vendor</th><th class="csr-num">WO Value</th><th class="csr-num">Billed (Tax Inv)</th>
+            <th class="csr-num">To be Billed</th><th class="csr-num">Open Advance</th><th class="csr-num">Claimed (FRL)</th>
+            <th class="csr-num">Not Claimed</th>
           </tr></thead>
           <tbody id="bWoPos"></tbody>
         </table>
@@ -173,7 +174,8 @@
         <table class="csr-table">
           <thead><tr>
             <th>Date</th><th>Type</th><th>Bill No</th><th>WO No</th><th>Vendor</th><th class="csr-num">Taxable Value</th>
-            <th class="csr-num">GST %</th><th class="csr-num">GST</th><th class="csr-num">Bill Amount</th><th>Claimed in FRL</th><th>Copy</th><th class="lv-act">Action</th>
+            <th class="csr-num">GST %</th><th class="csr-num">GST</th><th class="csr-num">Amount</th><th>Advance / Settlement</th>
+            <th class="csr-num">Claim</th><th>FRL</th><th>Copy</th><th class="lv-act">Action</th>
           </tr></thead>
           <tbody id="bInv"></tbody>
         </table>
@@ -229,7 +231,7 @@
           <tbody id="bLed"></tbody>
         </table>
       </div>
-      <div class="lv-note"></div>
+      <div class="lv-note">Debit: amount claimed from KSS through an FRL. Credit: amount received. Balance Dr: still to be received from KSS; Cr: received more than claimed.</div>
     </div>
   </div>
 </div>
@@ -285,12 +287,17 @@ $(function () {
   // ---------- figures
   var A  = r2(L.amount);                                   // sanctioned
   var B  = 0; WO.forEach(function (w) { B += +w.total_amount; }); B = r2(B);
-  var TI = 0, PI = 0, CL = 0;                              // tax invoices, proforma, bills claimed in FRLs
+  // C = bills (tax invoices only). A proforma is an advance request: it counts only while open (not settled by a tax invoice).
+  var C = 0, PO = 0, POC = 0, U = 0;                       // bills, open advances, open advances already claimed, not yet claimed
   INV.forEach(function (v) {
-    if (v.invoice_type === 'Proforma') PI += +v.amount; else TI += +v.amount;
-    if (v.frl_number) CL += +v.amount;
+    if (v.invoice_type === 'Proforma') {
+      if (!v.settled_by) { PO += +v.amount; if (v.frl_number) POC += +v.claim_amount; }
+    } else {
+      C += +v.amount;
+    }
+    if (!v.frl_number) U += +v.claimable;
   });
-  TI = r2(TI); PI = r2(PI); var C = r2(TI + PI); CL = r2(CL);
+  C = r2(C); PO = r2(PO); POC = r2(POC); U = r2(U);
   var D = 0; FRL.forEach(function (r) { D += +r.amount; }); D = r2(D);       // claimed through FRLs
   var E = 0, OTH = 0;                                                        // received against FRL / without FRL
   RC.forEach(function (f) { if (f.frl_id) E += +f.amount; else OTH += +f.amount; });
@@ -321,15 +328,16 @@ $(function () {
   line($b, 'A', 'Sanctioned amount (approval letter)', A, 'lv-tot');
   line($b, 'B', 'Work orders issued', B, '', WO.length + ' WO' + (WO.length === 1 ? '' : 's'));
   line($b, '', 'Balance available for new work orders', A - B, A - B < 0 ? 'lv-bad' : 'lv-ok', 'A - B');
-  line($b, '', 'Tax invoices received', TI, 'lv-sub');
-  line($b, '', 'Proforma invoices received', PI, 'lv-sub');
-  line($b, 'C', 'Total bills received', C, 'lv-tot');
+  line($b, 'C', 'Bills received (tax invoices)', C, 'lv-tot');
   line($b, '', 'Work order value not yet billed', B - C, B - C < 0 ? 'lv-bad' : '', 'B - C');
+  line($b, '', 'of which advance asked on proforma (open)', PO, 'lv-sub');
 
   var $f = $('#stFunds');
-  line($f, 'C', 'Total bills received', C);
+  line($f, 'C', 'Bills received (tax invoices)', C);
+  line($f, '', 'Add: open advances (proforma not yet settled)', PO, 'lv-sub');
+  line($f, 'T', 'Total to be claimed from KSS', C + PO, 'lv-tot', 'C + advances');
   line($f, 'D', 'Claimed from KSS through FRLs', D, '', FRL.length + ' FRL' + (FRL.length === 1 ? '' : 's'));
-  line($f, '', 'Bills not yet claimed', C - CL, C - CL > 0 ? 'lv-due' : '', 'bills not in any FRL');
+  line($f, '', 'Not yet claimed', U, U > 0 ? 'lv-due' : '', 'T - D');
   line($f, 'E', 'Received from KSS against FRLs', E, 'lv-tot');
   line($f, '', 'Outstanding from KSS', D - E, D - E > 0 ? 'lv-due' : (D - E < 0 ? 'lv-bad' : 'lv-ok'), 'D - E');
   if (OTH) {
@@ -347,25 +355,24 @@ $(function () {
     $p.append($d);
   }
   if (!WO.length && A > 0) point('No work order issued yet', A, btn('+ Work Order', 'CsrWorkOrderServlet?action=form&letterId=' + L.id));
-  if (B - C > 0)  point('Work order value not yet billed by vendors', B - C);
-  if (C - CL > 0) point('Bills received but not yet claimed from KSS', C - CL, btn('+ Raise FRL', 'CsrFrlServlet?action=form&letterId=' + L.id));
+  if (B - C > 0)  point('Work order value not yet billed by vendors (tax invoice awaited)', B - C);
+  if (POC > 0)    point('Advance claimed on proforma, final tax invoice awaited', POC);
+  if (U > 0)      point('Bills / advances not yet claimed from KSS', U, btn('+ Raise FRL', 'CsrFrlServlet?action=form&letterId=' + L.id));
   if (D - E > 0)  point('Claimed from KSS, not yet received', D - E);
   if (!pts) $p.append($('<div class="lv-pt ok"></div>').append('<span class="lv-dot"></span>')
-                 .append($('<span></span>').text('Nothing pending. All bills claimed and all claims received.')));
+                 .append($('<span></span>').text('Nothing pending. All work billed, all bills claimed and all claims received.')));
 
   // ---------- summary: WO-wise position
-  var pos = { v: 0, b: 0, tb: 0, c: 0, nc: 0 };
+  var pos = { v: 0, b: 0, tb: 0, a: 0, c: 0, nc: 0 };
   WO.forEach(function (w) {
-    var billed = 0, claimed = 0;
-    INV.forEach(function (v) { if (String(v.wo_id) === String(w.id)) { billed += +v.amount; if (v.frl_number) claimed += +v.amount; } });
-    var tb = +w.total_amount - billed, nc = billed - claimed;
-    pos.v += +w.total_amount; pos.b += billed; pos.tb += tb; pos.c += claimed; pos.nc += nc;
+    var tb = +w.total_amount - +w.tax_billed, nc = +w.unclaimed;
+    pos.v += +w.total_amount; pos.b += +w.tax_billed; pos.tb += tb; pos.a += +w.pi_open; pos.c += +w.claimed; pos.nc += nc;
     $('#bWoPos').append($('<tr class="csr-row"></tr>').append(td(w.wo_number, 'csr-strong')).append(td(w.vendor_name))
-      .append(nTd(w.total_amount, true)).append(nTd(billed)).append(nTd(tb)).append(nTd(claimed))
+      .append(nTd(w.total_amount, true)).append(nTd(w.tax_billed)).append(nTd(tb)).append(nTd(w.pi_open)).append(nTd(w.claimed))
       .append($('<td class="csr-num"></td>').text(amt(nc)).css({ color: nc > 0 ? '#b45309' : '', fontWeight: nc > 0 ? 600 : '' })));
   });
-  if (WO.length) $('#bWoPos').append(totRow(['Total', '', pos.v, pos.b, pos.tb, pos.c, pos.nc]));
-  else $('#bWoPos').append(none(7, 'No work orders yet.'));
+  if (WO.length) $('#bWoPos').append(totRow(['Total', '', pos.v, pos.b, pos.tb, pos.a, pos.c, pos.nc]));
+  else $('#bWoPos').append(none(8, 'No work orders yet.'));
 
   // ---------- work orders
   $('#nWo').text(WO.length);
@@ -386,22 +393,28 @@ $(function () {
 
   // ---------- bills (date order)
   $('#nInv').text(INV.length);
-  var s2 = [0, 0, 0];
+  var s2 = [0, 0, 0, 0];
   INV.slice().sort(function (a, b) { return dmy(a.invoice_date) < dmy(b.invoice_date) ? -1 : 1; }).forEach(function (v) {
-    s2[0] += +v.price; s2[1] += +v.gst_amount; s2[2] += +v.amount;
+    if (v.invoice_type !== 'Proforma') { s2[0] += +v.price; s2[1] += +v.gst_amount; s2[2] += +v.amount; }
+    s2[3] += +(v.frl_number ? v.claim_amount : v.claimable);
     var pi = v.invoice_type === 'Proforma';
     $('#bInv').append($('<tr class="csr-row"></tr>')
       .append(td(v.invoice_date))
       .append($('<td></td>').append($('<span class="csr-badge"></span>').text(pi ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', pi)))
       .append(td(v.invoice_number, 'csr-strong')).append(td(v.wo_number)).append(td(v.vendor_name))
       .append(nTd(v.price)).append(td(Number(v.gst_percent) + ' %', 'csr-num')).append(nTd(v.gst_amount)).append(nTd(v.amount, true))
+      .append(td(pi ? (v.settled_by ? 'Settled by ' + v.settled_by : 'Open advance') : (v.proforma_number ? 'Against ' + v.proforma_number : '-'), 'csr-small'))
+      .append(nTd(v.frl_number ? v.claim_amount : v.claimable))
       .append(v.frl_number ? td(v.frl_number)
-        : $('<td></td>').append($('<span class="csr-small" style="color:#b45309;font-weight:600;">Not claimed</span>')))
+        : (+v.claimable > 0 ? $('<td></td>').append($('<span class="csr-small" style="color:#b45309;font-weight:600;">Not claimed</span>'))
+                            : td('-', 'csr-small')))
       .append(fileTd(v.attachment_size, 'CsrInvoiceServlet?action=file&id=' + v.id))
       .append(actTd(btn('&#9998; Edit', 'CsrInvoiceServlet?action=form&id=' + v.id, true))));
   });
-  if (INV.length) $('#bInv').append(totRow(['Total', '', '', '', '', s2[0], '', s2[1], s2[2], '', '', 'ACT']));
-  else $('#bInv').append(none(12, 'No bills yet.'));
+  if (INV.length) $('#bInv').append(totRow(['Total bills (tax invoices)', '', '', '', '', s2[0], '', s2[1], s2[2], '', s2[3], '', '', 'ACT']));
+  else $('#bInv').append(none(14, 'No bills yet.'));
+  $('#tab-bills .csr-table-wrap').after($('<div class="lv-note"></div>').text(
+    'Proforma = advance request, not a bill. Claim = amount put in the FRL (tax invoice less advance already claimed on its proforma).'));
 
   // ---------- FRLs
   $('#nFrl').text(FRL.length);

@@ -143,10 +143,10 @@ $(function () {
     $tr.append(flowCell(woCount, 'CsrWorkOrderServlet?letterId=' + r.id,
       woCount ? woCount + ' WO' + (woCount === 1 ? '' : 's') + ': ' + money(r.woTotal) : 'No work orders',
       'Balance', money(bal), bal < 0));
-    var invCount = parseInt(r.invCount, 10) || 0, notInFrl = Number(r.invTotal || 0) - Number(r.invInFrl || 0);
+    var invCount = parseInt(r.invCount, 10) || 0, unclaimed = Number(r.invUnclaimed || 0);
     $tr.append(flowCell(invCount, 'CsrInvoiceServlet',
-      invCount ? invCount + ' invoice' + (invCount === 1 ? '' : 's') + ': ' + money(r.invTotal) : 'No invoices',
-      invCount ? 'Not in FRL' : '', money(notInFrl)));
+      invCount ? 'Bills: ' + money(r.invTotal) : 'No invoices',
+      invCount ? 'Not claimed' : '', money(unclaimed)));
     var frlCount = parseInt(r.frlCount, 10) || 0, due = Number(r.frlTotal || 0) - Number(r.fundFrlTotal || 0);
     $tr.append(flowCell(frlCount, 'CsrFrlServlet?letterId=' + r.id,
       frlCount ? frlCount + ' FRL' + (frlCount === 1 ? '' : 's') + ': ' + money(r.frlTotal) : 'No FRL yet',

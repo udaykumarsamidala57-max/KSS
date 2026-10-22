@@ -76,6 +76,12 @@
           <input type="date" id="fDate" name="invoiceDate" class="csr-input">
         </div>
 
+        <div class="csr-field span-3" id="pfWrap">
+          <label for="fPf">Against Proforma (advance)</label>
+          <select id="fPf" name="proformaId" class="csr-input"></select>
+          <div class="csr-budget" id="pfInfo" style="display:none;"></div>
+        </div>
+
         <div class="csr-field">
           <label for="fPrice">Price (&#8377;) <span class="req">*</span></label>
           <input type="number" id="fPrice" name="price" class="csr-input csr-amount" min="0.01" step="0.01" placeholder="0.00">
@@ -125,6 +131,7 @@ $(function () {
   var inv        = <%= gson.toJson(inv) %>;                     // null when adding
   var workOrders = <%= gson.toJson(request.getAttribute("workOrders")) %>;
   var preset     = <%= gson.toJson(request.getAttribute("presetWoId")) %>;
+  var allInv     = <%= gson.toJson(request.getAttribute("invoices")) %> || [];
   var loadError  = <%= gson.toJson(request.getAttribute("error")) %>;
   var RS = String.fromCharCode(8377);
 
@@ -148,8 +155,20 @@ $(function () {
 
   // ---- work orders + balance
   var $wo = $('#fWo').append('<option value="">-- Select work order --</option>');
+  function isTax() { return $('#fType').val() === 'Tax Invoice'; }
+  function pfById(id) { for (var i = 0; i < allInv.length; i++) if (String(allInv[i].id) === String(id)) return allInv[i]; return null; }
+  // what the work order already carries, without this invoice (tax invoices + proformas not settled)
   function othersFor(w) {
-    return Number(w.invoiced) - (inv && String(inv.woId) === String(w.id) ? Number(inv.amount) : 0);
+    var o = Number(w.invoiced);
+    if (inv && String(inv.woId) === String(w.id)) {
+      o -= (inv.invoiceType === 'Proforma' && inv.settledById) ? 0 : Number(inv.amount);
+      if (inv.proformaId) { var old = pfById(inv.proformaId); if (old) o += Number(old.amount); }   // old proforma re-opens
+    }
+    if (isTax() && $('#fPf').val()) {                                   // the proforma this bill settles stops counting
+      var p = pfById($('#fPf').val());
+      if (p && String(p.woId) === String(w.id)) o -= Number(p.amount);
+    }
+    return r2(o);
   }
   workOrders.forEach(function (w) {
     var avail = Number(w.total) - othersFor(w);
@@ -166,8 +185,35 @@ $(function () {
     if (!w) return null;
     return { total: Number(w.total), others: othersFor(w), avail: r2(Number(w.total) - othersFor(w)) };
   }
+  function fillProformas() {
+    var keep = $('#fPf').val() || (inv && inv.proformaId) || '';
+    var $pf = $('#fPf').empty().append('<option value="">-- No proforma (bill without advance) --</option>'), n = 0;
+    allInv.forEach(function (p) {
+      if (p.invoiceType !== 'Proforma' || String(p.woId) !== String($wo.val())) return;
+      if (inv && String(p.id) === String(inv.id)) return;
+      if (p.settledById && !(inv && String(p.settledById) === String(inv.id))) return;
+      $pf.append($('<option></option>').attr('value', p.id)
+        .text(p.invoiceNumber + '  |  ' + p.invoiceDateTxt + '  |  Advance ' + money(p.amount)
+              + (p.frlNumber ? '  |  claimed in ' + p.frlNumber : '  |  not claimed')));
+      n++;
+    });
+    $pf.val(keep); if ($pf.val() === null) $pf.val('');
+    $('#pfWrap').toggle(isTax() && (n > 0 || !!$pf.val()));
+  }
   function recalc() {
     var price = r2($('#fPrice').val()), g = r2(price * Number($('#fGst').val()) / 100), amt = r2(price + g);
+    var p = isTax() && $('#fPf').val() ? pfById($('#fPf').val()) : null, pfMsg = '';
+    if (p) {
+      var adv = p.frlNumber ? Number(p.claimAmount || p.amount) : 0;
+      $('#pfInfo').empty()
+        .append($('<span></span>').text('Advance ').append($('<b></b>').text(money(p.amount))))
+        .append($('<span></span>').text('Already claimed from KSS ').append($('<b></b>').text(money(adv))))
+        .append($('<span></span>').text('This bill will claim ').append($('<b></b>').text(price ? money(r2(amt - adv)) : '-')))
+        .show();
+      if (price && amt < Number(p.amount)) pfMsg = 'Tax invoice amount ' + money(amt) + ' is less than the proforma advance ' + money(p.amount) + '.';
+    } else {
+      $('#pfInfo').hide();
+    }
     $('#vGst').text(price ? money(g) : '-');
     $('#vAmount').text(price ? money(amt) : '-');
     var b = available();
@@ -177,14 +223,18 @@ $(function () {
     } else {
       $('#budgetBox').hide();
     }
-    if (b && amt > b.avail) {
+    if (pfMsg) {
+      $('#overWarn').text(pfMsg).show();
+    } else if (b && amt > b.avail) {
       $('#overWarn').text('Invoice amount ' + money(amt) + ' is more than the available ' + money(b.avail) + ' on this work order.').show();
     } else {
       $('#overWarn').hide();
     }
     return amt;
   }
-  $wo.on('change', recalc);
+  $wo.on('change', function () { $('#fPf').val(''); fillProformas(); recalc(); });
+  $('#fType').on('change', function () { fillProformas(); recalc(); });
+  $('#fPf').on('change', recalc);
   $('#fPrice, #fGst').on('input change', recalc);
 
   // ---- fill form
@@ -194,11 +244,15 @@ $(function () {
     $('#fId').val(inv.id);
     $wo.val(inv.woId);
     $('#fType').val(inv.invoiceType || 'Tax Invoice');
-    if (inv.frlId) {
-      // already in an FRL: work order and amount are locked
+    fillProformas();
+    if (inv.frlId || inv.settledById) {
+      // in an FRL, or a proforma already settled: type, work order, amount (and proforma link) are locked
       $('#csrError').removeClass('csr-alert-err').addClass('csr-alert-ok')
-        .text('This invoice is included in FRL ' + inv.frlNumber + '. Work order, price and GST cannot be changed.').show();
+        .text(inv.settledById ? 'This proforma is settled by tax invoice ' + inv.settledByNumber + '. Type, work order, price and GST cannot be changed.'
+                              : 'This invoice is included in FRL ' + inv.frlNumber + '. Type, work order, price, GST and proforma cannot be changed.').show();
       $wo.prop('disabled', true).after($('<input type="hidden" name="woId">').val(inv.woId));
+      $('#fType').prop('disabled', true).after($('<input type="hidden" name="invoiceType">').val(inv.invoiceType));
+      $('#fPf').prop('disabled', true).after($('<input type="hidden" name="proformaId">').val(inv.proformaId || ''));
       $('#fPrice').prop('readonly', true);
       $('#fGst').prop('disabled', true).after($('<input type="hidden" name="gst">').val(inv.gst));
     }
@@ -217,6 +271,7 @@ $(function () {
     $('#pageTitle').text('New Invoice');
     $('#btnSave').text('Save Invoice');
     if (preset) $wo.val(preset);
+    fillProformas();
     var d = new Date();
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
@@ -231,7 +286,7 @@ $(function () {
     if (!$('#fDate').val()) { showToast(false, 'Please enter the Invoice Date.'); return; }
     if (!(Number($('#fPrice').val()) > 0)) { showToast(false, 'Please enter a valid Price.'); $('#fPrice').trigger('focus'); return; }
     var amt = recalc(), b = available();
-    if (b && amt > b.avail) { showToast(false, $('#overWarn').text()); return; }
+    if ($('#overWarn').is(':visible')) { showToast(false, $('#overWarn').text()); return; }
     var file = $('#fFile')[0].files[0];
     if (file) {
       if (!/\.(pdf|jpe?g|png)$/i.test(file.name)) { showToast(false, 'Invoice copy must be a PDF, JPG or PNG file.'); return; }

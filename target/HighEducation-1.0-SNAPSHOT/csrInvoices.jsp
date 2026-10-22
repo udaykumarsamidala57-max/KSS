@@ -36,7 +36,7 @@
     <div class="csr-stats">
       <div class="csr-stat"><div class="csr-stat-label">Invoices</div><div class="csr-stat-value" id="statCount">0</div></div>
       <div class="csr-stat"><div class="csr-stat-label" id="statWoLabel">Work Order Total</div><div class="csr-stat-value" id="statWo">-</div></div>
-      <div class="csr-stat"><div class="csr-stat-label">Invoiced</div><div class="csr-stat-value" id="statInvoiced">-</div></div>
+      <div class="csr-stat"><div class="csr-stat-label">Billed + Open Advance</div><div class="csr-stat-value" id="statInvoiced">-</div></div>
       <div class="csr-stat"><div class="csr-stat-label">Balance</div><div class="csr-stat-value" id="statBalance">-</div></div>
     </div>
   </div>
@@ -124,8 +124,12 @@ $(function () {
   function rowHtml(r, n) {
     var $tr = $('<tr class="csr-row inv-row"></tr>').attr('data-id', r.id);
     $tr.append($('<td></td>').text(n));
+    var isPi = r.invoiceType === 'Proforma';
+    var sub = isPi ? (r.settledByNumber ? 'Settled by ' + r.settledByNumber : 'Open advance')
+                   : (r.proformaNumber ? 'Against ' + r.proformaNumber : '');
     $tr.append($('<td></td>').append($('<span class="csr-badge"></span>')
-      .text(r.invoiceType === 'Proforma' ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', r.invoiceType === 'Proforma')));
+      .text(isPi ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', isPi))
+      .append($('<div class="csr-small" style="margin-top:3px;"></div>').text(sub)));
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.invoiceNumber))
       .append($('<div class="csr-small"></div>').text(r.invoiceDateTxt)));
@@ -138,11 +142,16 @@ $(function () {
     $tr.append($('<td class="csr-num csr-strong"></td>').text(money(r.amount)));
     var $f = $('<td></td>');
     if (r.frlId) {
-      $f.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrFrlServlet?letterId=' + r.letterId).text(r.frlNumber));
-    } else {
+      $f.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrFrlServlet?letterId=' + r.letterId).text(r.frlNumber))
+        .append($('<div class="csr-small"></div>').text('Claimed ' + money(r.claimAmount)));
+    } else if (Number(r.claimable) > 0) {
       $f.append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ FRL</a>')
         .attr('href', 'CsrFrlServlet?action=form&letterId=' + r.letterId + '&invoiceId=' + r.id)
         .attr('title', 'Raise a funds request letter for this invoice'));
+      if (Number(r.claimable) !== Number(r.amount))
+        $f.append($('<div class="csr-small"></div>').text('To claim ' + money(r.claimable)));
+    } else {
+      $f.append($('<span class="csr-small"></span>').text(isPi ? 'Settled, not claimed' : 'Covered by advance'));
     }
     $tr.append($f);
     var $a = $('<td></td>');
@@ -207,14 +216,8 @@ $(function () {
     $.ajax({ url: 'CsrInvoiceServlet', type: 'POST', dataType: 'json', data: { action: 'delete', id: id }
     }).done(function (res) {
       if (!res.ok) { showToast(false, res.message); render(); return; }
-      var i = byId(rows, id);
-      if (i !== -1) {
-        var wi = byId(workOrders, rows[i].woId);
-        if (wi !== -1) workOrders[wi].invoiced = (Number(workOrders[wi].invoiced) - Number(rows[i].amount)).toFixed(2);
-        rows.splice(i, 1);
-      }
-      render();
-      showToast(true, res.message);
+      // reload: deleting a tax invoice can re-open its proforma, so totals are taken fresh from the server
+      window.location.href = 'CsrInvoiceServlet?msg=' + encodeURIComponent(res.message);
     }).fail(function (xhr) {
       showToast(false, (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not delete. Please try again.');
       render();

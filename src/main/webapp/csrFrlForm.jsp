@@ -67,7 +67,9 @@
                   <th>Invoice No</th>
                   <th>Date</th>
                   <th>Work Order / Vendor</th>
-                  <th class="csr-num">Amount</th>
+                  <th class="csr-num">Bill Amount</th>
+                  <th class="csr-num">Less Advance</th>
+                  <th class="csr-num">Claim</th>
                 </tr>
               </thead>
               <tbody id="invBody"></tbody>
@@ -153,18 +155,25 @@ $(function () {
       if (!lid || String(v.letterId) !== String(lid)) return;
       var mine = myIds.indexOf(String(v.id)) !== -1;
       if (v.frlId && !mine) return;
+      var claim = mine ? Number(v.claimAmount || v.amount) : Number(v.claimable);
+      if (!mine && !(claim > 0)) return;                       // nothing left to claim (settled proforma / fully covered by advance)
+      var less = Number(v.amount) - claim;
       var on = ticked ? ticked.indexOf(String(v.id)) !== -1 : (mine || String(v.id) === String(presetInv));
       var $tr = $('<tr></tr>');
       $tr.append($('<td></td>').append($('<input type="checkbox" class="inv-tick">').val(v.id).prop('checked', on)));
       $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(v.invoiceType === 'Proforma' ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', v.invoiceType === 'Proforma')));
-      $tr.append($('<td class="csr-strong"></td>').text(v.invoiceNumber));
+      $tr.append($('<td></td>').append($('<div class="csr-strong"></div>').text(v.invoiceNumber))
+        .append($('<div class="csr-small"></div>').text(v.invoiceType === 'Proforma' ? 'Advance' : (v.proformaNumber ? 'Against ' + v.proformaNumber : ''))));
       $tr.append($('<td></td>').text(v.invoiceDateTxt));
       $tr.append($('<td></td>').append($('<div></div>').text(v.woNumber)).append($('<div class="csr-small"></div>').text(v.vendorName)));
-      $tr.append($('<td class="csr-num csr-strong"></td>').text(money(v.amount)).attr('data-amt', v.amount));
+      $tr.append($('<td class="csr-num"></td>').text(money(v.amount)));
+      $tr.append($('<td class="csr-num"></td>').text(less > 0 ? money(less) : '-')
+        .attr('title', less > 0 ? 'Advance already claimed on ' + (v.proformaNumber || 'the proforma') : ''));
+      $tr.append($('<td class="csr-num csr-strong"></td>').text(money(claim)).attr('data-amt', claim));
       $b.append($tr); n++;
     });
-    if (!lid) $b.append('<tr><td colspan="6" class="csr-empty">Select the approval letter to see its invoices.</td></tr>');
-    else if (!n) $b.append('<tr><td colspan="6" class="csr-empty">No invoices waiting for an FRL on this approval letter. Add the invoice first (KSS CSR &gt; Invoices).</td></tr>');
+    if (!lid) $b.append('<tr><td colspan="8" class="csr-empty">Select the approval letter to see its invoices.</td></tr>');
+    else if (!n) $b.append('<tr><td colspan="8" class="csr-empty">No invoices waiting for an FRL on this approval letter. Add the invoice first (KSS CSR &gt; Invoices).</td></tr>');
     total();
   }
   function total() {
