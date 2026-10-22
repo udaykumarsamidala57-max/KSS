@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+/* =====================================================================
+   Finance theme for Global (admin) pages: Approvals, KSS CSR, Masters
+   - IBM Plex Sans: built for data screens, equal-width digits
+   - Slate ink text, teal actions, green / amber / red for money status
+   - Compact rows and full-width tables so more records fit on screen
+   Included after each page's own <style> block, so these rules win.
+   ===================================================================== */
+:root {
+  --fin-font: 'IBM Plex Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+  --fin-ink: #0f172a;
+  --fin-ink-2: #334155;
+  --fin-muted: #64748b;
+  --fin-line: #e2e8f0;
+  --fin-line-soft: #eef2f6;
+  --fin-head: #f8fafc;
+  --fin-teal: #0f766e;
+  --fin-amber: #b45309;
+}
+
+body {
+  font-family: var(--fin-font) !important;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+input, select, textarea, button { font-family: var(--fin-font) !important; font-variant-numeric: tabular-nums; }
+
+/* ---------- page frame: full width, tight ---------- */
+.kc-page, .vd-page, .as-page, .cm-page, .csr-page { padding: 10px 16px !important; max-width: none !important; }
+.csr-page-narrow { max-width: 1120px !important; }
+.kc-header, .vd-header, .as-header, .cm-header, .csr-header { margin-bottom: 10px !important; gap: 8px !important; align-items: center !important; }
+.kc-subtitle, .vd-subtitle, .as-subtitle, .cm-subtitle, .csr-subtitle { font-size: 10.5px !important; letter-spacing: .7px !important; color: var(--fin-muted) !important; }
+.kc-title, .vd-title, .as-title, .cm-title, .csr-title { font-size: 19px !important; font-weight: 600 !important; color: var(--fin-ink) !important; margin-top: 1px !important; }
+.kc-summary, .vd-summary, .as-summary, .cm-summary { font-size: 12px !important; margin-top: 2px !important; }
+
+/* ---------- filters / search ---------- */
+.kc-controls, .vd-controls, .as-controls, .csr-controls { gap: 6px !important; }
+.kc-controls label, .vd-controls label, .as-controls label { font-size: 11px !important; }
+.kc-controls select, .kc-controls input, .vd-controls select, .vd-controls input,
+.as-controls select, .as-controls input, .cm-search, .csr-controls select, .csr-controls input {
+  height: 30px !important; font-size: 12.5px !important; border-radius: 4px !important; }
+
+/* ---------- cards ---------- */
+.kc-card, .vd-card, .as-card, .cm-card, .csr-card, .csr-stat {
+  border-radius: 6px !important; border-color: var(--fin-line) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05) !important; }
+.csr-card-head { padding: 8px 12px !important; }
+.csr-card-title { font-size: 13.5px !important; color: var(--fin-ink) !important; font-weight: 600 !important; }
+
+/* ---------- KPI tiles ---------- */
+.csr-stats { gap: 8px !important; }
+.csr-stat { padding: 6px 12px !important; min-width: 128px !important; }
+.csr-stat-label { font-size: 10px !important; letter-spacing: .6px !important; }
+.csr-stat-value { font-size: 17px !important; font-weight: 600 !important; color: var(--fin-ink) !important; }
+
+/* ---------- data tables: ledger style ---------- */
+table.kc-table, table.vd-table, table.as-table, table.cm-table, table.csr-table, .vd-docs, .csr-subtable, .data-table {
+  font-size: 12.5px !important; }
+.kc-table th, .vd-table > thead th, .as-table th, .cm-table th, .csr-table th, .vd-docs th, .csr-subtable th, .data-table th {
+  padding: 6px 8px !important; font-size: 10.5px !important; font-weight: 600 !important; letter-spacing: .5px !important;
+  color: var(--fin-ink-2) !important; background: var(--fin-head) !important;
+  border-bottom: 1px solid #cbd5e1 !important; }
+.kc-table td, .vd-table > tbody > tr.vd-app > td, .as-table td, .cm-table td, .csr-table td, .vd-docs td, .csr-subtable td, .data-table td {
+  padding: 5px 8px !important; line-height: 1.35 !important; border-bottom-color: var(--fin-line-soft) !important; }
+.csr-table td { vertical-align: middle !important; }
+.kc-table tr:hover td, .vd-table > tbody > tr.vd-app:hover > td, .as-table tr.as-app:hover > td,
+.cm-table tr:hover td, .csr-table tbody tr.csr-row:hover td, .data-table tr:hover td { background: #f0fdfa !important; }
+.csr-total-row td { font-weight: 600 !important; color: var(--fin-ink) !important; background: #f8fafc !important;
+  border-top: 2px solid #cbd5e1 !important; }
+
+/* money columns */
+.csr-num, .as-num, .cm-num { white-space: nowrap; text-align: right; }
+.csr-table td.csr-num, .as-amount { color: var(--fin-ink); font-weight: 600; }
+.csr-small, .as-small { font-size: 11px !important; }
+.csr-neg { color: #b91c1c !important; }
+
+/* ---------- buttons ---------- */
+.kc-btn, .vd-btn, .as-btn, .cm-btn, .csr-btn {
+  height: 28px !important; padding: 0 11px !important; font-size: 12px !important; font-weight: 600 !important; border-radius: 4px !important;
+  box-shadow: none !important; }
+.csr-btn-sm, .vd-table .vd-btn, .as-table .as-btn, .cm-table .cm-btn, .kc-form .kc-btn {
+  height: 24px !important; padding: 0 8px !important; font-size: 11.5px !important; }
+.csr-actions, .as-actions, .cm-actions, .vd-doc-actions { gap: 4px !important; flex-wrap: nowrap !important; }
+.csr-btn.csr-link-btn { display: inline-flex !important; align-items: center !important; }
+
+/* ---------- badges / pills ---------- */
+.kc-badge, .vd-badge, .as-badge, .cm-badge, .csr-badge, .badge {
+  padding: 1px 7px !important; font-size: 10px !important; border-radius: 3px !important; box-shadow: none !important; letter-spacing: .3px !important; }
+
+/* ---------- alerts ---------- */
+.kc-alert, .vd-alert, .as-alert, .cm-alert, .csr-alert { padding: 7px 11px !important; font-size: 12.5px !important; margin-bottom: 8px !important; }
+
+/* ---------- forms ---------- */
+.csr-form { padding: 12px !important; gap: 10px 14px !important; }
+.csr-field label { font-size: 10.5px !important; letter-spacing: .4px !important; margin-bottom: 3px !important; }
+.csr-input { height: 30px !important; font-size: 13px !important; }
+.csr-textarea { font-size: 13px !important; min-height: 64px !important; }
+.csr-budget { padding: 6px 10px !important; font-size: 12px !important; }
+.csr-amount-box { padding: 8px 12px !important; }
+.csr-amount-box b { font-size: 17px !important; color: var(--fin-ink) !important; }
+.cm-in, .as-field input, .vd-reject-box input { height: 28px !important; font-size: 12.5px !important; }
+
+/* ---------- Organization Master ---------- */
+.container { max-width: 1100px !important; }
+.form-header { padding: 10px 16px !important; box-shadow: none !important; text-align: left !important; }
+.form-header h2 { font-size: 17px !important; color: var(--fin-ink) !important; letter-spacing: .3px !important; }
+.form-body { padding: 12px 16px !important; }
+.section-title { padding: 5px 10px !important; font-size: 11.5px !important; margin: 10px 0 8px !important; }
+.form-grid { gap: 10px 14px !important; }
+select, input[type=text] { font-size: 13px; }
+input[type=submit] { padding: 6px 22px !important; font-size: 12px !important; }
+.btn-action { padding: 2px 8px !important; font-size: 11.5px !important; }
+
+/* keep short codes, dates and links on one line */
+.as-table td:nth-child(2), .vd-table td:nth-child(2), .kc-table td:nth-child(2) { white-space: nowrap; }
+.csr-pdf { white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }

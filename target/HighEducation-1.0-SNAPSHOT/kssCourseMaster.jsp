@@ -38,24 +38,25 @@
 <%@ include file="header.jsp" %>
 
 <style>
+
   :root {
-    --brand-primary: #7a1f35;
-    --brand-primary-dark: #5e1627;
-    --brand-accent-bg: #fdf6f7;
-    --brand-border: #e2cece;
-    --brand-border-dark: #c8b1b1;
-    --text-main: #2b2b2b;
-    --text-muted: #666666;
-    --bg-page: #f8f9fa;
-    --table-header-bg: #faf0f2;
-    --row-hover: #fcf2f4;
+    --brand-primary: #0f766e;
+    --brand-primary-dark: #115e59;
+    --brand-accent-bg: #f0fdfa;
+    --brand-border: #e2e8f0;
+    --brand-border-dark: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --bg-page: #f1f5f9;
+    --table-header-bg: #f8fafc;
+    --row-hover: #f0fdfa;
     --radius: 4px;
-    --card-shadow: 0 4px 12px rgba(122, 31, 53, 0.08);
-    --ok: #137333;  --ok-bg: #e6f4ea;  --ok-bd: #ceead6;
-    --bad: #c5221f; --bad-bg: #fce8e6; --bad-bd: #fad2cf;
+    --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --ok: #047857;  --ok-bg: #ecfdf5;  --ok-bd: #a7f3d0;
+    --bad: #b91c1c; --bad-bg: #fef2f2; --bad-bd: #fecaca;
   }
   body { background: var(--bg-page); color: var(--text-main);
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+         font-family: 'Inter', 'Salesforce Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-variant-numeric: tabular-nums;  }
 
   .cm-page { padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
   .cm-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 14px; }
@@ -85,10 +86,10 @@
   table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .cm-table th { background: var(--table-header-bg); color: var(--brand-primary); text-align: left; font-size: 11px;
       text-transform: uppercase; letter-spacing: .4px; padding: 10px; border-bottom: 1px solid var(--brand-border); white-space: nowrap; }
-  .cm-table td { padding: 8px 10px; border-bottom: 1px solid #f1e6e8; vertical-align: middle; }
+  .cm-table td { padding: 8px 10px; border-bottom: 1px solid #eef2f6; vertical-align: middle; }
   .cm-table tr:hover td { background: var(--row-hover); }
   .cm-table tr.cm-inactive td { color: #9a9a9a; background: #f7f7f7; }
-  .cm-table tr.cm-flash td { background: #fdf0f3 !important; transition: background .6s; }
+  .cm-table tr.cm-flash td { background: #ccfbef !important; transition: background .6s; }
   .cm-num { text-align: right; white-space: nowrap; }
   .cm-name { font-weight: 600; }
 
@@ -102,7 +103,7 @@
             border: 1px solid var(--brand-primary); background: var(--brand-primary); color: #fff; white-space: nowrap; }
   .cm-btn:hover { background: var(--brand-primary-dark); }
   .cm-btn:disabled { opacity: .45; cursor: default; }
-  .cm-btn-outline { background: #fff; color: var(--brand-primary); border-color: var(--brand-border-dark); box-shadow: 0 1px 4px rgba(122,31,53,.15); }
+  .cm-btn-outline { background: #fff; color: var(--brand-primary); border-color: var(--brand-border-dark); box-shadow: 0 1px 4px rgba(15, 23, 42,.15); }
   .cm-btn-outline:hover { background: var(--brand-accent-bg); border-color: var(--brand-primary); }
   .cm-btn-bad { background: #fff; color: var(--bad); border-color: var(--bad-bd); }
   .cm-btn-bad:hover { background: var(--bad-bg); border-color: var(--bad); }
@@ -110,6 +111,9 @@
   .cm-confirm { font-size: 12px; color: var(--bad); font-weight: 600; }
 
   .cm-empty { text-align: center; color: var(--text-muted); padding: 34px; }
+</style>
+<style>
+<%@ include file="css/finance.css" %>
 </style>
 </head>
 <body>
