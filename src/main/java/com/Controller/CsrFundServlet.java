@@ -30,11 +30,12 @@ import com.Bean.DBUtil;
 import com.google.gson.JsonObject;
 
 /**
- * KSS CSR Amount Spending : Fund Receipts against Approval Letters (Global role only).
- * A letter can receive funds many times; the total received may not exceed the approved amount.
+ * KSS CSR Amount Spending : Fund Receipts against Funds Request Letters (Global role only).
+ * Approval Letter -> FRLs -> Fund Receipts. An FRL can receive funds many times;
+ * the total received against an FRL may not exceed the amount requested in it.
  *
  *  GET  CsrFundServlet[?letterId=N]                    -> list page (csrFunds.jsp)
- *  GET  CsrFundServlet?action=form[&id=N|&letterId=N]  -> add / edit form (csrFundForm.jsp)
+ *  GET  CsrFundServlet?action=form[&id=N|&frlId=N]     -> add / edit form (csrFundForm.jsp)
  *  GET  CsrFundServlet?action=file&id=N                -> open the attachment
  *  POST action=save   (multipart, AJAX)                -> add / update
  *  POST action=delete (AJAX)                           -> delete
@@ -49,13 +50,14 @@ public class CsrFundServlet extends HttpServlet {
     public static final List<String> MODES = Arrays.asList("NEFT", "RTGS", "IMPS", "UPI", "Cheque", "DD", "Cash", "Other");
 
     private static final String FUND_COLUMNS =
-            "f.id, f.letter_id, DATE_FORMAT(f.receipt_date, '%Y-%m-%d') AS rdate_iso, "
+            "f.id, f.letter_id, f.frl_id, r.frl_number, DATE_FORMAT(f.receipt_date, '%Y-%m-%d') AS rdate_iso, "
           + "DATE_FORMAT(f.receipt_date, '%d-%m-%Y') AS rdate_txt, f.amount, f.payment_mode, f.reference_no, f.bank_name, "
           + "f.remarks, f.attachment_name, f.attachment_size, f.created_by, DATE_FORMAT(f.created_at, '%d-%m-%Y') AS created_txt, "
           + "l.letter_number, l.letter_name, l.activity_kind, l.amount AS letter_amount";
 
     private static final String FUND_FROM =
-            " FROM kss_csr_fund_receipt f JOIN kss_csr_approval_letter l ON l.id = f.letter_id";
+            " FROM kss_csr_fund_receipt f JOIN kss_csr_approval_letter l ON l.id = f.letter_id"
+          + " LEFT JOIN kss_csr_fund_request r ON r.id = f.frl_id";
 
     private boolean isGlobal(HttpSession sess) {
         String role = (String) sess.getAttribute("role");
@@ -89,6 +91,8 @@ public class CsrFundServlet extends HttpServlet {
 
         if ("form".equals(action)) {
             String idParam = request.getParameter("id");
+            String frlParam = request.getParameter("frlId");
+            List<Map<String, String>> frls = new ArrayList<>();
             Map<String, String> fund = null;
             try (Connection con = DBUtil.getConnection()) {
                 if (idParam != null && idParam.matches("\\d+")) {
@@ -101,14 +105,15 @@ public class CsrFundServlet extends HttpServlet {
                         return;
                     }
                 }
-                letters = loadLetters(con);
+                frls = CsrFrlServlet.loadFrls(con);
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("error", "Database error: " + e.getMessage()
-                        + " (Has the kss_csr_fund_receipt table been created?)");
+                        + " (Have the kss_csr_fund_receipt and kss_csr_fund_request tables been created?)");
             }
             request.setAttribute("fund", fund);
-            request.setAttribute("letters", letters);
+            request.setAttribute("frls", frls);
+            request.setAttribute("presetFrlId", frlParam != null && frlParam.matches("\\d+") ? frlParam : "");
             request.setAttribute("modes", MODES);
             request.setAttribute("presetLetterId", presetLetter);
             request.getRequestDispatcher("/csrFundForm.jsp").forward(request, response);
@@ -201,7 +206,7 @@ public class CsrFundServlet extends HttpServlet {
 
     private void save(HttpServletRequest request, HttpServletResponse response, Connection con, String user) throws Exception {
         String idParam = trim(request.getParameter("id"));
-        String letterParam = trim(request.getParameter("letterId"));
+        String frlParam = trim(request.getParameter("frlId"));
         String rDate = trim(request.getParameter("receiptDate"));
         String amountS = trim(request.getParameter("amount"));
         String mode = trim(request.getParameter("paymentMode"));
@@ -209,7 +214,7 @@ public class CsrFundServlet extends HttpServlet {
         String bank = trim(request.getParameter("bankName"));
         String remarks = trim(request.getParameter("remarks"));
 
-        if (!letterParam.matches("\\d+")) { sendJson(response, 400, fail("Please select the Approval Letter.")); return; }
+        if (!frlParam.matches("\\d+")) { sendJson(response, 400, fail("Please select the Funds Request Letter.")); return; }
         LocalDate date;
         try {
             date = LocalDate.parse(rDate);
@@ -250,38 +255,42 @@ public class CsrFundServlet extends HttpServlet {
 
         boolean isNew = idParam.isEmpty();
         if (!isNew && !idParam.matches("\\d+")) { sendJson(response, 400, fail("Invalid receipt.")); return; }
-        int letterId = Integer.parseInt(letterParam);
+        int frlId = Integer.parseInt(frlParam);
         int id = isNew ? 0 : Integer.parseInt(idParam);
 
-        // ---- total received must not exceed the approved amount
-        BigDecimal approved = null;
-        String letterNumber = null;
-        try (PreparedStatement ps = con.prepareStatement("SELECT amount, letter_number FROM kss_csr_approval_letter WHERE id = ?")) {
-            ps.setInt(1, letterId);
-            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) { approved = rs.getBigDecimal(1); letterNumber = rs.getString(2); } }
+        // ---- total received against an FRL must not exceed the amount requested in it
+        BigDecimal requested = null;
+        int letterId = 0;
+        String frlNumber = null;
+        try (PreparedStatement ps = con.prepareStatement("SELECT amount, letter_id, frl_number FROM kss_csr_fund_request WHERE id = ?")) {
+            ps.setInt(1, frlId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) { requested = rs.getBigDecimal(1); letterId = rs.getInt(2); frlNumber = rs.getString(3); }
+            }
         }
-        if (approved == null) { sendJson(response, 400, fail("Approval letter not found. Please reload the page.")); return; }
+        if (requested == null) { sendJson(response, 400, fail("Funds request letter not found. Please reload the page.")); return; }
         BigDecimal others;
         try (PreparedStatement ps = con.prepareStatement(
-                "SELECT COALESCE(SUM(amount), 0) FROM kss_csr_fund_receipt WHERE letter_id = ? AND id <> ?")) {
-            ps.setInt(1, letterId);
+                "SELECT COALESCE(SUM(amount), 0) FROM kss_csr_fund_receipt WHERE frl_id = ? AND id <> ?")) {
+            ps.setInt(1, frlId);
             ps.setInt(2, id);
             try (ResultSet rs = ps.executeQuery()) { rs.next(); others = rs.getBigDecimal(1); }
         }
-        BigDecimal pending = approved.subtract(others);
+        BigDecimal pending = requested.subtract(others);
         if (amount.compareTo(pending) > 0) {
-            sendJson(response, 400, fail("Amount Rs " + amount.toPlainString() + " is more than the pending Rs "
-                    + pending.toPlainString() + " for approval letter " + letterNumber + "."));
+            sendJson(response, 400, fail("Amount Rs " + amount.toPlainString() + " is more than the Rs "
+                    + pending.setScale(2, RoundingMode.HALF_UP).toPlainString() + " yet to be received against FRL " + frlNumber + "."));
             return;
         }
 
         if (isNew) {
             try (PreparedStatement ps = con.prepareStatement(
-                    "INSERT INTO kss_csr_fund_receipt (letter_id, receipt_date, amount, payment_mode, reference_no, bank_name, remarks, "
-                  + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO kss_csr_fund_receipt (letter_id, frl_id, receipt_date, amount, payment_mode, reference_no, bank_name, remarks, "
+                  + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 int i = 1;
                 ps.setInt(i++, letterId);
+                ps.setInt(i++, frlId);
                 ps.setDate(i++, Date.valueOf(date));
                 ps.setBigDecimal(i++, amount);
                 ps.setString(i++, mode);
@@ -298,13 +307,14 @@ public class CsrFundServlet extends HttpServlet {
                 try (ResultSet keys = ps.getGeneratedKeys()) { keys.next(); id = keys.getInt(1); }
             }
         } else {
-            String sql = "UPDATE kss_csr_fund_receipt SET letter_id=?, receipt_date=?, amount=?, payment_mode=?, reference_no=?, "
+            String sql = "UPDATE kss_csr_fund_receipt SET letter_id=?, frl_id=?, receipt_date=?, amount=?, payment_mode=?, reference_no=?, "
                        + "bank_name=?, remarks=?, updated_by=?"
                        + (file != null ? ", attachment=?, attachment_name=?, attachment_type=?, attachment_size=?" : "")
                        + " WHERE id=?";
             try (PreparedStatement ps = con.prepareStatement(sql)) {
                 int i = 1;
                 ps.setInt(i++, letterId);
+                ps.setInt(i++, frlId);
                 ps.setDate(i++, Date.valueOf(date));
                 ps.setBigDecimal(i++, amount);
                 ps.setString(i++, mode);
@@ -330,7 +340,7 @@ public class CsrFundServlet extends HttpServlet {
         json.addProperty("ok", true);
         json.addProperty("id", id);
         json.addProperty("message", (isNew ? "Fund receipt added: Rs " : "Fund receipt updated: Rs ") + amount.toPlainString()
-                + " for " + letterNumber);
+                + " against FRL " + frlNumber);
         sendJson(response, 200, json);
     }
 
@@ -386,6 +396,9 @@ public class CsrFundServlet extends HttpServlet {
         Map<String, String> r = new LinkedHashMap<>();
         r.put("id", String.valueOf(rs.getInt("id")));
         r.put("letterId", String.valueOf(rs.getInt("letter_id")));
+        int frl = rs.getInt("frl_id");
+        r.put("frlId", rs.wasNull() ? "" : String.valueOf(frl));
+        r.put("frlNumber", rs.getString("frl_number"));
         r.put("receiptDate", rs.getString("rdate_iso"));
         r.put("receiptDateTxt", rs.getString("rdate_txt"));
         r.put("amount", money2(rs.getBigDecimal("amount")));

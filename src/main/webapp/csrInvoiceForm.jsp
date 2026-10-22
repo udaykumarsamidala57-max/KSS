@@ -62,7 +62,7 @@
 
         <div class="csr-field">
           <label for="fNumber">Invoice Number <span class="req">*</span></label>
-          <input type="text" id="fNumber" name="invoiceNumber" class="csr-input" maxlength="100" placeholder="e.g. INV-2026-0451">
+          <input type="text" id="fNumber" name="invoiceNumber" class="csr-input" maxlength="100">
         </div>
         <div class="csr-field">
           <label for="fDate">Invoice Date <span class="req">*</span></label>

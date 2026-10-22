@@ -67,7 +67,7 @@
             <th>Particulars</th>
             <th class="csr-num">Amount</th>
             <th>PDF</th>
-            <th>Funds Received</th>
+            <th>Funds</th>
             <th>Work Orders</th>
             <th>Added</th>
             <th>Action</th>
@@ -128,15 +128,18 @@ $(function () {
       $pdf.append('<span class="csr-small">No PDF</span>');
     }
     $tr.append($pdf);
-    var fundCount = parseInt(r.fundCount, 10) || 0, pend = Number(r.amount) - Number(r.fundTotal || 0);
+    var frlCount = parseInt(r.frlCount, 10) || 0, fundCount = parseInt(r.fundCount, 10) || 0;
     var $fd = $('<td class="csr-wo-cell"></td>');
-    if (fundCount) {
-      $fd.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrFundServlet?letterId=' + r.id)
-                   .text(fundCount + ' receipt' + (fundCount === 1 ? '' : 's') + ': ' + money(r.fundTotal)));
+    if (frlCount) {
+      $fd.append($('<a class="csr-strong" style="color:inherit"></a>').attr('href', 'CsrFrlServlet?letterId=' + r.id)
+                   .text(frlCount + ' FRL' + (frlCount === 1 ? '' : 's') + ': ' + money(r.frlTotal)));
     } else {
-      $fd.append('<div class="csr-small">No funds received</div>');
+      $fd.append('<div class="csr-small">No FRL yet</div>');
     }
-    $fd.append($('<div class="csr-small"></div>').append('Pending ').append($('<b></b>').text(money(pend)).toggleClass('csr-neg', pend < 0)));
+    var $rcv = $('<div class="csr-small"></div>').append('Received ');
+    if (fundCount) $rcv.append($('<a style="color:inherit"></a>').attr('href', 'CsrFundServlet?letterId=' + r.id).append($('<b></b>').text(money(r.fundTotal))));
+    else $rcv.append($('<b></b>').text(money(0)));
+    $fd.append($rcv);
     $tr.append($fd);
     var woCount = parseInt(r.woCount, 10) || 0, bal = Number(r.amount) - Number(r.woTotal || 0);
     var $wo = $('<td class="csr-wo-cell"></td>');
@@ -153,7 +156,7 @@ $(function () {
       .append($('<div class="csr-small"></div>').text(r.createdBy ? 'by ' + r.createdBy : '')));
     $tr.append($('<td></td>').append(
       $('<div class="csr-actions"></div>')
-        .append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ Fund</a>').attr('href', 'CsrFundServlet?action=form&letterId=' + r.id).attr('title', 'Record funds received against this letter'))
+        .append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ FRL</a>').attr('href', 'CsrFrlServlet?action=form&letterId=' + r.id).attr('title', 'New funds request letter against this approval letter'))
         .append($('<a class="csr-btn csr-btn-sm csr-link-btn">+ WO</a>').attr('href', 'CsrWorkOrderServlet?action=form&letterId=' + r.id).attr('title', 'New work order against this letter'))
         .append($('<a class="csr-btn csr-btn-sm csr-btn-outline csr-link-btn">&#9998; Edit</a>').attr('href', 'CsrLetterServlet?action=form&id=' + r.id))
         .append('<button type="button" class="csr-btn csr-btn-sm csr-btn-bad js-del">Delete</button>')));

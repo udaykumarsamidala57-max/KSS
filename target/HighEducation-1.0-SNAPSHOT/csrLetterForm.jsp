@@ -57,11 +57,11 @@
 
       <div class="csr-field span-2">
         <label for="fName">Letter Name <span class="req">*</span></label>
-        <input type="text" id="fName" name="letterName" class="csr-input" maxlength="200" placeholder="e.g. Approval for school building repair">
+        <input type="text" id="fName" name="letterName" class="csr-input" maxlength="200">
       </div>
       <div class="csr-field">
         <label for="fNumber">Letter Number <span class="req">*</span></label>
-        <input type="text" id="fNumber" name="letterNumber" class="csr-input" maxlength="100" placeholder="e.g. KSS/CSR/2026/015">
+        <input type="text" id="fNumber" name="letterNumber" class="csr-input" maxlength="100">
       </div>
 
       <div class="csr-field">
@@ -71,7 +71,7 @@
       </div>
       <div class="csr-field">
         <label for="fPlace">Place <span class="req">*</span></label>
-        <input type="text" id="fPlace" name="place" class="csr-input" maxlength="200" placeholder="e.g. Sandur">
+        <input type="text" id="fPlace" name="place" class="csr-input" maxlength="200">
       </div>
       <div class="csr-field">
         <label for="fAmount">Amount (&#8377;) <span class="req">*</span></label>

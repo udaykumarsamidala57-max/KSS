@@ -64,7 +64,7 @@
         </div>
         <div class="csr-field">
           <label for="fWoNumber">WO Number <span class="req">*</span></label>
-          <input type="text" id="fWoNumber" name="woNumber" class="csr-input" maxlength="100" placeholder="e.g. KSS/WO/2026/001">
+          <input type="text" id="fWoNumber" name="woNumber" class="csr-input" maxlength="100">
         </div>
         <div class="csr-field">
           <label for="fWoDate">WO Date <span class="req">*</span></label>
@@ -114,15 +114,15 @@
         </div>
         <div class="csr-field">
           <label for="fVPhone">Phone Number</label>
-          <input type="text" id="fVPhone" name="vendorPhone" class="csr-input" maxlength="20" placeholder="e.g. 9876543210">
+          <input type="text" id="fVPhone" name="vendorPhone" class="csr-input" maxlength="20">
         </div>
         <div class="csr-field">
           <label for="fVEmail">Email ID</label>
-          <input type="email" id="fVEmail" name="vendorEmail" class="csr-input" maxlength="150" placeholder="vendor@example.com">
+          <input type="email" id="fVEmail" name="vendorEmail" class="csr-input" maxlength="150">
         </div>
         <div class="csr-field">
           <label for="fVGstin">GSTIN</label>
-          <input type="text" id="fVGstin" name="vendorGstin" class="csr-input csr-upper" maxlength="15" placeholder="29ABCDE1234F1Z5">
+          <input type="text" id="fVGstin" name="vendorGstin" class="csr-input csr-upper" maxlength="15">
         </div>
         <div class="csr-field span-3">
           <label for="fVAddress">Address</label>
@@ -333,7 +333,7 @@ $(function () {
     if ($.trim($('#fVName').val()) === '') { showToast(false, 'Please enter the Vendor Name.'); $('#fVName').trigger('focus'); return; }
     var gstin = $.trim($('#fVGstin').val());
     if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) {
-      showToast(false, 'GSTIN must be 15 characters, e.g. 29ABCDE1234F1Z5.'); $('#fVGstin').trigger('focus'); return;
+      showToast(false, 'GSTIN must be a valid 15-character GSTIN.'); $('#fVGstin').trigger('focus'); return;
     }
     var file = $('#fFile')[0].files[0];
     if (file) {

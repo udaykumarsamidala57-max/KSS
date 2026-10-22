@@ -50,7 +50,9 @@ public class CsrLetterServlet extends HttpServlet {
           + "(SELECT COUNT(*) FROM kss_csr_work_order w WHERE w.letter_id = kss_csr_approval_letter.id) AS wo_count, "
           + "(SELECT COALESCE(SUM(w.total_amount), 0) FROM kss_csr_work_order w WHERE w.letter_id = kss_csr_approval_letter.id) AS wo_total, "
           + "(SELECT COUNT(*) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id) AS fund_count, "
-          + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id) AS fund_total";
+          + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = kss_csr_approval_letter.id) AS fund_total, "
+          + "(SELECT COUNT(*) FROM kss_csr_fund_request r WHERE r.letter_id = kss_csr_approval_letter.id) AS frl_count, "
+          + "(SELECT COALESCE(SUM(r.amount), 0) FROM kss_csr_fund_request r WHERE r.letter_id = kss_csr_approval_letter.id) AS frl_total";
 
     private boolean isGlobal(HttpSession sess) {
         String role = (String) sess.getAttribute("role");
@@ -287,13 +289,15 @@ public class CsrLetterServlet extends HttpServlet {
                     return;
                 }
                 id = Integer.parseInt(idParam);
-                // the approved amount cannot go below what is already committed (work orders) or received (funds)
+                // the approved amount cannot go below what is already committed (work orders) or requested (FRLs)
                 BigDecimal committed = BigDecimal.ZERO, received = BigDecimal.ZERO;
                 try (PreparedStatement ps = con.prepareStatement(
                         "SELECT (SELECT COALESCE(SUM(total_amount), 0) FROM kss_csr_work_order WHERE letter_id = ?), "
-                      + "(SELECT COALESCE(SUM(amount), 0) FROM kss_csr_fund_receipt WHERE letter_id = ?)")) {
+                      + "(SELECT GREATEST((SELECT COALESCE(SUM(amount), 0) FROM kss_csr_fund_request WHERE letter_id = ?), "
+                      + "(SELECT COALESCE(SUM(amount), 0) FROM kss_csr_fund_receipt WHERE letter_id = ?)))")) {
                     ps.setInt(1, id);
                     ps.setInt(2, id);
+                    ps.setInt(3, id);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) { committed = rs.getBigDecimal(1); received = rs.getBigDecimal(2); }
                     }
@@ -304,7 +308,7 @@ public class CsrLetterServlet extends HttpServlet {
                     return;
                 }
                 if (amount.compareTo(received) < 0) {
-                    sendJson(response, 400, fail("Amount cannot be less than the funds already received ("
+                    sendJson(response, 400, fail("Amount cannot be less than the funds already requested in FRLs ("
                             + received.setScale(2, RoundingMode.HALF_UP).toPlainString() + ")."));
                     return;
                 }
@@ -373,6 +377,16 @@ public class CsrLetterServlet extends HttpServlet {
                     + (woCount == 1 ? "" : "s") + ". Delete the work orders first."));
             return;
         }
+        int frlCount = 0;
+        try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM kss_csr_fund_request WHERE letter_id = ?")) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) frlCount = rs.getInt(1); }
+        }
+        if (frlCount > 0) {
+            sendJson(response, 409, fail("Cannot delete " + number + ": it has " + frlCount + " funds request letter"
+                    + (frlCount == 1 ? "" : "s") + ". Delete the FRLs first."));
+            return;
+        }
         int fundCount = 0;
         try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM kss_csr_fund_receipt WHERE letter_id = ?")) {
             ps.setInt(1, id);
@@ -415,6 +429,9 @@ public class CsrLetterServlet extends HttpServlet {
         BigDecimal woTotal = rs.getBigDecimal("wo_total");
         r.put("woTotal", woTotal == null ? "0.00" : woTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
         r.put("fundCount", String.valueOf(rs.getInt("fund_count")));
+        r.put("frlCount", String.valueOf(rs.getInt("frl_count")));
+        BigDecimal frlTotal = rs.getBigDecimal("frl_total");
+        r.put("frlTotal", frlTotal == null ? "0.00" : frlTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
         BigDecimal fundTotal = rs.getBigDecimal("fund_total");
         r.put("fundTotal", fundTotal == null ? "0.00" : fundTotal.setScale(2, RoundingMode.HALF_UP).toPlainString());
         return r;

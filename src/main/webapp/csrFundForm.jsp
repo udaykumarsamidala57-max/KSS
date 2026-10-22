@@ -1,7 +1,7 @@
 <%@page import="java.util.Map"%>
 <%
     // Must be opened through CsrFundServlet?action=form (loads data + checks Global role)
-    if (request.getAttribute("letters") == null) {
+    if (request.getAttribute("frls") == null) {
         response.sendRedirect("CsrFundServlet?action=form");
         return;
     }
@@ -51,12 +51,13 @@
       <div class="csr-card-head"><div class="csr-card-title">Fund Received</div></div>
       <div class="csr-form">
         <div class="csr-field span-3">
-          <label for="fLetter">Against Approval Letter <span class="req">*</span></label>
-          <select id="fLetter" name="letterId" class="csr-input"></select>
+          <label for="fFrl">Against Funds Request Letter (FRL) <span class="req">*</span></label>
+          <select id="fFrl" name="frlId" class="csr-input"></select>
           <div class="csr-budget" id="budgetBox" style="display:none;">
-            <span>Approved <b id="bApproved"></b></span>
+            <span>Approval letter <b id="bLetter"></b></span>
+            <span>FRL amount <b id="bApproved"></b></span>
             <span>Received earlier <b id="bOthers"></b></span>
-            <span>Pending <b id="bPending"></b></span>
+            <span>Yet to receive <b id="bPending"></b></span>
           </div>
         </div>
 
@@ -75,16 +76,16 @@
 
         <div class="csr-field">
           <label for="fRef">Reference No (UTR / Cheque)</label>
-          <input type="text" id="fRef" name="referenceNo" class="csr-input" maxlength="100" placeholder="e.g. UTR / cheque number">
+          <input type="text" id="fRef" name="referenceNo" class="csr-input" maxlength="100">
         </div>
         <div class="csr-field span-2">
           <label for="fBank">Bank Name</label>
-          <input type="text" id="fBank" name="bankName" class="csr-input" maxlength="150" placeholder="e.g. State Bank of India, Sandur">
+          <input type="text" id="fBank" name="bankName" class="csr-input" maxlength="150">
         </div>
 
         <div class="csr-field span-3">
           <label for="fRemarks">Remarks</label>
-          <textarea id="fRemarks" name="remarks" class="csr-textarea" maxlength="500" placeholder="e.g. 1st instalment"></textarea>
+          <textarea id="fRemarks" name="remarks" class="csr-textarea" maxlength="500"></textarea>
           <div class="csr-over" id="overWarn" style="display:none; margin:8px 0 0;"></div>
         </div>
 
@@ -108,9 +109,9 @@
 <script>
 $(function () {
   var fund      = <%= gson.toJson(fund) %>;                    // null when adding
-  var letters   = <%= gson.toJson(request.getAttribute("letters")) %>;
+  var frls      = <%= gson.toJson(request.getAttribute("frls")) %>;
   var modes     = <%= gson.toJson(request.getAttribute("modes")) %>;
-  var preset    = <%= gson.toJson(request.getAttribute("presetLetterId")) %>;
+  var preset    = <%= gson.toJson(request.getAttribute("presetFrlId")) %>;
   var loadError = <%= gson.toJson(request.getAttribute("error")) %>;
   var RS = String.fromCharCode(8377);
 
@@ -134,35 +135,37 @@ $(function () {
 
   (modes || []).forEach(function (m) { $('#fMode').append($('<option></option>').attr('value', m).text(m)); });
 
-  var $sel = $('#fLetter').append('<option value="">-- Select approval letter --</option>');
+  var $sel = $('#fFrl').append('<option value="">-- Select funds request letter --</option>');
   function othersFor(l) {
-    return Number(l.received) - (fund && String(fund.letterId) === String(l.id) ? Number(fund.amount) : 0);
+    return Number(l.received) - (fund && String(fund.frlId) === String(l.id) ? Number(fund.amount) : 0);
   }
-  letters.forEach(function (l) {
+  frls.forEach(function (l) {
     var pending = Number(l.amount) - othersFor(l);
+    // show FRLs with money still to come, plus the one this receipt already belongs to
+    if (pending <= 0 && !(fund && String(fund.frlId) === String(l.id))) return;
     $sel.append($('<option></option>').attr('value', l.id)
-      .text(l.letterNumber + '  |  ' + l.letterName + '  |  Pending ' + money(pending)));
+      .text(l.frlNumber + '  |  ' + l.frlDateTxt + '  |  ' + l.letterNumber + '  |  Yet to receive ' + money(pending)));
   });
   function current() {
     var id = $sel.val();
-    for (var i = 0; i < letters.length; i++) if (String(letters[i].id) === String(id)) return letters[i];
+    for (var i = 0; i < frls.length; i++) if (String(frls[i].id) === String(id)) return frls[i];
     return null;
   }
   function budget() {
     var l = current();
     if (!l) return null;
-    return { approved: Number(l.amount), others: othersFor(l), pending: r2(Number(l.amount) - othersFor(l)) };
+    return { letter: l.letterNumber + ' - ' + l.letterName, approved: Number(l.amount), others: othersFor(l), pending: r2(Number(l.amount) - othersFor(l)) };
   }
   function check() {
     var b = budget(), amt = r2($('#fAmount').val());
     if (b) {
-      $('#bApproved').text(money(b.approved)); $('#bOthers').text(money(b.others)); $('#bPending').text(money(b.pending));
+      $('#bLetter').text(b.letter); $('#bApproved').text(money(b.approved)); $('#bOthers').text(money(b.others)); $('#bPending').text(money(b.pending));
       $('#budgetBox').show();
     } else {
       $('#budgetBox').hide();
     }
     if (b && amt > b.pending) {
-      $('#overWarn').text('Amount ' + money(amt) + ' is more than the pending ' + money(b.pending) + ' for this approval letter.').show();
+      $('#overWarn').text('Amount ' + money(amt) + ' is more than the ' + money(b.pending) + ' yet to receive against this FRL.').show();
     } else {
       $('#overWarn').hide();
     }
@@ -175,7 +178,7 @@ $(function () {
     $('#pageTitle').text('Edit Fund Receipt');
     $('#btnSave').text('Update Receipt');
     $('#fId').val(fund.id);
-    $sel.val(fund.letterId);
+    $sel.val(fund.frlId);
     $('#fDate').val(fund.receiptDate);
     $('#fAmount').val(fund.amount);
     $('#fMode').val(fund.paymentMode);
@@ -196,11 +199,12 @@ $(function () {
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
   check();
-  if (!letters.length && !loadError) $('#csrError').text('No approval letters yet. Add an approval letter first.').show();
+  if ($sel.find('option').length < 2 && !loadError)
+    $('#csrError').text('No funds request letter is waiting for money. Add a Funds Request Letter first (KSS CSR > Funds Request Letters).').show();
 
   $('#fundForm').on('submit', function (e) {
     e.preventDefault();
-    if (!$sel.val()) { showToast(false, 'Please select the Approval Letter.'); return; }
+    if (!$sel.val()) { showToast(false, 'Please select the Funds Request Letter.'); return; }
     if (!$('#fDate').val()) { showToast(false, 'Please enter the Receipt Date.'); return; }
     if (!(Number($('#fAmount').val()) > 0)) { showToast(false, 'Please enter a valid Amount.'); $('#fAmount').trigger('focus'); return; }
     var amt = check(), b = budget();

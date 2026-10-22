@@ -49,7 +49,7 @@
       <div class="csr-card-title">Funds Received <small id="listCount"></small></div>
       <div class="csr-controls">
         <select id="letterFilter"><option value="ALL">All Approval Letters</option></select>
-        <input type="text" id="searchBox" placeholder="Search letter / reference / bank">
+        <input type="text" id="searchBox" placeholder="Search FRL / letter / reference / bank">
         <a href="CsrFundServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New Fund Receipt</a>
       </div>
     </div>
@@ -59,7 +59,7 @@
           <tr>
             <th>#</th>
             <th>Receipt Date</th>
-            <th>Approval Letter</th>
+            <th>FRL / Approval Letter</th>
             <th class="csr-num">Amount</th>
             <th>Mode / Reference</th>
             <th>Bank</th>
@@ -118,8 +118,8 @@ $(function () {
     $tr.append($('<td></td>').text(n));
     $tr.append($('<td class="csr-strong"></td>').text(r.receiptDateTxt));
     $tr.append($('<td></td>')
-      .append($('<div class="csr-strong"></div>').text(r.letterNumber))
-      .append($('<div class="csr-small"></div>').text(r.letterName)));
+      .append($('<div class="csr-strong"></div>').text(r.frlNumber || '(no FRL)'))
+      .append($('<div class="csr-small"></div>').text(r.letterNumber + ' - ' + r.letterName)));
     $tr.append($('<td class="csr-num csr-strong"></td>').text(money(r.amount)));
     $tr.append($('<td></td>')
       .append($('<div></div>').text(r.paymentMode))
@@ -148,7 +148,7 @@ $(function () {
     var lf = $('#letterFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
     var $body = $('#fundBody').empty(), n = 0, sa = 0;
     rows.forEach(function (r) {
-      var hay = [r.letterNumber, r.letterName, r.referenceNo, r.bankName, r.paymentMode, r.remarks].join(' ').toLowerCase();
+      var hay = [r.frlNumber, r.letterNumber, r.letterName, r.referenceNo, r.bankName, r.paymentMode, r.remarks].join(' ').toLowerCase();
       if ((lf === 'ALL' || String(r.letterId) === String(lf)) && (q === '' || hay.indexOf(q) !== -1)) {
         $body.append(rowHtml(r, ++n));
         sa += Number(r.amount);
@@ -171,7 +171,6 @@ $(function () {
     $('#statApproved').text(money(approved));
     $('#statReceived').text(money(received));
     $('#statPending').text(money(approved - received)).toggleClass('csr-neg', approved - received < 0);
-    $('#btnNew').attr('href', 'CsrFundServlet?action=form' + (lf !== 'ALL' ? '&letterId=' + lf : ''));
   }
 
   // delete (inline confirm, AJAX)

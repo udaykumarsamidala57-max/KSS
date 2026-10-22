@@ -138,7 +138,7 @@
   <div class="cm-card">
     <!-- Add new course -->
     <div class="cm-add">
-      <div class="cm-field"><label>Course name</label><input type="text" id="addName" class="cm-in cm-in-name" maxlength="150" placeholder="e.g. ENGINEERING"></div>
+      <div class="cm-field"><label>Course name</label><input type="text" id="addName" class="cm-in cm-in-name" maxlength="150"></div>
       <div class="cm-field"><label>Sanctioned amount (&#8377;)</label><input type="number" id="addAmount" class="cm-in cm-in-amt" min="0" step="0.01" value="0"></div>
       <div class="cm-field"><label>Order</label><input type="number" id="addSort" class="cm-in cm-in-sort" placeholder="auto"></div>
       <button type="button" id="addBtn" class="cm-btn">+ Add Course</button>

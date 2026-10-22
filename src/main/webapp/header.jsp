@@ -598,6 +598,7 @@
            { "Approvals", "Step 2 : Verify Documents",   "VerifyDocumentsServlet",    "2",        "a", "VerifyDocumentsServlet", "verifyDocuments.jsp" },
            { "Approvals", "Step 3 : Approve Scholarship","ApproveScholarshipServlet", "3",        "a", "ApproveScholarshipServlet", "approveScholarship.jsp" },
            { "KSS CSR",   "Approval Letters",            "CsrLetterServlet",          "&#9993;",  "b", "CsrLetterServlet", "csrLetter" },
+           { "KSS CSR",   "Funds Request Letters",       "CsrFrlServlet",             "&#9997;",  "a", "CsrFrlServlet", "csrFrl" },
            { "KSS CSR",   "Fund Receipts",               "CsrFundServlet",            "&#8377;",  "c", "CsrFundServlet", "csrFund" },
            { "KSS CSR",   "Work Orders",                 "CsrWorkOrderServlet",       "&#9998;",  "d", "CsrWorkOrderServlet", "csrWorkOrder" },
            { "KSS CSR",   "Invoices",                    "CsrInvoiceServlet",         "&#9783;",  "e", "CsrInvoiceServlet", "csrInvoice" },

@@ -115,3 +115,4 @@ input[type=submit] { padding: 6px 22px !important; font-size: 12px !important; }
 /* keep short codes, dates and links on one line */
 .as-table td:nth-child(2), .vd-table td:nth-child(2), .kc-table td:nth-child(2) { white-space: nowrap; }
 .csr-pdf { white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+.csr-particulars { max-width: 220px !important; }
