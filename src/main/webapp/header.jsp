@@ -540,7 +540,12 @@
         </a>
         <ul class="dropdown-menu">
           <li>
-            <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") || currentURI.contains("scholarshipList.jsp") || currentURI.contains("ScholarshipApplication.jsp") ? "active" : "" %>">
+            <a href="ScholarshipApplication.jsp" class="<%= currentURI.contains("ScholarshipApplication.jsp") ? "active" : "" %>">
+              Apply Scholarship
+            </a>
+          </li>
+          <li>
+            <a href="ScholarshipListServelt" class="<%= currentURI.contains("ScholarshipListServelt") || currentURI.contains("scholarshipList.jsp") ? "active" : "" %>">
               Scholarship List
             </a>
           </li>
