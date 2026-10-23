@@ -34,7 +34,7 @@
 
   <div class="csr-header">
     <div>
-      <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Fund Receipts</div>
+      <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending &rsaquo; Fund Receipts</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
     <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
@@ -200,7 +200,7 @@ $(function () {
   }
   check();
   if ($sel.find('option').length < 2 && !loadError)
-    $('#csrError').text('No funds request letter is waiting for money. Add a Funds Request Letter first (KSS CSR > Funds Request Letters).').show();
+    $('#csrError').text('No funds request letter is waiting for money. Add a Funds Request Letter first (<%= com.Bean.AppConfig.code() %> CSR > Funds Request Letters).').show();
 
   $('#fundForm').on('submit', function (e) {
     e.preventDefault();

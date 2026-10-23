@@ -14,7 +14,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSS CSR Dashboard</title>
+<title><%= com.Bean.AppConfig.code() %> CSR Dashboard</title>
 
 <%@ include file="header.jsp" %>
 
@@ -75,7 +75,7 @@
 <div class="csr-page">
   <div class="csr-header">
     <div>
-      <div class="csr-subtitle">KSS CSR Amount Spending</div>
+      <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending</div>
       <h1 class="csr-title">Dashboard</h1>
     </div>
     <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>

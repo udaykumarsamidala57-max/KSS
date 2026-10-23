@@ -10,6 +10,10 @@
     boolean isGlobalUser = roless != null && "Global".equalsIgnoreCase(roless.replace('\u00A0', ' ').trim());
     String deptss = (String) sesso.getAttribute("department");
     String branchs = (String) sesso.getAttribute("branch");
+    // institution of this request (KSS / SSS, chosen after login by Global users; com.Bean.AppConfig)
+    String instCode = com.Bean.AppConfig.code();
+    boolean csrOnly = com.Bean.AppConfig.csrOnly();
+    String homePage = com.Bean.AppConfig.homePage();
 %>
 <style>
   /* Scoped Variables & Isolated CSS to prevent leaking into main page body */
@@ -285,6 +289,21 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
 
+  .kss-navbar-scope .inst-switch {
+    color: #ffffff !important;
+    background-color: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .kss-navbar-scope .inst-switch b { font-weight: 700; }
+  .kss-navbar-scope .inst-switch span { opacity: .75; margin: 0 2px; }
+  .kss-navbar-scope .inst-switch:hover { background-color: rgba(255, 255, 255, 0.18); }
+
   .kss-navbar-scope .logout-btn {
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.15);
@@ -499,10 +518,10 @@
 <!-- TOP NAVIGATION BAR -->
 <nav class="kss-navbar-scope navbar">
   <div class="navbar-container">
-    <a href="Dashboard.jsp" class="navbar-brand">
+    <a href="<%= homePage %>" class="navbar-brand">
       <div class="brand-text-group">
-        <span class="brand-title">Karnataka Seva Sangha</span>
-        <span class="brand-subtitle">Higher Education Scholarship Portal</span>
+        <span class="brand-title"><%= com.Bean.AppConfig.name() %></span>
+        <span class="brand-subtitle"><%= com.Bean.AppConfig.portalTitle() %></span>
       </div>
     </a>
     
@@ -531,9 +550,10 @@
     <ul class="navbar-menu">
       <!-- Combined Scholarship Options Dropdown -->
       <li>
-        <a href="Dashboard.jsp" class="<%= currentURI.contains("Dashboard.jsp") ? "active" : "" %>">
+        <a href="<%= homePage %>" class="<%= currentURI.contains("Dashboard.jsp") || (csrOnly && currentURI.contains("CsrDashboardServlet")) ? "active" : "" %>">
           Dashboard
         </a>
+      <% if (!csrOnly) { %>
       <li>
         <a href="#" class="dropdown-toggle <%= isScholarshipActive ? "active" : "" %>" onclick="return false;">
           Scholarships
@@ -594,6 +614,7 @@
           <% } %>
         </ul>
       </li>
+      <% } %>
     </ul>
 
     <% if (isGlobalUser) {
@@ -611,12 +632,21 @@
            { "Masters",   "Organization Master",         "organization.jsp",          "&#9873;",  "f", "organization.jsp" },
            { "Masters",   "KSS Course Master",           "KssCourseMasterServlet",    "&#9881;",  "f", "KssCourseMasterServlet", "kssCourseMaster.jsp" }
          };
+         // CSR-only deployment: no scholarship approvals or masters; CSR tiles carry this institution's code
+         java.util.List<String[]> appList = new java.util.ArrayList<>();
+         for (String[] a : apps) {
+           if (csrOnly && !"KSS CSR".equals(a[0])) continue;
+           String[] b = a.clone();
+           if ("KSS CSR".equals(b[0])) b[0] = instCode + " CSR";
+           appList.add(b);
+         }
+         apps = appList.toArray(new String[0][]);
          boolean appsActive = false;
          for (String[] a : apps) for (int k = 5; k < a.length; k++) if (currentURI.contains(a[k])) appsActive = true;
     %>
-    <!-- Gmail-style 9-dots launcher: Approvals, KSS CSR, Masters (Global only) -->
+    <%-- Gmail-style 9-dots launcher: Approvals, CSR, Masters (Global only) --%>
     <div class="kss-apps">
-      <button type="button" class="kss-apps-btn <%= appsActive ? "is-active" : "" %>" id="kssAppsBtn" aria-label="Apps" aria-haspopup="true" aria-expanded="false" title="Approvals, KSS CSR &amp; Masters">
+      <button type="button" class="kss-apps-btn <%= appsActive ? "is-active" : "" %>" id="kssAppsBtn" aria-label="Apps" aria-haspopup="true" aria-expanded="false" title="<%= csrOnly ? instCode + " CSR" : "Approvals, " + instCode + " CSR &amp; Masters" %>">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
       </button>
       <div class="kss-apps-panel" id="kssAppsPanel" role="dialog" aria-label="Apps">
@@ -648,6 +678,15 @@
 
     <!-- Right Side: User Details & Logout Button -->
     <div class="user-profile-section">
+      <% if (isGlobalUser) {
+           // switch institution (Global users): current code, link to each other institution { code, name, what }
+           String[][] instChoices = com.Bean.AppConfig.choices();
+           for (int ic = 0; ic < instChoices.length; ic++) {
+             if (instChoices[ic][0].equals(instCode)) continue; %>
+      <a href="InstitutionServlet?code=<%= instChoices[ic][0] %>" class="inst-switch" title="Switch to <%= instChoices[ic][1] %>">
+        <b><%= instCode %></b> <span>&#8644;</span> <%= instChoices[ic][0] %>
+      </a>
+      <% } } %>
       <div class="user-details">
         <span class="user-name"><%= userss != null ? userss : "User" %></span>
         <div class="user-meta-group">
@@ -708,7 +747,7 @@
 <footer class="kss-footer-scope">
   <div class="footer-container">
     <div>
-      &copy; <%= java.time.Year.now().getValue() %> Karnataka Seva Sangha. All rights reserved.
+      &copy; <%= java.time.Year.now().getValue() %> <%= com.Bean.AppConfig.name() %>. All rights reserved.
     </div>
     <div>
       Developed by <span class="developer-credit">SSS IT | OFFICE CENTRAL</span>&nbsp;&nbsp;<span class="tagline"></span>

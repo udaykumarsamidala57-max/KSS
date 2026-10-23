@@ -70,7 +70,7 @@ public class CsrInvoiceServlet extends HttpServlet {
 
     private static final String INV_COLUMNS =
             "i.id, i.work_order_id, i.invoice_type, i.invoice_number, DATE_FORMAT(i.invoice_date, '%Y-%m-%d') AS inv_date_iso, "
-          + "DATE_FORMAT(i.invoice_date, '%d-%m-%Y') AS inv_date_txt, i.price, i.gst_percent, i.gst_amount, i.amount, "
+          + "DATE_FORMAT(i.invoice_date, '%d-%m-%Y') AS inv_date_txt, i.particulars, i.price, i.gst_percent, i.gst_amount, i.amount, "
           + "i.attachment_name, i.attachment_type, i.attachment_size, i.created_by, "
           + "DATE_FORMAT(i.created_at, '%d-%m-%Y') AS created_txt, "
           + "w.wo_number, w.vendor_name, w.total_amount AS wo_total, w.letter_id, l.letter_number, l.letter_name, "
@@ -82,6 +82,7 @@ public class CsrInvoiceServlet extends HttpServlet {
           + "(SELECT p.amount FROM kss_csr_invoice p WHERE p.id = i.proforma_id) AS proforma_amount, "
           + "(SELECT s.id FROM kss_csr_invoice s WHERE s.proforma_id = i.id) AS settled_by_id, "
           + "(SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id) AS settled_by_number, "
+          + "(SELECT GROUP_CONCAT(p.voucher_no ORDER BY p.payment_date, p.id SEPARATOR ', ') FROM kss_csr_vendor_payment p WHERE p.invoice_id = i.id) AS voucher_no, "
           + advanceClaimed("i") + " AS advance_claimed, " + claimable("i") + " AS claimable";
 
     private static final String INV_FROM =
@@ -239,6 +240,7 @@ public class CsrInvoiceServlet extends HttpServlet {
         String priceS = trim(request.getParameter("price"));
         String gstS = trim(request.getParameter("gst"));
         String type = trim(request.getParameter("invoiceType"));
+        String particulars = trim(request.getParameter("particulars"));
         String proformaS = trim(request.getParameter("proformaId"));
         // tax invoice: raise an FRL for it? ("0" = no, the money already came through the proforma advance)
         int frlRequired = "Tax Invoice".equals(type) && "0".equals(trim(request.getParameter("frlRequired"))) ? 0 : 1;
@@ -247,6 +249,7 @@ public class CsrInvoiceServlet extends HttpServlet {
         if (!woParam.matches("\\d+"))  { sendJson(response, 400, fail("Please select the Work Order.")); return; }
         if (invNumber.isEmpty())       { sendJson(response, 400, fail("Please enter the Invoice Number.")); return; }
         if (invNumber.length() > 100)  { sendJson(response, 400, fail("Invoice Number is too long.")); return; }
+        if (particulars.length() > 500) { sendJson(response, 400, fail("Particulars is too long (maximum 500 characters).")); return; }
         LocalDate date;
         try {
             date = LocalDate.parse(invDate);
@@ -300,19 +303,21 @@ public class CsrInvoiceServlet extends HttpServlet {
         }
 
         if (!isNew) {
-            String oldType = null, frl = null, settledBy = null;
+            String oldType = null, frl = null, settledBy = null, voucher = null;
             int oldWo = 0, oldPf = 0, oldFrlReq = 1;
             BigDecimal oldAmount = null;
             try (PreparedStatement ps = con.prepareStatement(
                     "SELECT i.invoice_type, i.work_order_id, i.amount, COALESCE(i.proforma_id, 0), i.frl_required, "
                   + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id WHERE fi.invoice_id = i.id), "
-                  + "(SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id) "
+                  + "(SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id), "
+                  + "(SELECT GROUP_CONCAT(p.voucher_no ORDER BY p.payment_date, p.id SEPARATOR ', ') FROM kss_csr_vendor_payment p WHERE p.invoice_id = i.id) "
                   + "FROM kss_csr_invoice i WHERE i.id = ?")) {
                 ps.setInt(1, id);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         oldType = rs.getString(1); oldWo = rs.getInt(2); oldAmount = rs.getBigDecimal(3);
                         oldPf = rs.getInt(4); oldFrlReq = rs.getInt(5); frl = rs.getString(6); settledBy = rs.getString(7);
+                        voucher = rs.getString(8);
                     }
                 }
             }
@@ -321,6 +326,12 @@ public class CsrInvoiceServlet extends HttpServlet {
             if (settledBy != null && (!"Proforma".equals(type) || oldWo != woId || oldAmount.compareTo(amount) != 0)) {
                 sendJson(response, 400, fail("This proforma is settled by tax invoice " + settledBy
                         + ", so its type, work order and amount cannot be changed."));
+                return;
+            }
+            // a tax invoice already paid through a payment voucher keeps its type, work order and amount
+            if (voucher != null && (!oldType.equals(type) || oldWo != woId || oldAmount.compareTo(amount) != 0)) {
+                sendJson(response, 400, fail("This invoice is paid through payment voucher(s) " + voucher
+                        + ", so its type, work order and amount cannot be changed. Delete the voucher(s) first."));
                 return;
             }
             // an invoice already in an FRL keeps its type, work order, amount and proforma link
@@ -393,8 +404,8 @@ public class CsrInvoiceServlet extends HttpServlet {
         try {
             if (isNew) {
                 try (PreparedStatement ps = con.prepareStatement(
-                        "INSERT INTO kss_csr_invoice (work_order_id, invoice_type, proforma_id, frl_required, invoice_number, invoice_date, price, gst_percent, gst_amount, amount, "
-                      + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        "INSERT INTO kss_csr_invoice (work_order_id, invoice_type, proforma_id, frl_required, invoice_number, invoice_date, particulars, price, gst_percent, gst_amount, amount, "
+                      + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS)) {
                     int i = 1;
                     ps.setInt(i++, woId);
@@ -403,6 +414,7 @@ public class CsrInvoiceServlet extends HttpServlet {
                     ps.setInt(i++, frlRequired);
                     ps.setString(i++, invNumber);
                     ps.setDate(i++, Date.valueOf(date));
+                    ps.setString(i++, particulars.isEmpty() ? null : particulars);
                     ps.setBigDecimal(i++, price);
                     ps.setBigDecimal(i++, gst);
                     ps.setBigDecimal(i++, gstAmt);
@@ -417,7 +429,7 @@ public class CsrInvoiceServlet extends HttpServlet {
                     try (ResultSet keys = ps.getGeneratedKeys()) { keys.next(); id = keys.getInt(1); }
                 }
             } else {
-                String sql = "UPDATE kss_csr_invoice SET work_order_id=?, invoice_type=?, proforma_id=?, frl_required=?, invoice_number=?, invoice_date=?, price=?, gst_percent=?, "
+                String sql = "UPDATE kss_csr_invoice SET work_order_id=?, invoice_type=?, proforma_id=?, frl_required=?, invoice_number=?, invoice_date=?, particulars=?, price=?, gst_percent=?, "
                            + "gst_amount=?, amount=?, updated_by=?"
                            + (file != null ? ", attachment=?, attachment_name=?, attachment_type=?, attachment_size=?" : "")
                            + " WHERE id=?";
@@ -429,6 +441,7 @@ public class CsrInvoiceServlet extends HttpServlet {
                     ps.setInt(i++, frlRequired);
                     ps.setString(i++, invNumber);
                     ps.setDate(i++, Date.valueOf(date));
+                    ps.setString(i++, particulars.isEmpty() ? null : particulars);
                     ps.setBigDecimal(i++, price);
                     ps.setBigDecimal(i++, gst);
                     ps.setBigDecimal(i++, gstAmt);
@@ -467,15 +480,20 @@ public class CsrInvoiceServlet extends HttpServlet {
         String idParam = trim(request.getParameter("id"));
         if (!idParam.matches("\\d+")) { sendJson(response, 400, fail("Invalid invoice.")); return; }
         int id = Integer.parseInt(idParam);
-        String number = null, frl = null, settledBy = null;
+        String number = null, frl = null, settledBy = null, voucher = null;
         try (PreparedStatement ps = con.prepareStatement(
                 "SELECT i.invoice_number, (SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
-              + "WHERE fi.invoice_id = i.id), (SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id) "
+              + "WHERE fi.invoice_id = i.id), (SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id), "
+              + "(SELECT GROUP_CONCAT(p.voucher_no ORDER BY p.payment_date, p.id SEPARATOR ', ') FROM kss_csr_vendor_payment p WHERE p.invoice_id = i.id) "
               + "FROM kss_csr_invoice i WHERE i.id = ?")) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) { number = rs.getString(1); frl = rs.getString(2); settledBy = rs.getString(3); }
+                if (rs.next()) { number = rs.getString(1); frl = rs.getString(2); settledBy = rs.getString(3); voucher = rs.getString(4); }
             }
+        }
+        if (voucher != null) {
+            sendJson(response, 409, fail("Cannot delete " + number + ": it is paid through payment voucher(s) " + voucher + ". Delete the voucher(s) first."));
+            return;
         }
         if (settledBy != null) {
             sendJson(response, 409, fail("Cannot delete proforma " + number + ": it is settled by tax invoice " + settledBy + "."));
@@ -502,16 +520,17 @@ public class CsrInvoiceServlet extends HttpServlet {
     static List<Map<String, String>> loadWorkOrders(Connection con) throws Exception {
         List<Map<String, String>> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(
-                "SELECT w.id, w.wo_number, DATE_FORMAT(w.wo_date, '%d-%m-%Y') AS wo_date_txt, w.vendor_name, w.total_amount, "
+                "SELECT w.id, w.letter_id, w.wo_number, DATE_FORMAT(w.wo_date, '%d-%m-%Y') AS wo_date_txt, w.vendor_name, w.total_amount, "
               + "l.letter_number, COALESCE(SUM(" + counted("i") + "), 0) AS invoiced, COUNT(i.id) AS inv_count "
               + "FROM kss_csr_work_order w JOIN kss_csr_approval_letter l ON l.id = w.letter_id "
               + "LEFT JOIN kss_csr_invoice i ON i.work_order_id = w.id "
-              + "GROUP BY w.id, w.wo_number, w.wo_date, w.vendor_name, w.total_amount, l.letter_number "
+              + "GROUP BY w.id, w.letter_id, w.wo_number, w.wo_date, w.vendor_name, w.total_amount, l.letter_number "
               + "ORDER BY w.wo_date DESC, w.id DESC");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Map<String, String> m = new LinkedHashMap<>();
                 m.put("id", String.valueOf(rs.getInt("id")));
+                m.put("letterId", String.valueOf(rs.getInt("letter_id")));
                 m.put("woNumber", rs.getString("wo_number"));
                 m.put("woDateTxt", rs.getString("wo_date_txt"));
                 m.put("vendorName", rs.getString("vendor_name"));
@@ -560,6 +579,8 @@ public class CsrInvoiceServlet extends HttpServlet {
         r.put("invoiceNumber", rs.getString("invoice_number"));
         r.put("invoiceDate", rs.getString("inv_date_iso"));
         r.put("invoiceDateTxt", rs.getString("inv_date_txt"));
+        r.put("particulars", rs.getString("particulars"));
+        r.put("voucherNo", rs.getString("voucher_no"));
         r.put("price", money2(rs.getBigDecimal("price")));
         r.put("gst", rs.getBigDecimal("gst_percent").stripTrailingZeros().toPlainString());
         r.put("gstAmount", money2(rs.getBigDecimal("gst_amount")));

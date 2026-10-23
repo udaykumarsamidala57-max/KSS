@@ -388,6 +388,17 @@ public class CsrWorkOrderServlet extends HttpServlet {
                         + " cannot be less than the amount already invoiced Rs " + invoiced.toPlainString() + "."));
                 return;
             }
+            BigDecimal advancePaid;
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT COALESCE(SUM(amount), 0) FROM kss_csr_vendor_advance WHERE work_order_id = ?")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) { rs.next(); advancePaid = rs.getBigDecimal(1); }
+            }
+            if (total.compareTo(advancePaid) < 0) {
+                sendJson(response, 400, fail("Work order total Rs " + total.toPlainString()
+                        + " cannot be less than the advance already paid to the vendor Rs " + advancePaid.toPlainString() + "."));
+                return;
+            }
         }
         BigDecimal balance = letterAmount.subtract(others);
         if (total.compareTo(balance) > 0) {
@@ -518,6 +529,16 @@ public class CsrWorkOrderServlet extends HttpServlet {
         if (invCount > 0) {
             sendJson(response, 409, fail("Cannot delete " + number + ": it has " + invCount + " invoice"
                     + (invCount == 1 ? "" : "s") + ". Delete the invoices first."));
+            return;
+        }
+        int advCount = 0;
+        try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM kss_csr_vendor_advance WHERE work_order_id = ?")) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) advCount = rs.getInt(1); }
+        }
+        if (advCount > 0) {
+            sendJson(response, 409, fail("Cannot delete " + number + ": " + advCount + " advance payment"
+                    + (advCount == 1 ? " is" : "s are") + " recorded against it. Delete the advances first."));
             return;
         }
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM kss_csr_work_order WHERE id = ?")) {

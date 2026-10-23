@@ -169,6 +169,7 @@ public class CsrLetterServlet extends HttpServlet {
                   + "f.bank_name, f.remarks, f.attachment_size, f.frl_id, r.frl_number "
                   + "FROM kss_csr_fund_receipt f LEFT JOIN kss_csr_fund_request r ON r.id = f.frl_id "
                   + "WHERE f.letter_id = ? ORDER BY f.receipt_date, f.id", id));
+            loadVendorPayments(request, con, id);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Database error: " + e.getMessage());
@@ -179,6 +180,38 @@ public class CsrLetterServlet extends HttpServlet {
         }
         request.setAttribute("letter", letter);
         request.getRequestDispatcher("/csrLetterView.jsp").forward(request, response);
+    }
+
+    /**
+     * Payments to vendors under this letter: advances against work orders, payment vouchers against tax invoices,
+     * and the tax invoices with their particulars. Kept separate so the rest of the page still opens if
+     * KSS_csr_vendor_payment.sql has not been run yet.
+     */
+    private void loadVendorPayments(HttpServletRequest request, Connection con, int id) {
+        try {
+            request.setAttribute("advances", rows(con,
+                    "SELECT a.id, DATE_FORMAT(a.advance_date, '%d-%m-%Y') AS advance_date, a.amount, a.payment_mode, a.reference_no, "
+                  + "a.bank_name, a.remarks, a.attachment_size, a.created_by, w.id AS wo_id, w.wo_number, w.vendor_name "
+                  + "FROM kss_csr_vendor_advance a JOIN kss_csr_work_order w ON w.id = a.work_order_id "
+                  + "WHERE w.letter_id = ? ORDER BY a.advance_date, a.id", id));
+            request.setAttribute("vouchers", rows(con,
+                    "SELECT p.id, p.voucher_no, DATE_FORMAT(p.payment_date, '%d-%m-%Y') AS payment_date, p.bill_amount, "
+                  + "p.debit_note_amount, p.debit_note_remarks, p.tds_section, p.tds_percent, p.tds_amount, p.retention_percent, "
+                  + "p.retention_amount, p.advance_adjusted, p.net_paid, p.payment_mode, p.reference_no, p.bank_name, p.remarks, "
+                  + "p.attachment_size, p.created_by, i.id AS invoice_id, i.invoice_number, DATE_FORMAT(i.invoice_date, '%d-%m-%Y') AS invoice_date, "
+                  + "i.price, i.gst_percent, i.gst_amount, "
+                  + "w.id AS wo_id, w.wo_number, w.vendor_name "
+                  + "FROM kss_csr_vendor_payment p JOIN kss_csr_invoice i ON i.id = p.invoice_id "
+                  + "JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+                  + "WHERE w.letter_id = ? ORDER BY p.payment_date, p.id", id));
+            request.setAttribute("billParticulars", rows(con,
+                    "SELECT i.id, i.particulars FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+                  + "WHERE w.letter_id = ?", id));
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("payError", "Vendor payments could not be loaded: " + e.getMessage()
+                    + " (Has KSS_csr_vendor_payment.sql been run on the database?)");
+        }
     }
 
     /** Runs a query with one int parameter; every column becomes a string (money with 2 decimals). */

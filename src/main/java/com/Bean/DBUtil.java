@@ -28,7 +28,21 @@ public class DBUtil {
         }
     }
 
+    /**
+     * Connection to the schema of the institution of the current request (AppConfig / ModuleFilter):
+     * KSS uses the schema in URL above, SSS uses SSS_CSR on the same MySQL server.
+     */
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+        String schema = AppConfig.schema();
+        if (schema != null) {
+            try {
+                con.setCatalog(schema);
+            } catch (SQLException e) {
+                con.close();
+                throw e;
+            }
+        }
+        return con;
     }
-}
+}

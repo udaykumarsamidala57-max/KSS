@@ -58,6 +58,8 @@ public class LoginServlet extends HttpServlet {
                 String department = clean(rs.getString("department"));
                 String branch = clean(rs.getString("branch")); // Retrieve branch from DB
 
+                HttpSession old = request.getSession(false);
+                if (old != null) old.invalidate();          // new session id at every login
                 HttpSession session = request.getSession();
                 session.setAttribute("username", uname);
                 session.setAttribute("role", role);
@@ -66,7 +68,9 @@ public class LoginServlet extends HttpServlet {
                 
                 // Redirect based on role / department
                 if ("Global".equalsIgnoreCase(role)) {
-                    response.sendRedirect("Dashboard.jsp");
+                    // Global users work in KSS and SSS: choose the institution first (selectInstitution.jsp)
+                    session.removeAttribute(com.Bean.AppConfig.SESSION_KEY);
+                    response.sendRedirect("selectInstitution.jsp");
                 } else if ("incharge".equalsIgnoreCase(role) || "Finance".equalsIgnoreCase(department)) {
                     response.sendRedirect("Dashboard.jsp");
                 } else if ("HOSTEL".equalsIgnoreCase(department)) {
@@ -88,4 +92,4 @@ public class LoginServlet extends HttpServlet {
             try { if (con != null) con.close(); } catch (Exception ignored) {}
         }
     }
-}
+}

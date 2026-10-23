@@ -34,7 +34,7 @@
 
   <div class="csr-header">
     <div>
-      <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Funds Request Letters</div>
+      <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending &rsaquo; Funds Request Letters</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
     <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
@@ -173,7 +173,7 @@ $(function () {
       $b.append($tr); n++;
     });
     if (!lid) $b.append('<tr><td colspan="8" class="csr-empty">Select the approval letter to see its invoices.</td></tr>');
-    else if (!n) $b.append('<tr><td colspan="8" class="csr-empty">No invoices waiting for an FRL on this approval letter. Add the invoice first (KSS CSR &gt; Invoices).</td></tr>');
+    else if (!n) $b.append('<tr><td colspan="8" class="csr-empty">No invoices waiting for an FRL on this approval letter. Add the invoice first (<%= com.Bean.AppConfig.code() %> CSR &gt; Invoices).</td></tr>');
     total();
   }
   function total() {

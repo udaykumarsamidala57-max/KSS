@@ -24,6 +24,8 @@ kss_csr_fund_request 1 ── many kss_csr_fund_receipt (via nullable receipt.fr
 kss_csr_approval_letter 1 ── many kss_csr_fund_receipt (receipt.letter_id also remains required)
 kss_csr_fund_request many ── many kss_csr_invoice (through kss_csr_frl_invoice;
                                                 UNIQUE invoice_id means each invoice can be linked once)
+kss_csr_work_order 1 ── many kss_csr_vendor_advance (advances paid to the vendor)
+kss_csr_invoice 1 ── many kss_csr_vendor_payment (payment vouchers = part payments; tax invoices only)
 kss_csr_invoice 1 ── 0..1 settling invoice (self-reference through proforma_id;
                                          UNIQUE proforma_id permits one tax invoice per proforma)
 ```
@@ -159,6 +161,7 @@ Application login and user attributes. This schema guide describes columns only;
 
 ## CSR funding tables
 
+
 ### `kss_csr_approval_letter`
 Approved CSR activity/funding authorization, including its uploaded signed letter. This is the parent record for CSR work orders and fund requests/receipts.
 
@@ -237,6 +240,7 @@ Proforma or tax invoice received against a work order. The final table includes 
 | `frl_required` | `TINYINT(1) NOT NULL DEFAULT 1`; whether this invoice should be included in an FRL; added by `KSS_csr_invoice_frl_required.sql`. |
 | `invoice_number` | `VARCHAR(100) NOT NULL`. |
 | `invoice_date` | `DATE NOT NULL`. |
+| `particulars` | `VARCHAR(500) NULL`; what the bill is for, shown on the payment voucher; added by `KSS_csr_vendor_payment.sql`. |
 | `price` | `DECIMAL(14,2) NOT NULL`; pre-GST price. |
 | `gst_percent` | `DECIMAL(5,2) NOT NULL DEFAULT 0.00`. |
 | `gst_amount` | `DECIMAL(14,2) NOT NULL DEFAULT 0.00`. |
@@ -310,6 +314,50 @@ Bridge table linking an FRL to the invoice it claims, with the claim amount reco
 
 **Keys:** composite PK `(frl_id, invoice_id)`; unique `invoice_id`; FKs `frl_id → kss_csr_fund_request.id ON DELETE CASCADE`, `invoice_id → kss_csr_invoice.id ON DELETE RESTRICT`.
 
+### `kss_csr_vendor_advance`
+Advance paid to a vendor against a work order (not a proforma). It is adjusted later against that vendor's tax invoices in `kss_csr_vendor_payment.advance_adjusted`. Added by `KSS_csr_vendor_payment.sql`.
+
+| Column | Definition / meaning |
+|---|---|
+| `id` | `INT NOT NULL AUTO_INCREMENT`; primary key. |
+| `work_order_id` | `INT NOT NULL`; FK to work order; delete restricted. |
+| `advance_date` | `DATE NOT NULL`. |
+| `amount` | `DECIMAL(14,2) NOT NULL`; advance paid. |
+| `payment_mode` | `ENUM('NEFT','RTGS','IMPS','UPI','Cheque','DD','Cash','Other') NOT NULL DEFAULT 'NEFT'`. |
+| `reference_no` | `VARCHAR(100) NULL`; UTR / cheque / DD number. |
+| `bank_name` | `VARCHAR(150) NULL`. |
+| `remarks` | `VARCHAR(500) NULL`. |
+| `attachment`, `attachment_name`, `attachment_type`, `attachment_size` | Optional payment proof (`LONGBLOB`, `VARCHAR(255)`, `VARCHAR(50)`, `INT`). |
+| `created_by`, `created_at`, `updated_by`, `updated_at` | Audit columns. |
+
+**Keys:** PK `id`; index `work_order_id`; FK `work_order_id → kss_csr_work_order.id ON DELETE RESTRICT`.
+**Rules in code (`CsrPaymentServlet`):** total advances on a work order ≤ work order total; an advance cannot be reduced or deleted below the amount already adjusted in vouchers of that work order.
+
+### `kss_csr_vendor_payment`
+Payment voucher: one payment (full or part) of a tax invoice to the vendor, with deductions. A bill may have one or more vouchers. Added by `KSS_csr_vendor_payment.sql`; `KSS_csr_vendor_payment_partial.sql` converts an older copy that had a unique key on `invoice_id`.
+
+| Column | Definition / meaning |
+|---|---|
+| `id` | `INT NOT NULL AUTO_INCREMENT`; primary key. |
+| `invoice_id` | `INT NOT NULL`; FK to the tax invoice paid (several vouchers per invoice allowed); delete restricted. |
+| `voucher_no` | `VARCHAR(100) NOT NULL`; globally unique voucher number. |
+| `payment_date` | `DATE NOT NULL`; not before the invoice date (checked in code). |
+| `bill_amount` | `DECIMAL(14,2) NOT NULL`; copy of the invoice amount when saved. |
+| `debit_note_amount`, `debit_note_remarks` | `DECIMAL(14,2) NOT NULL DEFAULT 0.00`, `VARCHAR(500) NULL`; reason required when amount > 0. |
+| `tds_section`, `tds_percent`, `tds_amount` | `VARCHAR(20) NULL` (194C / 194J offered in the form; NULL = not deducted), `DECIMAL(5,2)`, `DECIMAL(14,2)`; TDS on the taxable value (invoice price). |
+| `retention_percent`, `retention_amount` | `DECIMAL(5,2)`, `DECIMAL(14,2)`; retention on the bill amount, held for later release. |
+| `advance_adjusted` | `DECIMAL(14,2) NOT NULL DEFAULT 0.00`; part of the work order's vendor advances adjusted here. |
+| `net_paid` | `DECIMAL(14,2) NOT NULL`; amount paid now by bank / cheque. The voucher **settles** net_paid + debit note + TDS + retention + advance adjusted of the bill. |
+| `payment_mode`, `reference_no`, `bank_name`, `remarks` | As in `kss_csr_vendor_advance`. |
+| `attachment`, `attachment_name`, `attachment_type`, `attachment_size` | Optional payment proof. |
+| `created_by`, `created_at`, `updated_by`, `updated_at` | Audit columns. |
+
+**Keys:** PK `id`; index `invoice_id` (`idx_csr_pay_invoice`); unique `voucher_no` (`uq_csr_pay_voucher`); FK `invoice_id → kss_csr_invoice.id ON DELETE RESTRICT`.
+**Rules in code:** tax invoices only; Σ settled of a bill's vouchers ≤ bill amount; Σ TDS ≤ taxable value; Σ retention ≤ bill; advance adjusted ≤ advances paid − adjusted in other vouchers of the same work order; while a voucher exists the invoice's type, work order and amount are locked and it cannot be deleted.
+
+## Other institutions
+Each institution has its own **schema on the same MySQL server** with the same CSR tables (names stay `kss_csr_*`): KSS → `KSS`, SSS → `SSS_CSR`. The application switches schema per user choice (`AppConfig`, `DBUtil.getConnection()`); logins always come from `KSS.users`. A new schema is created from `Dump20261016/NEW_INSTITUTION_CSR_database.sql` (its `users` table is unused). Any later schema change must be applied to every institution's schema.
+
 ## End-to-end workflows
 
 ### Scholarship
@@ -324,6 +372,7 @@ Bridge table linking an FRL to the invoice it claims, with the claim amount reco
 3. Record proforma or tax invoices in `kss_csr_invoice`. A tax invoice may point to the proforma it settles using `proforma_id`.
 4. Create an FRL in `kss_csr_fund_request`; link claimed invoices in `kss_csr_frl_invoice` and set each invoice's `claim_amount`.
 5. Record received money in `kss_csr_fund_receipt`, linked to both the approval letter and, where known, the FRL.
+6. Pay vendors: record advances against a work order in `kss_csr_vendor_advance`; pay each tax invoice through one or more `kss_csr_vendor_payment` vouchers (part payments; debit note, TDS, retention, advance adjusted, amount paid). This is separate from FRLs.
 
 The meanings above describe stored relationships. Business rules such as validating amounts against approvals, invoice totals, or prior advances may also be enforced in Java code and are not guaranteed solely by the listed SQL constraints.
 

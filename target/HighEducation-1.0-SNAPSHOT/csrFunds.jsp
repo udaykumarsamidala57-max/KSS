@@ -11,7 +11,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSS CSR Fund Receipts</title>
+<title><%= com.Bean.AppConfig.code() %> CSR Fund Receipts</title>
 
 <!-- INCLUDE SHARED HEADER & MENU -->
 <%@ include file="header.jsp" %>
@@ -30,7 +30,7 @@
 
   <div class="csr-header">
     <div>
-      <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Management Approvals</div>
+      <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending &rsaquo; Management Approvals</div>
       <h1 class="csr-title">Fund Receipts</h1>
     </div>
     <div class="csr-stats">

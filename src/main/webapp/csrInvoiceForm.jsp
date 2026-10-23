@@ -34,10 +34,10 @@
 
   <div class="csr-header">
     <div>
-      <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Step 3</div>
+      <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending &rsaquo; Step 3</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn" id="btnBack">&#8592; Back to Management Approvals</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>
@@ -89,6 +89,12 @@
           </select>
         </div>
 
+        <div class="csr-field span-3">
+          <label for="fPart">Particulars</label>
+          <input type="text" id="fPart" name="particulars" class="csr-input" maxlength="500">
+          <div class="csr-hint">What the bill is for. Shown on the payment voucher.</div>
+        </div>
+
         <div class="csr-field">
           <label for="fPrice">Price (&#8377;) <span class="req">*</span></label>
           <input type="number" id="fPrice" name="price" class="csr-input csr-amount" min="0.01" step="0.01" placeholder="0.00">
@@ -124,7 +130,7 @@
         </div>
 
         <div class="csr-form-actions">
-          <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">Cancel</a>
+          <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn" id="btnCancel">Cancel</a>
           <button type="submit" class="csr-btn" id="btnSave"></button>
         </div>
       </div>
@@ -143,6 +149,8 @@ $(function () {
   var RS = String.fromCharCode(8377);
 
   if (loadError) $('#csrError').text(loadError).show();
+  // opened from a management approval page: go back there after saving
+  var backToLetter = new URLSearchParams(window.location.search).get('back') === 'letter';
 
   function money(v) {
     return RS + ' ' + Number(v || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -248,11 +256,12 @@ $(function () {
     $('#fType').val(inv.invoiceType || 'Tax Invoice');
     $('#fFrlReq').val(inv.frlRequired === '0' ? '0' : '1');
     fillProformas();
-    if (inv.frlId || inv.settledById) {
-      // in an FRL, or a proforma already settled: type, work order, amount (and proforma link) are locked
+    if (inv.frlId || inv.settledById || inv.voucherNo) {
+      // in an FRL, paid through a voucher, or a proforma already settled: type, work order, amount (and proforma link) are locked
       $('#csrError').removeClass('csr-alert-err').addClass('csr-alert-ok')
         .text(inv.settledById ? 'This proforma is settled by tax invoice ' + inv.settledByNumber + '. Type, work order, price and GST cannot be changed.'
-                              : 'This invoice is included in FRL ' + inv.frlNumber + '. Type, work order, price, GST and proforma cannot be changed.').show();
+            : inv.frlId ? 'This invoice is included in FRL ' + inv.frlNumber + '. Type, work order, price, GST and proforma cannot be changed.'
+            : 'This invoice is paid through payment voucher(s) ' + inv.voucherNo + '. Type, work order, price and GST cannot be changed.').show();
       $wo.prop('disabled', true).after($('<input type="hidden" name="woId">').val(inv.woId));
       $('#fType').prop('disabled', true).after($('<input type="hidden" name="invoiceType">').val(inv.invoiceType));
       $('#fPf').prop('disabled', true).after($('<input type="hidden" name="proformaId">').val(inv.proformaId || ''));
@@ -262,6 +271,7 @@ $(function () {
     }
     $('#fNumber').val(inv.invoiceNumber);
     $('#fDate').val(inv.invoiceDate);
+    $('#fPart').val(inv.particulars || '');
     $('#fPrice').val(inv.price);
     if ($('#fGst option[value="' + inv.gst + '"]').length === 0) $('#fGst').append($('<option></option>').attr('value', inv.gst).text(inv.gst + ' %'));
     $('#fGst').val(inv.gst);
@@ -280,7 +290,11 @@ $(function () {
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
   recalc();
-  if (!workOrders.length && !loadError) $('#csrError').text('No work orders yet. Create a work order first (KSS CSR > Work Orders).').show();
+  if (backToLetter && currentWo()) {
+    $('#btnBack, #btnCancel').attr('href', 'CsrLetterServlet?action=view&id=' + currentWo().letterId + '#bills');
+    $('#btnBack').html('&#8592; Back to Management Approval');
+  }
+  if (!workOrders.length && !loadError) $('#csrError').text('No work orders yet. Create a work order first (<%= com.Bean.AppConfig.code() %> CSR > Work Orders).').show();
 
   // ---- save (AJAX), then back to the list
   $('#invForm').on('submit', function (e) {
@@ -304,7 +318,10 @@ $(function () {
       data: new FormData(this), processData: false, contentType: false
     }).done(function (res) {
       if (!res.ok) { showToast(false, res.message); $btn.prop('disabled', false).text(label); return; }
-      window.location.href = 'CsrInvoiceServlet?msg=' + encodeURIComponent(res.message) + '&hl=' + res.id;
+      var w = currentWo();
+      window.location.href = backToLetter && w
+        ? 'CsrLetterServlet?action=view&id=' + w.letterId + '&msg=' + encodeURIComponent(res.message) + '#bills'
+        : 'CsrInvoiceServlet?msg=' + encodeURIComponent(res.message) + '&hl=' + res.id;
     }).fail(function (xhr) {
       showToast(false, (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not save. Please try again.');
       $btn.prop('disabled', false).text(label);
