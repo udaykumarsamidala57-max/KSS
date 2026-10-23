@@ -45,7 +45,8 @@ public class CsrLetterServlet extends HttpServlet {
     private static final int MAX_PDF_BYTES = 10 * 1024 * 1024;   // 10 MB
 
     private static final String LIST_COLUMNS =
-            "id, letter_name, letter_number, activity_kind, place, particulars, amount, pdf_name, pdf_size, "
+            "id, letter_name, letter_number, activity_kind, place, particulars, amount, pdf_name, pdf_size, company_id, "
+          + CsrCompanyServlet.nameOf("kss_csr_approval_letter") + " AS company_name, "
           + "created_by, DATE_FORMAT(created_at, '%d-%m-%Y') AS created_txt, "
           + "updated_by, DATE_FORMAT(updated_at, '%d-%m-%Y %H:%i') AS updated_txt, "
           + "(SELECT COUNT(*) FROM kss_csr_work_order w WHERE w.letter_id = kss_csr_approval_letter.id) AS wo_count, "
@@ -262,11 +263,13 @@ public class CsrLetterServlet extends HttpServlet {
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) kinds.add(rs.getString(1));
             }
+            request.setAttribute("companies", CsrCompanyServlet.loadChoices(con, row == null ? null : row.get("companyId")));
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Database error: " + e.getMessage()
                     + " (Has the kss_csr_approval_letter table been created?)");
         }
+        if (request.getAttribute("companies") == null) request.setAttribute("companies", new ArrayList<Map<String, String>>());
         request.setAttribute("row", row);
         request.setAttribute("kinds", kinds);
         request.getRequestDispatcher("/csrLetterForm.jsp").forward(request, response);
@@ -352,8 +355,11 @@ public class CsrLetterServlet extends HttpServlet {
         String place = trim(request.getParameter("place"));
         String particulars = trim(request.getParameter("particulars"));
         String amountParam = trim(request.getParameter("amount"));
+        String companyParam = trim(request.getParameter("companyId"));
 
         // ---- validation
+        if (!companyParam.matches("\\d+")) { sendJson(response, 400, fail("Please select the Funding Company.")); return; }
+        int companyId = Integer.parseInt(companyParam);
         if (letterName.isEmpty())   { sendJson(response, 400, fail("Please enter the Letter Name.")); return; }
         if (letterNumber.isEmpty()) { sendJson(response, 400, fail("Please enter the Letter Number.")); return; }
         if (activity.isEmpty())     { sendJson(response, 400, fail("Please enter the Kind of CSR activity.")); return; }
@@ -394,6 +400,39 @@ public class CsrLetterServlet extends HttpServlet {
         }
 
         boolean isNew = idParam.isEmpty();
+        if (!isNew && !idParam.matches("\\d+")) {
+            sendJson(response, 400, fail("Invalid letter."));
+            return;
+        }
+        // ---- funding company: must exist; a new choice must be Active; cannot change once FRLs / receipts exist
+        String companyStatus = null, companyName = null;
+        try (PreparedStatement ps = con.prepareStatement("SELECT status, company_name FROM kss_csr_company WHERE id = ?")) {
+            ps.setInt(1, companyId);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) { companyStatus = rs.getString(1); companyName = rs.getString(2); } }
+        }
+        if (companyStatus == null) { sendJson(response, 400, fail("The selected company does not exist. Please reload the page.")); return; }
+        Integer oldCompany = null;
+        int frlOrReceipts = 0;
+        if (!isNew) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT company_id, (SELECT COUNT(*) FROM kss_csr_fund_request WHERE letter_id = l.id) "
+                  + "+ (SELECT COUNT(*) FROM kss_csr_fund_receipt WHERE letter_id = l.id) FROM kss_csr_approval_letter l WHERE l.id = ?")) {
+                ps.setInt(1, Integer.parseInt(idParam));
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) { int c = rs.getInt(1); oldCompany = rs.wasNull() ? null : c; frlOrReceipts = rs.getInt(2); }
+                }
+            }
+        }
+        boolean companyChanged = oldCompany == null || oldCompany != companyId;
+        if (companyChanged && !"Active".equals(companyStatus)) {
+            sendJson(response, 400, fail(companyName + " is Inactive. Choose an active company or make it Active in Masters > Companies."));
+            return;
+        }
+        if (!isNew && oldCompany != null && companyChanged && frlOrReceipts > 0) {
+            sendJson(response, 409, fail("The funding company cannot be changed: FRLs or receipts have already been recorded with the present company."));
+            return;
+        }
+
         int id;
         try {
             if (isNew) {
@@ -403,7 +442,7 @@ public class CsrLetterServlet extends HttpServlet {
                 }
                 try (PreparedStatement ps = con.prepareStatement(
                         "INSERT INTO kss_csr_approval_letter (letter_name, letter_number, activity_kind, place, particulars, "
-                      + "amount, pdf_file, pdf_name, pdf_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                      + "amount, pdf_file, pdf_name, pdf_size, created_by, updated_by, company_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS)) {
                     ps.setString(1, letterName);
                     ps.setString(2, letterNumber);
@@ -416,6 +455,7 @@ public class CsrLetterServlet extends HttpServlet {
                     ps.setInt(9, pdf.length);
                     ps.setString(10, user);
                     ps.setString(11, user);
+                    ps.setInt(12, companyId);
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
                         keys.next();
@@ -423,10 +463,6 @@ public class CsrLetterServlet extends HttpServlet {
                     }
                 }
             } else {
-                if (!idParam.matches("\\d+")) {
-                    sendJson(response, 400, fail("Invalid letter."));
-                    return;
-                }
                 id = Integer.parseInt(idParam);
                 // the approved amount cannot go below what is already committed (work orders) or requested (FRLs)
                 BigDecimal committed = BigDecimal.ZERO, received = BigDecimal.ZERO;
@@ -452,7 +488,7 @@ public class CsrLetterServlet extends HttpServlet {
                     return;
                 }
                 String sql = "UPDATE kss_csr_approval_letter SET letter_name=?, letter_number=?, activity_kind=?, place=?, "
-                           + "particulars=?, amount=?, updated_by=?"
+                           + "particulars=?, amount=?, updated_by=?, company_id=?"
                            + (pdf != null ? ", pdf_file=?, pdf_name=?, pdf_size=?" : "")
                            + " WHERE id=?";
                 try (PreparedStatement ps = con.prepareStatement(sql)) {
@@ -464,6 +500,7 @@ public class CsrLetterServlet extends HttpServlet {
                     ps.setString(i++, particulars.isEmpty() ? null : particulars);
                     ps.setBigDecimal(i++, amount);
                     ps.setString(i++, user);
+                    ps.setInt(i++, companyId);
                     if (pdf != null) {
                         ps.setBytes(i++, pdf);
                         ps.setString(i++, pdfName);
@@ -553,6 +590,9 @@ public class CsrLetterServlet extends HttpServlet {
         r.put("id", String.valueOf(rs.getInt("id")));
         r.put("letterName", rs.getString("letter_name"));
         r.put("letterNumber", rs.getString("letter_number"));
+        int companyId = rs.getInt("company_id");
+        r.put("companyId", rs.wasNull() ? "" : String.valueOf(companyId));
+        r.put("companyName", rs.getString("company_name"));
         r.put("activityKind", rs.getString("activity_kind"));
         r.put("place", rs.getString("place"));
         r.put("particulars", rs.getString("particulars"));

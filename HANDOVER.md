@@ -41,6 +41,12 @@ SET SQL_SAFE_UPDATES=1;
 ```
 Skip any statement that returns 1060 / 1061 (already applied).
 
+## 4a. Funding companies (2026-10-23)
+* Masters > Companies (`CsrCompanyServlet`, `csrCompanies.jsp`, `csrCompanyForm.jsp`), table `kss_csr_company` in each institution schema.
+* `kss_csr_approval_letter.company_id` links each approval to its company. FRLs and receipts take the company from their approval (no column on those tables).
+* SQL: `Dump20261016\KSS_csr_company.sql`, run once in `KSS` and once in `SSS_CSR`. Already included in `NEW_INSTITUTION_CSR_database.sql` for new institutions.
+* Not changed: CSR Dashboard (all companies together). A company-wise dashboard can be added later if wanted.
+
 ## 5. Pending code change: "+ New Receipt" from the Management Approval page (merge by hand)
 On the Receipts tab, a **+ New Receipt** button opens the receipt form limited to that approval's FRLs and returns to `#rcpt` after saving.
 * `csrFundForm.jsp`: (a) `var onlyLetter = <%= gson.toJson(request.getAttribute("presetLetterId")) %>; var backToLetter = new URLSearchParams(location.search).get('back') === 'letter';` (b) in the FRL option loop: `if (onlyLetter && !fund && String(l.letterId) !== String(onlyLetter)) return;` (c) after filling: `else if ($sel.find('option').length === 2) $sel.val($sel.find('option').eq(1).val());` (d) on success: back to `CsrLetterServlet?action=view&id=<letterId>#rcpt` when `backToLetter`, else the list.
@@ -48,16 +54,16 @@ On the Receipts tab, a **+ New Receipt** button opens the receipt form limited t
 * Test: letter with a due FRL → only its FRLs, back to `#rcpt`; no FRL due → button hidden; normal Fund Receipts form still lists all due FRLs.
 
 ## 6. Local test rig (cloud session)
-Maven Central and code.jquery.com are blocked from the cloud workspace. The rig used: the PC's `target\HighEducation-1.0-SNAPSHOT\WEB-INF\lib` jars, Ubuntu `libtomcat9-java` (embedded Tomcat 9), MariaDB with schemas `KSS` and `SSS_CSR` built from the `Dump20261016` scripts, a test-only `DBUtil` with the same schema logic (never copied to the PC), and Playwright with jQuery served locally. Suites: 53 CSR / vendor-payment checks and 19 institution checks (choose, switch, data kept apart, non-Global blocked).
+Maven Central and code.jquery.com are blocked from the cloud workspace. The rig used: the PC's `target\HighEducation-1.0-SNAPSHOT\WEB-INF\lib` jars, Ubuntu `libtomcat9-java` (embedded Tomcat 9), MariaDB with schemas `KSS` and `SSS_CSR` built from the `Dump20261016` scripts, a test-only `DBUtil` with the same schema logic (never copied to the PC), and Playwright with jQuery served locally. Suites: 53 CSR / vendor-payment checks, 40 funding-company checks and 19 institution checks (choose, switch, data kept apart, non-Global blocked).
 
 ## 7. Working method that has worked
 * Stage the PC file → edit (LF) → test on the local rig (Playwright, screenshots, rule checks) → write back to the PC with CRLF and an mtime guard (`expectedMtimeMs`) so owner edits are never overwritten.
 * Keep replies short; say what changed and the one next step.
 
 ## 8. File inventory
-Java (CSR): `CsrDashboardServlet, CsrLetterServlet, CsrWorkOrderServlet, CsrInvoiceServlet, CsrFrlServlet, CsrFundServlet, CsrPaymentServlet`.
+Java (CSR): `CsrDashboardServlet, CsrLetterServlet, CsrWorkOrderServlet, CsrInvoiceServlet, CsrFrlServlet, CsrFundServlet, CsrPaymentServlet, CsrCompanyServlet`.
 Java (institutions): `com.Bean.AppConfig`, `com.Controller.ModuleFilter`, `com.Controller.InstitutionServlet`, `com.Bean.DBUtil` (schema switch), `LoginServlet` (Global → choose page).
-JSP (CSR): `csrDashboard, csrLetters, csrLetterForm, csrLetterView, csrWorkOrders, csrWorkOrderForm, csrInvoices, csrInvoiceForm, csrFrls, csrFrlForm, csrFunds, csrFundForm, csrPaymentVoucherForm, csrVendorAdvanceForm`; `selectInstitution.jsp`; `header.jsp` (menu, 9-dots, KSS ⇄ SSS button).
+JSP (CSR): `csrDashboard, csrLetters, csrLetterForm, csrLetterView, csrWorkOrders, csrWorkOrderForm, csrInvoices, csrInvoiceForm, csrFrls, csrFrlForm, csrFunds, csrFundForm, csrPaymentVoucherForm, csrVendorAdvanceForm, csrCompanies, csrCompanyForm`; `selectInstitution.jsp`; `header.jsp` (menu, 9-dots, KSS ⇄ SSS button).
 CSS: `css/csrLetter.css`, `css/finance.css`.
-SQL (`Dump20261016\`): CSR scripts in the order of CLAUDE.md §8, `KSS_csr_vendor_payment.sql`, `KSS_csr_vendor_payment_partial.sql`, `NEW_INSTITUTION_CSR_database.sql`. Not used any more (delete): `KSS_csr_payment_procedure.sql`, `KSS_users_institutions.sql`.
+SQL (`Dump20261016\`): CSR scripts in the order of CLAUDE.md §8, `KSS_csr_vendor_payment.sql`, `KSS_csr_vendor_payment_partial.sql`, `KSS_csr_company.sql`, `NEW_INSTITUTION_CSR_database.sql`. Not used any more (delete): `KSS_csr_payment_procedure.sql`, `KSS_users_institutions.sql`.
 Other: `SQL schema.md/.sql`, `Dockerfile`, `pom.xml`.

@@ -14,8 +14,26 @@
     @SuppressWarnings("unchecked")
     Map<String, String> letterStats = (Map<String, String>) request.getAttribute("letterStats");
     String selectedLetterId = (String) request.getAttribute("selectedLetterId");
+    @SuppressWarnings("unchecked")
+    List<Map<String, String>> companyPosition = (List<Map<String, String>>) request.getAttribute("companyPosition");
+    @SuppressWarnings("unchecked")
+    List<Map<String, String>> unitPosition = (List<Map<String, String>>) request.getAttribute("unitPosition");
+    String companyError = (String) request.getAttribute("companyError");
+    @SuppressWarnings("unchecked")
+    List<Map<String, String>> monthly = (List<Map<String, String>>) request.getAttribute("monthly");
+    @SuppressWarnings("unchecked")
+    List<String[]> monthlyYears = (List<String[]>) request.getAttribute("monthlyYears");
+    String monthlyFy = (String) request.getAttribute("monthlyFy");
+    String monthlyOpening = (String) request.getAttribute("monthlyOpening");
+    String instCodeD = com.Bean.AppConfig.code();
 %>
 <%!
+    /** An amount that opens the detail popup; "-" (nil) stays plain text. */
+    private String dl(String value, String view, String key, String col, String fy) {
+        if (value == null || "-".equals(value) || "0".equals(value) || "0.0%".equals(value)) return escapeHtml(value);
+        return "<a href=\"#\" class=\"dd-link\" data-view=\"" + view + "\" data-key=\"" + escapeHtml(key) + "\" data-col=\"" + col + "\""
+             + (fy == null ? "" : " data-fy=\"" + escapeHtml(fy) + "\"") + " title=\"Show details\">" + escapeHtml(value) + "</a>";
+    }
     private String escapeHtml(String value) {
         if (value == null) return "";
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -70,6 +88,33 @@
 .csr-pdf-link { display:flex; flex-direction:column; gap:2px; min-width:160px; max-width:280px; padding:8px 10px; border:1px solid var(--fin-line); border-radius:5px; color:var(--fin-teal); text-decoration:none; background:#fff; }
 .csr-pdf-link:hover { background:#f0fdfa; border-color:#99c9c1; }
 .csr-pdf-link small { color:var(--fin-muted); font-size:10px; overflow-wrap:anywhere; }
+.csr-co-card { margin-top:14px; background:#fff; border:1px solid var(--fin-line); border-radius:7px; box-shadow:0 1px 2px rgba(15,23,42,.05); }
+.csr-co-card .csr-card-head { padding:10px 14px; border-bottom:1px solid var(--fin-line); }
+.csr-co-table td.csr-num, .csr-co-table th.csr-num { text-align:right; white-space:nowrap; }
+.csr-co-table th { white-space:normal; line-height:1.25; vertical-align:bottom; }
+.csr-co-table tr.csr-co-total td { font-weight:700; background:#f8fafc; border-top:2px solid #cbd5e1; }
+.csr-co-table .csr-co-neg { color:#b91c1c; }
+.csr-co-table td.csr-cum-neg { background:#fde4d8; color:#b91c1c; }
+.csr-co-table a.dd-link { color:inherit; text-decoration:none; border-bottom:1px dashed #0f766e; }
+.csr-co-table a.dd-link:hover { color:#0f766e; background:#f0fdfa; }
+.dd-modal { position:fixed; inset:0; z-index:2000; display:none; align-items:flex-start; justify-content:center; padding:60px 16px 20px; background:rgba(15,23,42,.45); }
+.dd-modal.open { display:flex; }
+.dd-box { width:min(1320px,100%); max-height:calc(100vh - 90px); display:flex; flex-direction:column; background:#fff; border-radius:7px; box-shadow:0 10px 30px rgba(15,23,42,.25); }
+.dd-head { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--fin-line); }
+.dd-title { font-size:14px; font-weight:600; color:var(--fin-ink); }
+.dd-body { overflow:auto; padding:0 0 6px; }
+.dd-body .csr-table td.n, .dd-body .csr-table th.n { text-align:right; white-space:nowrap; }
+.dd-body .csr-table tfoot td { font-weight:700; background:#f8fafc; border-top:2px solid #cbd5e1; }
+.dd-body .csr-table { width:100%; }
+.dd-body .csr-table td { vertical-align:top; }
+.dd-body .csr-table th { white-space:nowrap !important; }
+.dd-body .csr-table td.n, .dd-body .csr-table td.d { white-space:nowrap !important; }
+.dd-body .csr-table td.t { white-space:normal !important; overflow-wrap:anywhere; min-width:150px; max-width:340px; overflow:visible !important; text-overflow:clip !important; }
+.dd-msg { padding:16px 14px; color:var(--fin-muted); }
+.csr-co-fy { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--fin-muted); }
+.csr-co-fy select { height:28px; padding:0 6px; border:1px solid var(--fin-line); border-radius:4px; font:inherit; color:var(--fin-ink); background:#fff; }
+.csr-co-card .csr-card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.csr-co-note { padding:8px 14px 10px; color:var(--fin-muted); font-size:11.5px; line-height:1.5; }
 @media (max-width: 900px) {
   .csr-dashboard-prime { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .csr-dashboard-prime-item:nth-child(3) { grid-column:1 / -1; border-left:0; border-top:1px solid var(--fin-line); }
@@ -114,6 +159,108 @@
       <div class="csr-dashboard-balance">Balance to receive: <b><%= stats.getOrDefault("fundsBalance", "₹0.00") %></b></div>
     </div>
   </section>
+  <%-- Company-wise and Unit-wise Position (unit = Kind of CSR Activity of the approval): same columns and formulas --%>
+  <% Object[][] positions = { { "co", "Company-wise Position", "Company", companyPosition },
+                              { "unit", "Unit / Institution-wise Position", "Unit", unitPosition } };
+     for (Object[] pos : positions) {
+       @SuppressWarnings("unchecked")
+       List<Map<String, String>> posRows = (List<Map<String, String>>) pos[3]; %>
+  <section class="csr-co-card" aria-labelledby="<%= pos[0] %>-title" id="<%= pos[0] %>Position">
+    <div class="csr-card-head"><div class="csr-card-title" id="<%= pos[0] %>-title"><%= pos[1] %> <span class="csr-small">(&#8377;)</span></div></div>
+    <% if (companyError != null) { %>
+    <div class="csr-alert csr-alert-err" style="margin:10px 14px;"><%= escapeHtml(companyError) %></div>
+    <% } else if (posRows != null) { %>
+    <div class="csr-table-wrap">
+      <table class="csr-table csr-co-table">
+        <thead>
+          <tr>
+            <th><%= pos[2] %></th>
+            <th class="csr-num">Projects</th>
+            <th class="csr-num">Approved</th>
+            <th class="csr-num">Received</th>
+            <th class="csr-num">Yet to Receive</th>
+            <th class="csr-num">Utilised</th>
+            <th class="csr-num">Unspent with <%= escapeHtml(instCodeD) %></th>
+            <th class="csr-num">Retention Held</th>
+            <th class="csr-num">Bills Unpaid</th>
+            <th class="csr-num">Free Balance</th>
+            <th class="csr-num">Utilisation %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (Map<String, String> c : posRows) {
+               boolean tot = "1".equals(c.get("total"));
+               String cid = c.get("companyId");
+               String vw = (String) pos[0];
+               String k = tot ? "all" : ("co".equals(vw) ? (cid == null || cid.isEmpty() ? "0" : cid) : c.get("name")); %>
+          <tr class="<%= tot ? "csr-co-total" : "csr-row" %>">
+            <td><% if (!tot && cid != null && !cid.isEmpty() && !"0".equals(c.get("projects"))) { %><a class="csr-open" href="CsrLetterServlet?companyId=<%= escapeHtml(cid) %>"><%= escapeHtml(c.get("name")) %></a><% } else { %><%= escapeHtml(c.get("name")) %><% } %></td>
+            <td class="csr-num"><%= dl(c.get("projects"), vw, k, "projects", null) %></td>
+            <td class="csr-num"><%= dl(c.get("approved"), vw, k, "approved", null) %></td>
+            <td class="csr-num"><%= dl(c.get("received"), vw, k, "received", null) %></td>
+            <td class="csr-num"><%= dl(c.get("yetToReceive"), vw, k, "yetToReceive", null) %></td>
+            <td class="csr-num"><%= dl(c.get("utilised"), vw, k, "utilised", null) %></td>
+            <td class="csr-num <%= "1".equals(c.get("unspentNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("unspent"), vw, k, "unspent", null) %></td>
+            <td class="csr-num"><%= dl(c.get("retention"), vw, k, "retention", null) %></td>
+            <td class="csr-num"><%= dl(c.get("unpaid"), vw, k, "unpaid", null) %></td>
+            <td class="csr-num <%= "1".equals(c.get("freeNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("free"), vw, k, "free", null) %></td>
+            <td class="csr-num"><%= dl(c.get("utilisation"), vw, k, "utilisation", null) %></td>
+          </tr>
+          <% } %>
+          <% if (posRows.size() == 1) { %>
+          <tr><td colspan="11" class="csr-empty">No Management Approvals yet.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </section>
+  <% if (companyError != null) break; } %>
+
+  <% if (monthly != null) { %>
+  <section class="csr-co-card" aria-labelledby="month-title" id="monthPosition">
+    <div class="csr-card-head">
+      <div class="csr-card-title" id="month-title">Month-wise Receipts vs Utilisation <span class="csr-small">(&#8377;)</span></div>
+      <label class="csr-co-fy" for="fySelect">Financial year
+        <select id="fySelect">
+          <% for (String[] y : monthlyYears) { %>
+          <option value="<%= y[0] %>" <%= y[0].equals(monthlyFy) ? "selected" : "" %>><%= y[1] %></option>
+          <% } %>
+        </select>
+        <span>starts <b><%= request.getAttribute("monthlyFyStart") %></b></span>
+      </label>
+    </div>
+    <div class="csr-table-wrap">
+      <table class="csr-table csr-co-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th class="csr-num">Received from Company</th>
+            <th class="csr-num">Net Paid to Vendors</th>
+            <th class="csr-num">TDS Deducted</th>
+            <th class="csr-num">Total Utilised</th>
+            <th class="csr-num">Net Flow</th>
+            <th class="csr-num">Cumulative Unspent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (Map<String, String> mrow : monthly) { boolean tot = "1".equals(mrow.get("total")); String mk = mrow.get("key"); %>
+          <tr class="<%= tot ? "csr-co-total" : "csr-row" %>">
+            <td><%= mrow.get("month") %></td>
+            <td class="csr-num"><%= dl(mrow.get("received"), "month", mk, "received", monthlyFy) %></td>
+            <td class="csr-num"><%= dl(mrow.get("paid"), "month", mk, "paid", monthlyFy) %></td>
+            <td class="csr-num"><%= dl(mrow.get("tds"), "month", mk, "tds", monthlyFy) %></td>
+            <td class="csr-num"><%= dl(mrow.get("utilised"), "month", mk, "utilised", monthlyFy) %></td>
+            <td class="csr-num <%= "1".equals(mrow.get("flowNeg")) ? "csr-co-neg" : "" %>"><%= dl(mrow.get("flow"), "month", mk, "flow", monthlyFy) %></td>
+            <td class="csr-num <%= "1".equals(mrow.get("cumNeg")) ? "csr-cum-neg" : "" %>"><%= dl(mrow.get("cumulative"), "month", mk, "cumulative", monthlyFy) %></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <% } %>
+
   <section class="csr-letter-summary" aria-labelledby="letter-summary-title">
     <h2 class="csr-letter-card-title" id="letter-summary-title">Approval-wise Summary</h2>
     <div class="csr-letter-filter">
@@ -154,6 +301,16 @@
     <div id="letterPdfList" class="csr-pdf-list" aria-label="Approval PDFs"></div>
     </div>
   </section>
+</div>
+
+<div class="dd-modal" id="ddModal" role="dialog" aria-modal="true" aria-labelledby="ddTitle">
+  <div class="dd-box">
+    <div class="dd-head">
+      <div class="dd-title" id="ddTitle"></div>
+      <button type="button" class="csr-btn csr-btn-sm csr-btn-outline" id="ddClose">Close</button>
+    </div>
+    <div class="dd-body" id="ddBody"></div>
+  </div>
 </div>
 <script>
 (function () {
@@ -221,6 +378,60 @@
       });
   }
   select.addEventListener('change', loadApproval);
+
+  // ---- amount popups: CsrDashboardServlet?action=detail&view=&key=&col=[&fy=]
+  var modal = document.getElementById('ddModal'), ddTitle = document.getElementById('ddTitle'), ddBody = document.getElementById('ddBody');
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function closeDd() { modal.classList.remove('open'); }
+  // n = amount (right, one line), d = date / month / short code (one line), t = text (wraps)
+  function cellClass(d, i, v) {
+    if (d.num[i]) return 'n';
+    return (v == null || v.length <= 14 || /^\d{2}-\d{2}-\d{4}$/.test(v)) ? 'd' : 't';
+  }
+  function showDd(d) {
+    ddTitle.textContent = d.title;
+    ddBody.replaceChildren();
+    if (!d.rows || !d.rows.length) { ddBody.appendChild(el('div', 'dd-msg', 'No entries.')); return; }
+    var t = el('table', 'csr-table'), th = el('thead'), hr = el('tr'), tb = el('tbody');
+    d.cols.forEach(function (c, i) { hr.appendChild(el('th', d.num[i] ? 'n' : '', c)); });
+    th.appendChild(hr); t.appendChild(th);
+    d.rows.forEach(function (r) {
+      var tr = el('tr');
+      r.forEach(function (v, i) { tr.appendChild(el('td', cellClass(d, i, v), v)); });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    if (d.foot) {
+      var tf = el('tfoot'), fr = el('tr');
+      d.foot.forEach(function (v, i) { fr.appendChild(el('td', cellClass(d, i, v), v)); });
+      tf.appendChild(fr); t.appendChild(tf);
+    }
+    ddBody.appendChild(t);
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a.dd-link') : null;
+    if (!a) return;
+    e.preventDefault();
+    var q = 'action=detail&view=' + encodeURIComponent(a.dataset.view) + '&key=' + encodeURIComponent(a.dataset.key)
+          + '&col=' + encodeURIComponent(a.dataset.col) + (a.dataset.fy ? '&fy=' + encodeURIComponent(a.dataset.fy) : '');
+    ddTitle.textContent = 'Loading...';
+    ddBody.replaceChildren();
+    modal.classList.add('open');
+    fetch('CsrDashboardServlet?' + q, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) { ddTitle.textContent = 'Details'; ddBody.appendChild(el('div', 'dd-msg', d.message || 'Details could not be loaded.')); return; }
+        showDd(d);
+      })
+      .catch(function () { ddTitle.textContent = 'Details'; ddBody.appendChild(el('div', 'dd-msg', 'Details could not be loaded. Please try again.')); });
+  });
+  document.getElementById('ddClose').addEventListener('click', closeDd);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeDd(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDd(); });
+  var fy = document.getElementById('fySelect');
+  if (fy) fy.addEventListener('change', function () {
+    location.href = 'CsrDashboardServlet?fy=' + encodeURIComponent(fy.value) + (select.value ? '&letterId=' + encodeURIComponent(select.value) : '') + '#monthPosition';
+  });
   if (select.value) loadApproval();
 }());
 </script>

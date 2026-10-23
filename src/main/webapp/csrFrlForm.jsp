@@ -54,6 +54,7 @@
         <div class="csr-field span-3">
           <label for="fLetter">Against Approval Letter <span class="req">*</span></label>
           <select id="fLetter" name="letterId" class="csr-input"></select>
+          <div class="csr-hint" id="coHint"></div>
         </div>
 
         <div class="csr-field span-3">
@@ -144,8 +145,18 @@ $(function () {
   var myIds = frl && frl.invoiceIds ? String(frl.invoiceIds).split(',') : [];
   var $sel = $('#fLetter').append('<option value="">-- Select approval letter --</option>');
   letters.forEach(function (l) {
-    $sel.append($('<option></option>').attr('value', l.id).text(l.letterNumber + '  |  ' + l.letterName));
+    $sel.append($('<option></option>').attr('value', l.id)
+      .text(l.letterNumber + '  |  ' + l.letterName + '  |  ' + (l.companyName || 'company not set')));
   });
+  // the FRL is a request to the approval's funding company
+  function showCompany() {
+    var l = null, id = $sel.val();
+    letters.forEach(function (x) { if (String(x.id) === String(id)) l = x; });
+    if (!l) { $('#coHint').text('').css('color', ''); return; }
+    if (l.companyName) $('#coHint').text('Request to: ' + l.companyName).css('color', '#0f766e');
+    else $('#coHint').text('This approval has no funding company. Edit the approval and select the company first.').css('color', '#b91c1c');
+  }
+  $sel.on('change', showCompany);
 
   // invoices of the chosen letter that are free, or already in this FRL
   function renderInvoices(keepTicks) {
@@ -220,6 +231,7 @@ $(function () {
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
   renderInvoices(false);
+  showCompany();
   if (!letters.length && !loadError) $('#csrError').text('No Management Approvals yet. Add an approval letter first.').show();
 
   $('#frlForm').on('submit', function (e) {

@@ -84,7 +84,7 @@
         <div class="csr-field" id="frlReqWrap">
           <label for="fFrlReq">Raise FRL for this bill? <span class="req">*</span></label>
           <select id="fFrlReq" name="frlRequired" class="csr-input">
-            <option value="1">Yes - claim from SMIORE</option>
+            <option value="1">Yes - claim from the funding company</option>
             <option value="0">No - already received under proforma invoice</option>
           </select>
         </div>
@@ -216,7 +216,7 @@ $(function () {
       var adv = p.frlNumber ? Number(p.claimAmount || p.amount) : 0;
       $('#pfInfo').empty()
         .append($('<span></span>').text('Proforma invoice ').append($('<b></b>').text(money(p.amount))))
-        .append($('<span></span>').text('Already claimed from SMIORE ').append($('<b></b>').text(money(adv))))
+        .append($('<span></span>').text('Already claimed from the funding company ').append($('<b></b>').text(money(adv))))
         .append($('<span></span>').text('This bill will claim ').append($('<b></b>')
           .text($('#fFrlReq').val() === '0' ? 'nothing (No FRL)' : (price ? money(r2(amt - adv)) : '-'))))
         .show();

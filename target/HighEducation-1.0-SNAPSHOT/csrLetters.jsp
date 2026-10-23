@@ -51,6 +51,7 @@
     <div class="csr-card-head">
       <div class="csr-card-title">Management Approvals <small id="listCount"></small></div>
       <div class="csr-controls">
+        <select id="companyFilter"><option value="ALL">All Companies</option></select>
         <select id="kindFilter"><option value="ALL">All Activities</option></select>
         <input type="text" id="searchBox" placeholder="Search letter no / name / place">
         <a href="CsrLetterServlet?action=form" class="csr-btn csr-link-btn">+ New Approval Letter</a>
@@ -62,6 +63,7 @@
           <tr>
             <th>#</th>
             <th>Letter No / Name</th>
+            <th>Company</th>
             <th>CSR Activity / Place</th>
             <th>Particulars</th>
             <th class="csr-num">Amount</th>
@@ -77,7 +79,7 @@
         <tbody id="csrBody"></tbody>
         <tfoot>
           <tr class="csr-total-row" id="totalRow">
-            <td colspan="4">Total (shown)</td>
+            <td colspan="5">Total (shown)</td>
             <td class="csr-num" id="totalShown">-</td>
             <td colspan="7"></td>
           </tr>
@@ -118,6 +120,8 @@ $(function () {
       .append($('<a class="csr-strong csr-open"></a>').attr('href', 'CsrLetterServlet?action=view&id=' + r.id)
         .attr('title', 'Open this approval letter with its work orders, invoices, FRLs and receipts').text(r.letterNumber))
       .append($('<div class="csr-small"></div>').text(r.letterName)));
+    $tr.append($('<td></td>').append(r.companyName ? $('<span class="csr-strong"></span>').text(r.companyName)
+      : $('<span class="csr-neg csr-small"></span>').text('Not set')));
     $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(r.activityKind))
       .append($('<div class="csr-small" style="margin-top:3px;"></div>').text(r.place)));
     $tr.append($('<td class="csr-particulars"></td>').text(r.particulars || ''));
@@ -167,18 +171,18 @@ $(function () {
   }
 
   function render() {
-    var kind = $('#kindFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
+    var kind = $('#kindFilter').val(), co = $('#companyFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
     var $body = $('#csrBody').empty(), n = 0, shownTotal = 0, allTotal = 0;
     rows.forEach(function (r) {
       allTotal += Number(r.amount || 0);
-      var hay = [r.letterNumber, r.letterName, r.place, r.activityKind, r.particulars].join(' ').toLowerCase();
-      if ((kind === 'ALL' || r.activityKind === kind) && (q === '' || hay.indexOf(q) !== -1)) {
+      var hay = [r.letterNumber, r.letterName, r.companyName, r.place, r.activityKind, r.particulars].join(' ').toLowerCase();
+      if ((kind === 'ALL' || r.activityKind === kind) && (co === 'ALL' || String(r.companyId) === co) && (q === '' || hay.indexOf(q) !== -1)) {
         $body.append(rowHtml(r, ++n));
         shownTotal += Number(r.amount || 0);
       }
     });
     if (n === 0) {
-      $body.append('<tr><td colspan="12" class="csr-empty">' + (rows.length ? 'No letters match the filter.'
+      $body.append('<tr><td colspan="13" class="csr-empty">' + (rows.length ? 'No letters match the filter.'
         : 'No Management Approvals yet. Click <b>+ New Approval Letter</b> to add the first one.') + '</td></tr>');
     }
     $('#totalShown').text(money(shownTotal));
@@ -220,10 +224,19 @@ $(function () {
     });
   });
 
-  $('#kindFilter').on('change', render);
+  $('#kindFilter, #companyFilter').on('change', render);
   $('#searchBox').on('input keyup', render);
 
   refreshKinds();
+  // company filter: companies used by the approvals; ?companyId=N (from Masters > Companies) preselects one
+  (function () {
+    var seen = {}, list = [];
+    rows.forEach(function (r) { if (r.companyId && !seen[r.companyId]) { seen[r.companyId] = 1; list.push({ id: String(r.companyId), name: r.companyName }); } });
+    list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    list.forEach(function (c) { $('#companyFilter').append($('<option></option>').attr('value', c.id).text(c.name)); });
+    var want = new URLSearchParams(window.location.search).get('companyId');
+    if (want && seen[want]) $('#companyFilter').val(want);
+  })();
   render();
 
   // Message after saving on the form page (?msg=...&hl=id)

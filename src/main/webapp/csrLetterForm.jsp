@@ -10,6 +10,8 @@
     Map<String, String> row = (Map<String, String>) request.getAttribute("row");   // null = new letter
     @SuppressWarnings("unchecked")
     List<String> kinds = (List<String>) request.getAttribute("kinds");
+    @SuppressWarnings("unchecked")
+    List<Map<String, String>> companies = (List<Map<String, String>>) request.getAttribute("companies");
     String loadError = (String) request.getAttribute("error");
     boolean isEdit = row != null;
     com.google.gson.Gson gson = new com.google.gson.Gson();   // escapes < > & : safe inside <script>
@@ -54,6 +56,14 @@
     <form id="csrForm" class="csr-form" enctype="multipart/form-data" autocomplete="off">
       <input type="hidden" name="action" value="save">
       <input type="hidden" name="id" id="fId" value="">
+
+      <div class="csr-field span-2">
+        <label for="fCompany">Funding Company <span class="req">*</span></label>
+        <select id="fCompany" name="companyId" class="csr-input"></select>
+        <div class="csr-hint" id="companyHint">FRLs of this approval are sent to this company and its funds are received from it.
+          <a href="CsrCompanyServlet" target="_blank">Masters &gt; Companies</a></div>
+      </div>
+      <div class="csr-field"></div>
 
       <div class="csr-field span-2">
         <label for="fName">Letter Name <span class="req">*</span></label>
@@ -103,6 +113,7 @@
 $(function () {
   var row = <%= gson.toJson(row) %>;          // null when adding
   var usedKinds = <%= gson.toJson(kinds) %>;
+  var companies = <%= gson.toJson(companies) %>;
   var loadError = <%= gson.toJson(loadError) %>;
   var DEFAULT_KINDS = ['Education', 'Health Care', 'Rural Development', 'Environment', 'Sanitation & Drinking Water',
                        'Women Empowerment', 'Sports', 'Disaster Relief', 'Art & Culture', 'Animal Welfare'];
@@ -125,12 +136,28 @@ $(function () {
   (usedKinds || []).forEach(function (k) { if (k && kinds.indexOf(k) === -1) kinds.push(k); });
   kinds.forEach(function (k) { $('#kindList').append($('<option></option>').attr('value', k)); });
 
+  // Funding companies (Active ones, plus the one already on this approval)
+  var $co = $('#fCompany').append('<option value="">-- Select company --</option>');
+  (companies || []).forEach(function (c) {
+    $co.append($('<option></option>').attr('value', c.id)
+      .text(c.companyName + (c.shortName && c.shortName !== c.companyName ? ' (' + c.shortName + ')' : '') + (c.status === 'Inactive' ? ' - Inactive' : '')));
+  });
+  if (!companies || !companies.length) $('#companyHint').text('No active company yet. Add one in Masters > Companies first.').css('color', '#b91c1c');
+  else if (companies.length === 1 && !row) $co.val(companies[0].id);
+
   // Fill the form
   if (row) {
     $('#pageTitle').text('Edit Approval Letter');
     $('#formTitle').text('Letter ' + row.letterNumber);
     $('#btnSave').text('Update Letter');
     $('#fId').val(row.id);
+    $('#fCompany').val(row.companyId || '');
+    if (parseInt(row.frlCount, 10) > 0 || parseInt(row.fundCount, 10) > 0) {
+      if (row.companyId) {
+        $('#fCompany').prop('disabled', true).after($('<input type="hidden" name="companyId">').val(row.companyId));
+        $('#companyHint').text('Cannot be changed: FRLs or receipts are already recorded with this company.');
+      }
+    }
     $('#fName').val(row.letterName);
     $('#fNumber').val(row.letterNumber);
     $('#fKind').val(row.activityKind);
@@ -154,6 +181,7 @@ $(function () {
   $('#csrForm').on('submit', function (e) {
     e.preventDefault();
     var isNew = !row;
+    if (!$('#fCompany').val()) { showToast(false, 'Please select the Funding Company.'); $('#fCompany').trigger('focus'); return; }
     var checks = [['#fName', 'Letter Name'], ['#fNumber', 'Letter Number'], ['#fKind', 'Kind of CSR Activity'], ['#fPlace', 'Place']];
     for (var i = 0; i < checks.length; i++) {
       if ($.trim($(checks[i][0]).val()) === '') { showToast(false, 'Please enter the ' + checks[i][1] + '.'); $(checks[i][0]).trigger('focus'); return; }

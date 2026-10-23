@@ -48,6 +48,7 @@
     <div class="csr-card-head">
       <div class="csr-card-title">Funds Received <small id="listCount"></small></div>
       <div class="csr-controls">
+        <select id="companyFilter"><option value="ALL">All Companies</option></select>
         <select id="letterFilter"><option value="ALL">All Management Approvals</option></select>
         <input type="text" id="searchBox" placeholder="Search FRL / letter / reference / bank">
         <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
@@ -113,6 +114,24 @@ $(function () {
     $('#letterFilter').append($('<option></option>').attr('value', l.id).text(l.letterNumber + ' - ' + l.letterName));
   });
   if (preset && byId(letters, preset) !== -1) $('#letterFilter').val(preset);
+  // company filter: companies of the approvals; picking one narrows the approval list too
+  (function () {
+    var seen = {};
+    letters.forEach(function (l) {
+      if (l.companyId && !seen[l.companyId]) { seen[l.companyId] = 1;
+        $('#companyFilter').append($('<option></option>').attr('value', l.companyId).text(l.companyName)); }
+    });
+  })();
+  $('#companyFilter').on('change', function () {
+    var co = $(this).val();
+    $('#letterFilter option').each(function () {
+      var l = letters[byId(letters, this.value)];
+      $(this).toggle(this.value === 'ALL' || co === 'ALL' || (l && String(l.companyId) === co));
+    });
+    var cur = letters[byId(letters, $('#letterFilter').val())];
+    if (cur && co !== 'ALL' && String(cur.companyId) !== co) $('#letterFilter').val('ALL');
+    render();
+  });
 
   function rowHtml(r, n) {
     var $tr = $('<tr class="csr-row fund-row"></tr>').attr('data-id', r.id);
@@ -120,7 +139,8 @@ $(function () {
     $tr.append($('<td class="csr-strong"></td>').text(r.receiptDateTxt));
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.frlNumber || '(no FRL)'))
-      .append($('<div class="csr-small"></div>').text(r.letterNumber + ' - ' + r.letterName)));
+      .append($('<div class="csr-small"></div>').text(r.letterNumber + ' - ' + r.letterName))
+      .append($('<div class="csr-small"></div>').text('From: ' + (r.companyName || 'company not set'))));
     $tr.append($('<td class="csr-num csr-strong"></td>').text(money(r.amount)));
     $tr.append($('<td></td>')
       .append($('<div></div>').text(r.paymentMode))
@@ -146,11 +166,11 @@ $(function () {
   }
 
   function render() {
-    var lf = $('#letterFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
+    var lf = $('#letterFilter').val(), cf = $('#companyFilter').val(), q = $.trim($('#searchBox').val()).toLowerCase();
     var $body = $('#fundBody').empty(), n = 0, sa = 0;
     rows.forEach(function (r) {
-      var hay = [r.frlNumber, r.letterNumber, r.letterName, r.referenceNo, r.bankName, r.paymentMode, r.remarks].join(' ').toLowerCase();
-      if ((lf === 'ALL' || String(r.letterId) === String(lf)) && (q === '' || hay.indexOf(q) !== -1)) {
+      var hay = [r.frlNumber, r.letterNumber, r.letterName, r.companyName, r.referenceNo, r.bankName, r.paymentMode, r.remarks].join(' ').toLowerCase();
+      if ((lf === 'ALL' || String(r.letterId) === String(lf)) && (cf === 'ALL' || String(r.companyId) === cf) && (q === '' || hay.indexOf(q) !== -1)) {
         $body.append(rowHtml(r, ++n));
         sa += Number(r.amount);
       }

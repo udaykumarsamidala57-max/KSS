@@ -52,7 +52,8 @@ public class CsrFrlServlet extends HttpServlet {
             "r.id, r.letter_id, r.frl_number, DATE_FORMAT(r.frl_date, '%Y-%m-%d') AS fdate_iso, "
           + "DATE_FORMAT(r.frl_date, '%d-%m-%Y') AS fdate_txt, r.amount, r.remarks, r.attachment_name, r.attachment_size, "
           + "r.created_by, DATE_FORMAT(r.created_at, '%d-%m-%Y') AS created_txt, "
-          + "l.letter_number, l.letter_name, l.activity_kind, l.amount AS letter_amount, "
+          + "l.letter_number, l.letter_name, l.activity_kind, l.amount AS letter_amount, l.company_id, "
+          + CsrCompanyServlet.nameOf("l") + " AS company_name, "
           + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS received, "
           + "(SELECT COUNT(*) FROM kss_csr_fund_receipt f WHERE f.frl_id = r.id) AS rcpt_count, "
           + "(SELECT GROUP_CONCAT(CONCAT(IF(i.invoice_type = 'Proforma', 'PI ', ''), i.invoice_number) ORDER BY i.invoice_date, i.id SEPARATOR ', ') "
@@ -345,11 +346,21 @@ public class CsrFrlServlet extends HttpServlet {
         // ---- total requested must not exceed the approved amount
         BigDecimal approved = null;
         String letterNumber = null;
-        try (PreparedStatement ps = con.prepareStatement("SELECT amount, letter_number FROM kss_csr_approval_letter WHERE id = ?")) {
+        boolean hasCompany = false;
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT amount, letter_number, company_id FROM kss_csr_approval_letter WHERE id = ?")) {
             ps.setInt(1, letterId);
-            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) { approved = rs.getBigDecimal(1); letterNumber = rs.getString(2); } }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) { approved = rs.getBigDecimal(1); letterNumber = rs.getString(2); rs.getInt(3); hasCompany = !rs.wasNull(); }
+            }
         }
         if (approved == null) { sendJson(response, 400, fail("Approval letter not found. Please reload the page.")); return; }
+        // an FRL is a request to the approval's funding company, so the approval must have one
+        if (!hasCompany) {
+            sendJson(response, 400, fail("Management Approval " + letterNumber
+                    + " has no funding company. Edit the approval and select the company first."));
+            return;
+        }
         BigDecimal others;
         try (PreparedStatement ps = con.prepareStatement(
                 "SELECT COALESCE(SUM(amount), 0) FROM kss_csr_fund_request WHERE letter_id = ? AND id <> ?")) {
@@ -478,7 +489,8 @@ public class CsrFrlServlet extends HttpServlet {
     static List<Map<String, String>> loadLetters(Connection con) throws Exception {
         List<Map<String, String>> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(
-                "SELECT l.id, l.letter_number, l.letter_name, l.activity_kind, l.amount, "
+                "SELECT l.id, l.letter_number, l.letter_name, l.activity_kind, l.amount, l.company_id, "
+              + CsrCompanyServlet.nameOf("l") + " AS company_name, "
               + "(SELECT COALESCE(SUM(r.amount), 0) FROM kss_csr_fund_request r WHERE r.letter_id = l.id) AS requested, "
               + "(SELECT COUNT(*) FROM kss_csr_fund_request r WHERE r.letter_id = l.id) AS frl_count, "
               + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = l.id) AS received "
@@ -489,6 +501,8 @@ public class CsrFrlServlet extends HttpServlet {
                 m.put("id", String.valueOf(rs.getInt("id")));
                 m.put("letterNumber", rs.getString("letter_number"));
                 m.put("letterName", rs.getString("letter_name"));
+                m.put("companyId", rs.getInt("company_id") == 0 ? "" : String.valueOf(rs.getInt("company_id")));
+                m.put("companyName", rs.getString("company_name"));
                 m.put("activityKind", rs.getString("activity_kind"));
                 m.put("amount", money2(rs.getBigDecimal("amount")));
                 m.put("requested", money2(rs.getBigDecimal("requested")));
@@ -530,6 +544,8 @@ public class CsrFrlServlet extends HttpServlet {
         r.put("createdAt", rs.getString("created_txt"));
         r.put("letterNumber", rs.getString("letter_number"));
         r.put("letterName", rs.getString("letter_name"));
+        r.put("companyId", rs.getInt("company_id") == 0 ? "" : String.valueOf(rs.getInt("company_id")));
+        r.put("companyName", rs.getString("company_name"));
         r.put("activityKind", rs.getString("activity_kind"));
         r.put("letterAmount", money2(rs.getBigDecimal("letter_amount")));
         return r;

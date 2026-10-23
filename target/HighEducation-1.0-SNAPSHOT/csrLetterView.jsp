@@ -5,6 +5,11 @@
         return;
     }
     com.google.gson.Gson gson = new com.google.gson.Gson();   // escapes < > & : safe inside <script>
+    // funding company of this approval (Masters > Companies); shown wherever the page used to say SMIORE
+    @SuppressWarnings("unchecked")
+    String coName = ((java.util.Map<String, String>) request.getAttribute("letter")).get("companyName");
+    if (coName == null || coName.trim().isEmpty()) coName = "Company";
+    String coH = coName.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +30,7 @@
 </style>
 <style>
   /* ---- letter strip ---- */
-  .lv-info { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 2fr; gap: 6px 18px; padding: 9px 12px; }
+  .lv-info { display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr 2fr; gap: 6px 18px; padding: 9px 12px; }
   .lv-k { font-size: 10.5px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: #64748b; }
   .lv-v { font-size: 13px; color: #0f172a; margin-top: 2px; white-space: pre-wrap; }
 
@@ -210,7 +215,7 @@
     <button type="button" class="lv-tab" data-tab="pay">Vendor Payments <span class="lv-n" id="nPay">0</span></button>
     <button type="button" class="lv-tab" data-tab="frl">Fund Requests (FRL) <span class="lv-n" id="nFrl">0</span></button>
     <button type="button" class="lv-tab" data-tab="rcpt">Receipts <span class="lv-n" id="nRc">0</span></button>
-    <button type="button" class="lv-tab" data-tab="ledger">SMIORE Ledger</button>
+    <button type="button" class="lv-tab" data-tab="ledger"><%= coH %> Ledger</button>
   </div>
 
   <!-- ================= SUMMARY ================= -->
@@ -221,7 +226,7 @@
         <table class="lv-stmt" id="stBudget"></table>
       </div>
       <div class="csr-card">
-        <div class="csr-card-head"><div class="csr-card-title">Funds from SMIORE <span class="csr-small">(&#8377;)</span></div></div>
+        <div class="csr-card-head"><div class="csr-card-title">Funds from <%= coH %> <span class="csr-small">(&#8377;)</span></div></div>
         <table class="lv-stmt" id="stFunds"></table>
       </div>
     </div>
@@ -323,7 +328,7 @@
   <div class="lv-pane" id="tab-frl" data-title="Fund Requests (FRL)">
     <div class="csr-card">
       <div class="csr-card-head">
-        <div class="csr-card-title">Fund Requests sent to SMIORE <span class="csr-small">(&#8377;)</span></div>
+        <div class="csr-card-title">Fund Requests sent to <%= coH %> <span class="csr-small">(&#8377;)</span></div>
         <a class="csr-btn csr-btn-sm csr-link-btn lv-act" id="btnFrl">+ New FRL</a>
       </div>
       <div class="csr-table-wrap">
@@ -341,7 +346,7 @@
   <!-- ================= RECEIPTS ================= -->
   <div class="lv-pane" id="tab-rcpt" data-title="Receipts">
     <div class="csr-card">
-      <div class="csr-card-head"><div class="csr-card-title">Funds Received from SMIORE <span class="csr-small">(&#8377;)</span></div></div>
+      <div class="csr-card-head"><div class="csr-card-title">Funds Received from <%= coH %> <span class="csr-small">(&#8377;)</span></div></div>
       <div class="csr-table-wrap">
         <table class="csr-table">
           <thead><tr>
@@ -355,9 +360,9 @@
   </div>
 
   <!-- ================= LEDGER ================= -->
-  <div class="lv-pane" id="tab-ledger" data-title="SMIORE Ledger">
+  <div class="lv-pane" id="tab-ledger" data-title="<%= coH %> Ledger">
     <div class="csr-card">
-      <div class="csr-card-head"><div class="csr-card-title">SMIORE Receivable Ledger <span class="csr-small">(&#8377;)</span></div></div>
+      <div class="csr-card-head"><div class="csr-card-title"><%= coH %> Receivable Ledger <span class="csr-small">(&#8377;)</span></div></div>
       <div class="csr-table-wrap">
         <table class="csr-table">
           <thead><tr>
@@ -367,7 +372,7 @@
           <tbody id="bLed"></tbody>
         </table>
       </div>
-      <div class="lv-note">Debit: amount claimed from SMIORE through an FRL. Credit: amount received. Balance Dr: still to be received from SMIORE; Cr: received more than claimed.</div>
+      <div class="lv-note">Debit: amount claimed from <%= coH %> through an FRL. Credit: amount received. Balance Dr: still to be received from <%= coH %>; Cr: received more than claimed.</div>
     </div>
   </div>
 </div>
@@ -397,6 +402,7 @@
 <script>
 $(function () {
   var L   = <%= gson.toJson(request.getAttribute("letter")) %>;
+  var CO  = <%= gson.toJson(coName) %>;   // funding company
   var WO  = <%= gson.toJson(request.getAttribute("workOrders")) %> || [];
   var INV = <%= gson.toJson(request.getAttribute("invoices")) %> || [];
   var FRL = <%= gson.toJson(request.getAttribute("frls")) %> || [];
@@ -511,6 +517,7 @@ $(function () {
   $('#lvActions').prepend(btn('&#9998; Edit Letter', 'CsrLetterServlet?action=form&id=' + L.id, true));
   if (L.pdfSize) $('#lvActions').prepend(btn('&#128196; Letter PDF', 'CsrLetterServlet?action=pdf&id=' + L.id, true).attr('target', '_blank'));
   function info(k, v) { $('#lvInfo').append($('<div></div>').append($('<div class="lv-k"></div>').text(k)).append($('<div class="lv-v"></div>').text(v || '-'))); }
+  info('Funding Company', L.companyName || 'Not set (edit the approval)');
   info('CSR Activity', L.activityKind);
   info('Place', L.place);
   info('Sanctioned Amount', money(A));
@@ -537,11 +544,11 @@ $(function () {
   line($f, 'C', 'Bills received (tax invoices)', C);
   line($f, '', 'Add: open proforma invoices', PO, 'lv-sub');
   if (NF) line($f, '', 'Less: bills marked No FRL (covered by proforma invoices)', -NF, 'lv-sub');
-  line($f, 'T', 'Total to be claimed from SMIORE', C + PO - NF, 'lv-tot', NF ? 'C + proforma invoices - No FRL' : 'C + proforma invoices');
-  line($f, 'D', 'Claimed from SMIORE through FRLs', D, '', FRL.length + ' FRL' + (FRL.length === 1 ? '' : 's'));
+  line($f, 'T', 'Total to be claimed from ' + CO, C + PO - NF, 'lv-tot', NF ? 'C + proforma invoices - No FRL' : 'C + proforma invoices');
+  line($f, 'D', 'Claimed from ' + CO + ' through FRLs', D, '', FRL.length + ' FRL' + (FRL.length === 1 ? '' : 's'));
   line($f, '', 'Not yet claimed', U, U > 0 ? 'lv-due' : '', 'T - D');
-  line($f, 'E', 'Received from SMIORE against FRLs', E, 'lv-tot');
-  line($f, '', 'Outstanding from SMIORE', D - E, D - E > 0 ? 'lv-due' : (D - E < 0 ? 'lv-bad' : 'lv-ok'), 'D - E');
+  line($f, 'E', 'Received from ' + CO + ' against FRLs', E, 'lv-tot');
+  line($f, '', 'Outstanding from ' + CO, D - E, D - E > 0 ? 'lv-due' : (D - E < 0 ? 'lv-bad' : 'lv-ok'), 'D - E');
   if (OTH) {
     line($f, '', 'Received without FRL (old entries)', OTH, 'lv-sub');
     line($f, '', 'Total received', E + OTH, 'lv-tot');
@@ -571,8 +578,8 @@ $(function () {
   if (!WO.length && A > 0) point('No work order issued yet', A, btn('+ Work Order', 'CsrWorkOrderServlet?action=form&letterId=' + L.id));
   if (B - C > 0)  point('Work order value not yet billed by vendors (tax invoice awaited)', B - C);
   if (POC > 0)    point('Proforma invoice claimed; final tax invoice awaited', POC);
-  if (U > 0)      point('Bills / proforma invoices not yet claimed from SMIORE', U, btn('+ Raise FRL', 'CsrFrlServlet?action=form&letterId=' + L.id));
-  if (D - E > 0)  point('Claimed from SMIORE, not yet received', D - E);
+  if (U > 0)      point('Bills / proforma invoices not yet claimed from ' + CO, U, btn('+ Raise FRL', 'CsrFrlServlet?action=form&letterId=' + L.id));
+  if (D - E > 0)  point('Claimed from ' + CO + ', not yet received', D - E);
   if (UNPAID.length) point(UNPAID.length + ' tax invoice' + (UNPAID.length === 1 ? '' : 's') + ' not fully paid to vendors (balance due)', UNPAIDAMT,
                            btn('Pay Bills', '#pay').addClass('js-tab'));
   if (r2(VT.adv - VT.adj) > 0) point('Advance paid to vendors, not yet adjusted against bills', VT.adv - VT.adj,
@@ -1036,6 +1043,7 @@ $(function () {
       .append($('<div class="pr-meta"></div>').text('Printed ' + today + (PU ? ' by ' + PU : '') + '  |  Amounts in Rs')));
     $r.append($('<div class="pr-info"></div>')
       .append($('<span></span>').append('<b>Approval:</b> ').append(document.createTextNode(L.letterName || '-')))
+      .append($('<span></span>').append('<b>Funded by:</b> ').append(document.createTextNode(CO)))
       .append($('<span></span>').append('<b>Activity:</b> ').append(document.createTextNode(L.activityKind || '-')))
       .append($('<span></span>').append('<b>Place:</b> ').append(document.createTextNode(L.place || '-')))
       .append($('<span></span>').append('<b>Sanctioned:</b> ').append(document.createTextNode(money(A)))));
@@ -1046,7 +1054,7 @@ $(function () {
       .append($('<div></div>').append('<div class="pr-org">Budget</div>').append(st([
         ['A', 'Sanctioned', A, 'k'], ['B', 'Work orders issued', B], ['', 'Balance for new work (A - B)', A - B, 's'],
         ['C', 'Bills received (tax invoices)', C, 'k'], ['', 'Still to be billed (B - C)', B - C, 's']])))
-      .append($('<div></div>').append('<div class="pr-org">Funds from SMIORE</div>').append(st([
+      .append($('<div></div>').append($('<div class="pr-org"></div>').text('Funds from ' + CO)).append(st([
         ['T', 'To be claimed', C + PO - NF, 'k'], ['D', 'Claimed through FRLs', D], ['', 'Not yet claimed', U, 's'],
         ['E', 'Received', E + OTH, 'k'], ['', 'Outstanding (D - E)', D - E, 's']])))
       .append($('<div></div>').append('<div class="pr-org">Payments to Vendors</div>').append(st([
@@ -1083,7 +1091,7 @@ $(function () {
     $r.append($b);
 
     // 4. FRLs and receipts
-    $r.append('<h3>4. Fund Requests to SMIORE and Receipts</h3>');
+    $r.append($('<h3></h3>').text('4. Fund Requests to ' + CO + ' and Receipts'));
     var $f = T().append(head([['Date'], ['FRL No'], ['Bills'], ['Claimed', 1], ['Received', 1], ['Outstanding', 1]]));
     var tf = [0, 0, 0];
     FRL.forEach(function (r) {

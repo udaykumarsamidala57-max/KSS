@@ -16,6 +16,7 @@ organization_master (organization list; linked by organization name in applicati
 kss_student_scholarship 1 ── 0..1 kss_scholarship_approval
 kss_student_scholarship 1 ── many kss_scholarship_audit (application logic; audit FK is not declared)
 
+kss_csr_company 1 ── many kss_csr_approval_letter (funding company; FRLs and receipts follow the approval's company)
 kss_csr_approval_letter 1 ── many kss_csr_work_order
 kss_csr_work_order 1 ── many kss_csr_work_order_item
 kss_csr_work_order 1 ── many kss_csr_invoice
@@ -162,12 +163,31 @@ Application login and user attributes. This schema guide describes columns only;
 ## CSR funding tables
 
 
+### `kss_csr_company`
+Companies that fund CSR projects (Masters > Companies, `CsrCompanyServlet`). Added by `KSS_csr_company.sql` (2026-10-23), which also inserts `SMIORE` and links all earlier approvals to it.
+
+| Column | Definition / meaning |
+|---|---|
+| `id` | `INT NOT NULL AUTO_INCREMENT`; primary key. |
+| `company_name` | `VARCHAR(200) NOT NULL`; unique (`uq_csr_company_name`). |
+| `short_name` | `VARCHAR(50) NULL`; shown on screens and prints when given (otherwise `company_name`). |
+| `gstin` | `VARCHAR(15) NULL`; validated format. |
+| `pan` | `VARCHAR(10) NULL`; validated format; must match characters 3–12 of the GSTIN when both are given. |
+| `contact_person` / `phone` / `email` | `VARCHAR(150)` / `VARCHAR(20)` / `VARCHAR(150)`, all NULL. |
+| `address` | `VARCHAR(500) NULL`. |
+| `status` | `ENUM('Active','Inactive') NOT NULL DEFAULT 'Active'`; Inactive = not offered for new approvals. |
+| `created_by/at`, `updated_by/at` | audit columns. |
+
+**Keys:** PK `id`; unique `company_name`.
+**Rules in code:** cannot be deleted while any approval uses it (set Inactive instead).
+
 ### `kss_csr_approval_letter`
 Approved CSR activity/funding authorization, including its uploaded signed letter. This is the parent record for CSR work orders and fund requests/receipts.
 
 | Column | Definition / meaning |
 |---|---|
 | `id` | `INT NOT NULL AUTO_INCREMENT`; primary key. |
+| `company_id` | `INT NULL`; FK to `kss_csr_company.id` (`fk_csr_letter_company`, delete restricted). Required by the application for every save; NULL only on rows not yet migrated. Cannot change once the approval has FRLs or receipts; an FRL cannot be raised while it is NULL. |
 | `letter_name` | `VARCHAR(200) NOT NULL`; letter subject/name. |
 | `letter_number` | `VARCHAR(100) NOT NULL`; unique letter number. |
 | `activity_kind` | `VARCHAR(150) NOT NULL`; CSR activity category. |
@@ -182,7 +202,7 @@ Approved CSR activity/funding authorization, including its uploaded signed lette
 | `updated_by` | `VARCHAR(50) NULL`. |
 | `updated_at` | `TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`. |
 
-**Keys:** PK `id`; unique `letter_number`; index `activity_kind`.
+**Keys:** PK `id`; unique `letter_number`; index `activity_kind`; index `company_id` (`idx_csr_letter_company`).
 
 ### `kss_csr_work_order`
 Vendor work order issued against an approved CSR letter. Stores totals and optional scanned attachment.
@@ -367,7 +387,7 @@ Each institution has its own **schema on the same MySQL server** with the same C
 4. `organization_master` supplies organization names; `users` supplies login/role records.
 
 ### CSR funding
-1. Create an approved activity in `kss_csr_approval_letter`.
+1. Create an approved activity in `kss_csr_approval_letter`, choosing its funding company from `kss_csr_company`.
 2. Create work orders and line items in `kss_csr_work_order` and `kss_csr_work_order_item`.
 3. Record proforma or tax invoices in `kss_csr_invoice`. A tax invoice may point to the proforma it settles using `proforma_id`.
 4. Create an FRL in `kss_csr_fund_request`; link claimed invoices in `kss_csr_frl_invoice` and set each invoice's `claim_amount`.

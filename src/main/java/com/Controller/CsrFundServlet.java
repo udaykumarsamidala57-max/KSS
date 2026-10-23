@@ -53,7 +53,8 @@ public class CsrFundServlet extends HttpServlet {
             "f.id, f.letter_id, f.frl_id, r.frl_number, DATE_FORMAT(f.receipt_date, '%Y-%m-%d') AS rdate_iso, "
           + "DATE_FORMAT(f.receipt_date, '%d-%m-%Y') AS rdate_txt, f.amount, f.payment_mode, f.reference_no, f.bank_name, "
           + "f.remarks, f.attachment_name, f.attachment_size, f.created_by, DATE_FORMAT(f.created_at, '%d-%m-%Y') AS created_txt, "
-          + "l.letter_number, l.letter_name, l.activity_kind, l.amount AS letter_amount";
+          + "l.letter_number, l.letter_name, l.activity_kind, l.amount AS letter_amount, l.company_id, "
+          + CsrCompanyServlet.nameOf("l") + " AS company_name";
 
     private static final String FUND_FROM =
             " FROM kss_csr_fund_receipt f JOIN kss_csr_approval_letter l ON l.id = f.letter_id"
@@ -372,16 +373,19 @@ public class CsrFundServlet extends HttpServlet {
     static List<Map<String, String>> loadLetters(Connection con) throws Exception {
         List<Map<String, String>> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(
-                "SELECT l.id, l.letter_number, l.letter_name, l.activity_kind, l.amount, "
+                "SELECT l.id, l.letter_number, l.letter_name, l.activity_kind, l.amount, l.company_id, "
+              + CsrCompanyServlet.nameOf("l") + " AS company_name, "
               + "COALESCE(SUM(f.amount), 0) AS received, COUNT(f.id) AS rcpt_count "
               + "FROM kss_csr_approval_letter l LEFT JOIN kss_csr_fund_receipt f ON f.letter_id = l.id "
-              + "GROUP BY l.id, l.letter_number, l.letter_name, l.activity_kind, l.amount ORDER BY l.id DESC");
+              + "GROUP BY l.id, l.letter_number, l.letter_name, l.activity_kind, l.amount, l.company_id ORDER BY l.id DESC");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Map<String, String> m = new LinkedHashMap<>();
                 m.put("id", String.valueOf(rs.getInt("id")));
                 m.put("letterNumber", rs.getString("letter_number"));
                 m.put("letterName", rs.getString("letter_name"));
+                m.put("companyId", rs.getInt("company_id") == 0 ? "" : String.valueOf(rs.getInt("company_id")));
+                m.put("companyName", rs.getString("company_name"));
                 m.put("activityKind", rs.getString("activity_kind"));
                 m.put("amount", money2(rs.getBigDecimal("amount")));
                 m.put("received", money2(rs.getBigDecimal("received")));
@@ -412,6 +416,8 @@ public class CsrFundServlet extends HttpServlet {
         r.put("createdAt", rs.getString("created_txt"));
         r.put("letterNumber", rs.getString("letter_number"));
         r.put("letterName", rs.getString("letter_name"));
+        r.put("companyId", rs.getInt("company_id") == 0 ? "" : String.valueOf(rs.getInt("company_id")));
+        r.put("companyName", rs.getString("company_name"));
         r.put("activityKind", rs.getString("activity_kind"));
         r.put("letterAmount", money2(rs.getBigDecimal("letter_amount")));
         return r;

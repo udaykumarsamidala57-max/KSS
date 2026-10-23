@@ -144,7 +144,8 @@ $(function () {
     // show FRLs with money still to come, plus the one this receipt already belongs to
     if (pending <= 0 && !(fund && String(fund.frlId) === String(l.id))) return;
     $sel.append($('<option></option>').attr('value', l.id)
-      .text(l.frlNumber + '  |  ' + l.frlDateTxt + '  |  ' + l.letterNumber + '  |  Yet to receive ' + money(pending)));
+      .text(l.frlNumber + '  |  ' + l.frlDateTxt + '  |  ' + l.letterNumber + '  |  ' + (l.companyName || 'company not set')
+        + '  |  Yet to receive ' + money(pending)));
   });
   function current() {
     var id = $sel.val();
@@ -154,7 +155,7 @@ $(function () {
   function budget() {
     var l = current();
     if (!l) return null;
-    return { letter: l.letterNumber + ' - ' + l.letterName, approved: Number(l.amount), others: othersFor(l), pending: r2(Number(l.amount) - othersFor(l)) };
+    return { letter: l.letterNumber + ' - ' + l.letterName + (l.companyName ? '  (from ' + l.companyName + ')' : ''), approved: Number(l.amount), others: othersFor(l), pending: r2(Number(l.amount) - othersFor(l)) };
   }
   function check() {
     var b = budget(), amt = r2($('#fAmount').val());

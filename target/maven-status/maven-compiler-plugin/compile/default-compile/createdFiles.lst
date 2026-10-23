@@ -8,6 +8,7 @@ com\Controller\CsrDashboardServlet.class
 com\Controller\InstitutionServlet.class
 com\Controller\ScholarshipViewServlet.class
 com\DAO\scholarshipViewDAO.class
+com\Controller\CsrCompanyServlet.class
 com\Controller\SholarshipServelt.class
 com\DAO\scholarshipListDAO.class
 com\Controller\CsrLetterServlet.class

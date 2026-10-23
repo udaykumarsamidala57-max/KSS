@@ -629,13 +629,14 @@
            { "KSS CSR",   "Invoices",                    "CsrInvoiceServlet",         "&#9783;",  "e", "CsrInvoiceServlet", "csrInvoice" },
            { "KSS CSR",   "Funds Request Letters",       "CsrFrlServlet",             "&#9997;",  "a", "CsrFrlServlet", "csrFrl" },
            { "KSS CSR",   "Fund Receipts",               "CsrFundServlet",            "&#8377;",  "c", "CsrFundServlet", "csrFund" },
+           { "Masters",   "Companies (CSR Funders)",     "CsrCompanyServlet",         "&#9733;",  "f", "CsrCompanyServlet", "csrCompan" },
            { "Masters",   "Organization Master",         "organization.jsp",          "&#9873;",  "f", "organization.jsp" },
            { "Masters",   "KSS Course Master",           "KssCourseMasterServlet",    "&#9881;",  "f", "KssCourseMasterServlet", "kssCourseMaster.jsp" }
          };
-         // CSR-only deployment: no scholarship approvals or masters; CSR tiles carry this institution's code
+         // CSR-only institution: no scholarship approvals or scholarship masters (Companies stays); CSR tiles carry this institution's code
          java.util.List<String[]> appList = new java.util.ArrayList<>();
          for (String[] a : apps) {
-           if (csrOnly && !"KSS CSR".equals(a[0])) continue;
+           if (csrOnly && !"KSS CSR".equals(a[0]) && !a[2].startsWith("Csr")) continue;
            String[] b = a.clone();
            if ("KSS CSR".equals(b[0])) b[0] = instCode + " CSR";
            appList.add(b);
@@ -646,7 +647,7 @@
     %>
     <%-- Gmail-style 9-dots launcher: Approvals, CSR, Masters (Global only) --%>
     <div class="kss-apps">
-      <button type="button" class="kss-apps-btn <%= appsActive ? "is-active" : "" %>" id="kssAppsBtn" aria-label="Apps" aria-haspopup="true" aria-expanded="false" title="<%= csrOnly ? instCode + " CSR" : "Approvals, " + instCode + " CSR &amp; Masters" %>">
+      <button type="button" class="kss-apps-btn <%= appsActive ? "is-active" : "" %>" id="kssAppsBtn" aria-label="Apps" aria-haspopup="true" aria-expanded="false" title="<%= csrOnly ? instCode + " CSR &amp; Masters" : "Approvals, " + instCode + " CSR &amp; Masters" %>">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
       </button>
       <div class="kss-apps-panel" id="kssAppsPanel" role="dialog" aria-label="Apps">
