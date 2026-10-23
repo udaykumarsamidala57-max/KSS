@@ -107,7 +107,11 @@ public class CsrDashboardServlet extends HttpServlet {
           + "  - GREATEST(0, (SELECT COALESCE(SUM(a.amount), 0) FROM kss_csr_vendor_advance a WHERE a.work_order_id = w.id) "
           + "     - (SELECT COALESCE(SUM(p.advance_adjusted), 0) FROM kss_csr_vendor_payment p JOIN kss_csr_invoice i ON i.id = p.invoice_id "
           + "        WHERE i.work_order_id = w.id)))), 0) "
-          + " FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS unpaid "
+          + " FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS unpaid, "
+          + "(SELECT COUNT(*) FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS wo_count, "
+          + "(SELECT COALESCE(SUM(w.total_amount), 0) FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS wo_total, "
+          + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+          + " WHERE w.letter_id = l.id AND i.invoice_type = 'Tax Invoice') AS billed "
           + "FROM kss_csr_approval_letter l";
 
     /** Money in / out by month: receipts from companies, net paid to vendors (advances + voucher payments), TDS on vouchers. */
@@ -245,6 +249,7 @@ public class CsrDashboardServlet extends HttpServlet {
         try (java.sql.Connection con = DBUtil.getConnection()) {
             request.setAttribute("companyPosition", loadCompanyPosition(con));
             request.setAttribute("unitPosition", loadUnitPosition(con));
+            request.setAttribute("projectPosition", loadProjectPosition(con));
             loadMonthly(con, request);
         } catch (Exception e) {
             getServletContext().log("Unable to load company-wise position", e);
@@ -458,7 +463,7 @@ public class CsrDashboardServlet extends HttpServlet {
                 String fyParam = request.getParameter("fy");
                 if (fyParam == null || !fyParam.matches("\\d{4}")) throw new IllegalArgumentException("Invalid financial year.");
                 monthDetail(con, Integer.parseInt(fyParam), key, col, out);
-            } else if ("co".equals(view) || "unit".equals(view)) {
+            } else if ("co".equals(view) || "unit".equals(view) || "proj".equals(view)) {
                 if (!POS_COLS.contains(col)) throw new IllegalArgumentException("Invalid column.");
                 positionDetail(con, view, key, col, out);
             } else {
@@ -488,6 +493,7 @@ public class CsrDashboardServlet extends HttpServlet {
             while (rs.next()) {
                 boolean take;
                 if ("all".equals(key)) take = true;
+                else if ("proj".equals(view)) take = String.valueOf(rs.getInt("id")).equals(want);
                 else if ("co".equals(view)) {
                     int co = rs.getInt("company_id");
                     if (rs.wasNull() || !companies.contains(co)) co = 0;
@@ -507,13 +513,22 @@ public class CsrDashboardServlet extends HttpServlet {
 
     private void positionDetail(java.sql.Connection con, String view, String key, String col, Map<String, Object> out) throws Exception {
         String ids = letterIds(con, view, key);
-        String group = "all".equals(key) ? "All" : ("co".equals(view) ? companyLabel(con, key) : key);
+        String group = "all".equals(key) ? "All" : ("co".equals(view) ? companyLabel(con, key)
+                     : "proj".equals(view) ? projectLabel(con, key) : key);
         java.sql.Date from = java.sql.Date.valueOf("1900-01-01"), to = java.sql.Date.valueOf("9999-12-31");
         if ("received".equals(col)) receiptsTable(con, ids, from, to, "Received: " + group, out);
         else if ("utilised".equals(col)) outflowTable(con, ids, from, to, "Utilised: " + group, false, out);
         else if ("retention".equals(col)) retentionTable(con, ids, "Retention Held: " + group, out);
         else if ("unpaid".equals(col)) unpaidTable(con, ids, "Bills Unpaid: " + group, out);
         else approvalsTable(con, ids, group, out);
+    }
+
+    private static String projectLabel(java.sql.Connection con, String key) throws Exception {
+        if (!key.matches("\\d+")) return "Project";
+        try (java.sql.PreparedStatement ps = con.prepareStatement("SELECT letter_number FROM kss_csr_approval_letter WHERE id = ?")) {
+            ps.setInt(1, Integer.parseInt(key));
+            try (java.sql.ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getString(1) : "Project"; }
+        }
     }
 
     private static String companyLabel(java.sql.Connection con, String key) throws Exception {
@@ -749,6 +764,50 @@ public class CsrDashboardServlet extends HttpServlet {
         }
         put(out, title, new String[] { "Month", "Received", "Utilised", "Net Flow", "Cumulative Unspent" },
             new boolean[] { false, true, true, true, true }, rows, new String[] { "Closing", "", "", "", acct(cum) });
+    }
+
+    /**
+     * Project-wise Position: one row per Management Approval (entry order), plus TOTAL.
+     * Status: no work orders = Not started; work orders fully billed and nothing unpaid = Completed; else Work in progress.
+     * Alert (first that applies): utilised above approved; own funds advanced (unspent < 0);
+     * commitments above funds (free balance < 0); completed with free balance = surplus.
+     */
+    private List<Map<String, String>> loadProjectPosition(java.sql.Connection con) throws Exception {
+        List<Map<String, String>> out = new ArrayList<Map<String, String>>();
+        BigDecimal[] total = zeros();
+        try (java.sql.PreparedStatement ps = con.prepareStatement(POSITION_SQL + " ORDER BY l.id");
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                BigDecimal[] t = zeros();
+                add(t, rs);
+                for (int k = 0; k < total.length; k++) total[k] = total[k].add(t[k]);
+                Map<String, String> r = positionRow(rs.getString("letter_name"), "", t);
+                r.put("key", String.valueOf(rs.getInt("id")));
+                r.put("projectId", rs.getString("letter_number"));
+                r.put("unit", rs.getString("activity_kind"));
+                r.put("descr", rs.getString("descr"));
+                BigDecimal woTotal = zeroIfNull(rs.getBigDecimal("wo_total")), billed = zeroIfNull(rs.getBigDecimal("billed"));
+                String status;
+                if (rs.getInt("wo_count") == 0) status = "Not started";
+                else if (billed.compareTo(woTotal) >= 0 && t[5].signum() == 0) status = "Completed";
+                else status = "Work in progress";
+                r.put("status", status);
+                BigDecimal approved = t[1], unspent = t[2].subtract(t[3]), free = unspent.subtract(t[4]).subtract(t[5]);
+                String alert = "";
+                if (t[3].compareTo(approved) > 0) alert = "Spent more than approved";
+                else if (unspent.signum() < 0) alert = "Own funds advanced \u2013 claim from company";
+                else if (free.signum() < 0) alert = "Commitments exceed funds \u2013 request funds";
+                else if ("Completed".equals(status) && free.signum() > 0) alert = "Surplus \u2013 refund / adjust with company";
+                r.put("alert", alert);
+                r.put("alertBad", alert.startsWith("Surplus") ? "" : (alert.isEmpty() ? "" : "1"));
+                out.add(r);
+            }
+        }
+        Map<String, String> t = positionRow("TOTAL", "", total);
+        t.put("total", "1");
+        t.put("key", "all");
+        out.add(t);
+        return out;
     }
 
     /** Adds one approval row of POSITION_SQL to the totals. */

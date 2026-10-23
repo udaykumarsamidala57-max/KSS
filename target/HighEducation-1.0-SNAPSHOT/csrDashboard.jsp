@@ -20,6 +20,8 @@
     List<Map<String, String>> unitPosition = (List<Map<String, String>>) request.getAttribute("unitPosition");
     String companyError = (String) request.getAttribute("companyError");
     @SuppressWarnings("unchecked")
+    List<Map<String, String>> projectPosition = (List<Map<String, String>>) request.getAttribute("projectPosition");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> monthly = (List<Map<String, String>>) request.getAttribute("monthly");
     @SuppressWarnings("unchecked")
     List<String[]> monthlyYears = (List<String[]>) request.getAttribute("monthlyYears");
@@ -109,8 +111,24 @@
 .dd-body .csr-table td { vertical-align:top; }
 .dd-body .csr-table th { white-space:nowrap !important; }
 .dd-body .csr-table td.n, .dd-body .csr-table td.d { white-space:nowrap !important; }
+.dd-body .csr-table td.ma { white-space:normal !important; min-width:240px; max-width:420px; }
+.dd-body .csr-table td.ma .ma-no { font-weight:600; color:var(--fin-ink); }
+.dd-body .csr-table td.ma .ma-desc { margin-top:2px; font-size:11.5px; line-height:1.4; color:var(--fin-muted); }
 .dd-body .csr-table td.t { white-space:normal !important; overflow-wrap:anywhere; min-width:150px; max-width:340px; overflow:visible !important; text-overflow:clip !important; }
 .dd-msg { padding:16px 14px; color:var(--fin-muted); }
+.csr-co-table td.csr-co-neg a.dd-link, .csr-co-table td.csr-cum-neg a.dd-link { color:#b91c1c !important; }
+.csr-pj-table { table-layout:auto; }
+.csr-pj-table th, .csr-pj-table td { padding-left:6px !important; padding-right:6px !important; }
+.csr-pj-table th { white-space:normal !important; }
+.csr-pj-table td.pj-unit { white-space:normal !important; min-width:80px; max-width:120px; }
+.csr-pj-table td.pj-text { white-space:normal !important; min-width:130px; max-width:240px; }
+.csr-pj-table .pj-desc { margin-top:2px; font-size:11px; line-height:1.35; color:var(--fin-muted); }
+.csr-pj-st { display:inline-block; padding:1px 6px; border-radius:3px; font-size:10.5px; font-weight:600; line-height:1.3; border:1px solid; }
+.csr-pj-st.s-ns { color:#64748b; background:#f8fafc; border-color:#e2e8f0; }
+.csr-pj-st.s-wip { color:#b45309; background:#fffbeb; border-color:#fde68a; }
+.csr-pj-st.s-done { color:#047857; background:#ecfdf5; border-color:#a7f3d0; }
+.csr-pj-table td.pj-alert { white-space:normal !important; min-width:105px; max-width:140px; font-size:11.5px; line-height:1.35; font-weight:600; color:#b91c1c; }
+.csr-pj-table td.pj-alert.ok { color:#047857; }
 .csr-co-fy { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--fin-muted); }
 .csr-co-fy select { height:28px; padding:0 6px; border:1px solid var(--fin-line); border-radius:4px; font:inherit; color:var(--fin-ink); background:#fff; }
 .csr-co-card .csr-card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -216,6 +234,61 @@
     <% } %>
   </section>
   <% if (companyError != null) break; } %>
+
+  <% if (projectPosition != null && companyError == null) { %>
+  <section class="csr-co-card" aria-labelledby="proj-title" id="projPosition">
+    <div class="csr-card-head"><div class="csr-card-title" id="proj-title">Project-wise Position <span class="csr-small">(&#8377;)</span></div></div>
+    <div class="csr-table-wrap">
+      <table class="csr-table csr-co-table csr-pj-table">
+        <thead>
+          <tr>
+            <th>Project ID</th>
+            <th>Unit</th>
+            <th>Project / Purpose</th>
+            <th>Status</th>
+            <th class="csr-num">Approved</th>
+            <th class="csr-num">Received</th>
+            <th class="csr-num">Utilised</th>
+            <th class="csr-num">Unspent with <%= escapeHtml(instCodeD) %></th>
+            <th class="csr-num">Retention Held</th>
+            <th class="csr-num">Bills Unpaid</th>
+            <th class="csr-num">Free Balance</th>
+            <th class="csr-num">Util. %</th>
+            <th>Alert</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (Map<String, String> pj : projectPosition) {
+               boolean tot = "1".equals(pj.get("total")); String pk = pj.get("key");
+               String st = pj.get("status"); %>
+          <tr class="<%= tot ? "csr-co-total" : "csr-row" %>">
+            <% if (tot) { %>
+            <td colspan="4">TOTAL (<%= escapeHtml(pj.get("projects")) %> projects)</td>
+            <% } else { %>
+            <td style="white-space:nowrap;"><a class="csr-open" href="CsrLetterServlet?action=view&id=<%= escapeHtml(pk) %>"><%= escapeHtml(pj.get("projectId")) %></a></td>
+            <td class="pj-unit"><%= escapeHtml(pj.get("unit")) %></td>
+            <td class="pj-text"><%= escapeHtml(pj.get("name")) %><% if (pj.get("descr") != null && !pj.get("descr").isEmpty()) { %><div class="pj-desc"><%= escapeHtml(pj.get("descr")) %></div><% } %></td>
+            <td><span class="csr-pj-st <%= "Completed".equals(st) ? "s-done" : ("Not started".equals(st) ? "s-ns" : "s-wip") %>"><%= escapeHtml(st) %></span></td>
+            <% } %>
+            <td class="csr-num"><%= dl(pj.get("approved"), "proj", pk, "approved", null) %></td>
+            <td class="csr-num"><%= dl(pj.get("received"), "proj", pk, "received", null) %></td>
+            <td class="csr-num"><%= dl(pj.get("utilised"), "proj", pk, "utilised", null) %></td>
+            <td class="csr-num <%= "1".equals(pj.get("unspentNeg")) ? "csr-co-neg" : "" %>"><%= dl(pj.get("unspent"), "proj", pk, "unspent", null) %></td>
+            <td class="csr-num"><%= dl(pj.get("retention"), "proj", pk, "retention", null) %></td>
+            <td class="csr-num"><%= dl(pj.get("unpaid"), "proj", pk, "unpaid", null) %></td>
+            <td class="csr-num <%= "1".equals(pj.get("freeNeg")) ? "csr-co-neg" : "" %>"><%= dl(pj.get("free"), "proj", pk, "free", null) %></td>
+            <td class="csr-num"><%= dl(pj.get("utilisation"), "proj", pk, "utilisation", null) %></td>
+            <td class="pj-alert <%= "1".equals(pj.get("alertBad")) ? "" : "ok" %>"><%= tot ? "" : escapeHtml(pj.get("alert")) %></td>
+          </tr>
+          <% } %>
+          <% if (projectPosition.size() == 1) { %>
+          <tr><td colspan="13" class="csr-empty">No Management Approvals yet.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <% } %>
 
   <% if (monthly != null) { %>
   <section class="csr-co-card" aria-labelledby="month-title" id="monthPosition">
@@ -392,18 +465,31 @@
     ddTitle.textContent = d.title;
     ddBody.replaceChildren();
     if (!d.rows || !d.rows.length) { ddBody.appendChild(el('div', 'dd-msg', 'No entries.')); return; }
+    // the Description column is shown as a second, smaller line under the Management Approval
+    var di = d.cols.indexOf('Description'), ai = d.cols.indexOf('Management Approval');
+    if (ai === -1) di = -1;
     var t = el('table', 'csr-table'), th = el('thead'), hr = el('tr'), tb = el('tbody');
-    d.cols.forEach(function (c, i) { hr.appendChild(el('th', d.num[i] ? 'n' : '', c)); });
+    d.cols.forEach(function (c, i) { if (i !== di) hr.appendChild(el('th', d.num[i] ? 'n' : '', c)); });
     th.appendChild(hr); t.appendChild(th);
     d.rows.forEach(function (r) {
       var tr = el('tr');
-      r.forEach(function (v, i) { tr.appendChild(el('td', cellClass(d, i, v), v)); });
+      r.forEach(function (v, i) {
+        if (i === di) return;
+        if (i === ai) {
+          var td = el('td', 'ma');
+          td.appendChild(el('div', 'ma-no', v));
+          if (di !== -1 && r[di]) td.appendChild(el('div', 'ma-desc', r[di]));
+          tr.appendChild(td);
+          return;
+        }
+        tr.appendChild(el('td', cellClass(d, i, v), v));
+      });
       tb.appendChild(tr);
     });
     t.appendChild(tb);
     if (d.foot) {
       var tf = el('tfoot'), fr = el('tr');
-      d.foot.forEach(function (v, i) { fr.appendChild(el('td', cellClass(d, i, v), v)); });
+      d.foot.forEach(function (v, i) { if (i !== di) fr.appendChild(el('td', i === ai ? 'ma' : cellClass(d, i, v), v)); });
       tf.appendChild(fr); t.appendChild(tf);
     }
     ddBody.appendChild(t);

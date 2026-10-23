@@ -25,7 +25,7 @@ CSR flow is complete: Management Approval → Work Orders → Proforma / Tax Inv
 | **Print** of a Management Approval: one-page A4 statement (summary, WO position, bills, FRLs, pending, signatures) | Done 2026-10-23 |
 | **SSS institution:** choose / switch after login, SSS data in `SSS_CSR`, scholarship pages hidden in SSS | Done 2026-10-23, tested locally |
 | **Funding companies** (Masters > Companies): each Management Approval picks its company; FRLs / receipts / letter page / print show it instead of SMIORE; company filters on approvals, FRLs, receipts | Done 2026-10-23, tested locally (SQL not yet run by owner) |
-| **Dashboard: Company-wise and Unit-wise (Kind of CSR Activity) Position + Month-wise Receipts vs Utilisation (FY selector); every amount opens a detail popup** (approved, received, utilised, unspent, retention, bills unpaid, free balance, utilisation %) + Indian ₹ format on all dashboard amounts | Done 2026-10-23, tested locally |
+| **Dashboard: Company-wise and Unit-wise (Kind of CSR Activity) Position + Month-wise Receipts vs Utilisation (FY selector); Project-wise Position with Status and Alert; every amount opens a detail popup** (approved, received, utilised, unspent, retention, bills unpaid, free balance, utilisation %) + Indian ₹ format on all dashboard amounts | Done 2026-10-23, tested locally |
 | Locks: invoice with a voucher cannot change amount / be deleted; advance cannot go below adjusted; WO with advances cannot be deleted | Done |
 
 ## Database state (as reported by owner, 2026-10-23)
