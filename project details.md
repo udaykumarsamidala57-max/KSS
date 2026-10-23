@@ -53,6 +53,7 @@ The product is intended for **accountants and staff handling scholarship and CSR
 - Handle document upload/download and scholarship printing in ways that keep the main application session in place and avoid an unnecessary full application reload.
 - Use accountant-friendly labels and a small, stable set of top-level destinations. A proposed grouping is **Dashboard**, **Scholarships**, **CSR Finance**, and **Master Data**; group CSR letters, work orders, invoices, FRLs, and receipts inside CSR Finance. Add reports only when their actual scope is defined.
 - Keep the active module and current task visible. Use consistent placement for actions such as New, Save, Cancel, Search, and Back. Avoid duplicate menu routes and unexplained technical terms.
+- In **Admin → KSS CSR**, **Approval Letters** is the default/home screen. Every KSS CSR screen must provide a consistent, easy-to-find **Approval Letters** navigation action that returns directly to that screen using the AJAX navigation model, regardless of which CSR subpage the user is on.
 
 These are product requirements for future implementation, not a description of the current application. The present project is JSP-based, has separate page files, and includes direct navigation and some direct JDBC in JSPs. It does not yet meet the no-full-page-reload requirement. Treat a complete AJAX navigation and interaction refactor as a project-level change that must cover scholarship, CSR, course, organization, login/session, upload/download, and print paths together.
 ## Application architecture
@@ -131,11 +132,7 @@ The detailed field list, keys, nullability, defaults, enums, and delete rules ar
 - `Dockerfile` builds the WAR using Maven 3.9.6 with Temurin 17, then copies the WAR into a Tomcat 9 / JDK 17 image as the root web application. Container port 8080 is exposed.
 - The Docker build invokes Maven with tests skipped. The repository does not include a separate deployment/runbook document describing environment-specific setup.
 
-## Database configuration and operational context
 
-`com.Bean.DBUtil` centralizes JDBC connection creation. The current source contains connection settings in code, including a remote database endpoint and a credential. This project details document intentionally does not reproduce those values. For deployment, connection values should be supplied through protected environment/deployment configuration; moving them safely is a separate implementation task.
-
-The user-reported deployment discussion mentions Railway, a MySQL service, two or three Java services, a reported monthly bill range of roughly $25–$50, and interest in private service URLs. Those figures and topology are conversation context, not verified live provider state. The intended private-network setup and whether services share one repository still need a project decision.
 
 ## SQL export sources and confidence
 
@@ -157,4 +154,5 @@ At the time this project reference was updated, existing repository changes incl
 3. Trace the relevant JSP, servlet, DAO, and SQL together because database work is not isolated to DAOs everywhere.
 4. Keep credentials, document contents, and production data out of project documentation and generated examples.
 5. When adding/changing a schema object, update `SQL schema.md` and this project overview if the architecture or feature description also changes.
+
 

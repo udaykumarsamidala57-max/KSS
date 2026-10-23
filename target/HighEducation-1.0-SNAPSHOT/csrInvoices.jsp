@@ -55,6 +55,7 @@
         </select>
         <select id="woFilter"><option value="ALL">All Work Orders</option></select>
         <input type="text" id="searchBox" placeholder="Search invoice no / WO / vendor">
+        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
         <a href="CsrInvoiceServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New Invoice</a>
       </div>
     </div>

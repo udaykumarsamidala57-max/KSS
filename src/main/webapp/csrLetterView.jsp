@@ -97,7 +97,7 @@
     </div>
     <div class="csr-actions lv-noprint" id="lvActions">
       <button type="button" class="csr-btn csr-btn-sm csr-btn-outline" onclick="window.print()">&#128424; Print</button>
-      <a href="CsrLetterServlet" class="csr-btn csr-btn-sm csr-btn-outline csr-link-btn">&#8592; Approval Letters</a>
+      <a href="CsrLetterServlet" class="csr-btn csr-btn-sm csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
     </div>
   </div>
 

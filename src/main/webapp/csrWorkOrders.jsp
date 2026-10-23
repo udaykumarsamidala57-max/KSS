@@ -52,6 +52,7 @@
       <div class="csr-controls">
         <select id="letterFilter"><option value="ALL">All Approval Letters</option></select>
         <input type="text" id="searchBox" placeholder="Search WO no / vendor / letter">
+        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
         <a href="CsrWorkOrderServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New Work Order</a>
       </div>
     </div>

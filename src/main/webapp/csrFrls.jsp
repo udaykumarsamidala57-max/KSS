@@ -51,6 +51,7 @@
       <div class="csr-controls">
         <select id="letterFilter"><option value="ALL">All Approval Letters</option></select>
         <input type="text" id="searchBox" placeholder="Search FRL / letter / invoice / remarks">
+        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
         <a href="CsrFrlServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New FRL</a>
       </div>
     </div>

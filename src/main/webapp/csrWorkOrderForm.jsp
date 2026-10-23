@@ -38,7 +38,7 @@
       <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Step 2</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrWorkOrderServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Work Orders</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>
@@ -142,7 +142,7 @@
           <div class="csr-hint csr-current-pdf" id="currentFile"></div>
         </div>
         <div class="csr-form-actions">
-          <a href="CsrWorkOrderServlet" class="csr-btn csr-btn-outline csr-link-btn">Cancel</a>
+          <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">Cancel</a>
           <button type="submit" class="csr-btn" id="btnSave"></button>
         </div>
       </div>
