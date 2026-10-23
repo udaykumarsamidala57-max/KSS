@@ -53,17 +53,18 @@ public class CsrInvoiceServlet extends HttpServlet {
     static String settled(String a) {
         return "EXISTS (SELECT 1 FROM kss_csr_invoice s WHERE s.proforma_id = " + a + ".id)";
     }
-    /** Amount that counts against the work order: tax invoices + open (unsettled) proformas. */
+    /** Amount that counts as billed against the work order: tax invoices only (a proforma is an advance, not a bill). */
     public static String counted(String a) {
-        return "(CASE WHEN " + a + ".invoice_type = 'Proforma' AND " + settled(a) + " THEN 0 ELSE " + a + ".amount END)";
+        return "(CASE WHEN " + a + ".invoice_type = 'Proforma' THEN 0 ELSE " + a + ".amount END)";
     }
     /** Advance already claimed in an FRL on the proforma this tax invoice settles. */
     static String advanceClaimed(String a) {
         return "COALESCE((SELECT pf.claim_amount FROM kss_csr_frl_invoice pf WHERE pf.invoice_id = " + a + ".proforma_id), 0)";
     }
-    /** What this invoice can claim in an FRL (if it is not in one yet). */
+    /** What this invoice can claim in an FRL (if it is not in one yet). A tax invoice marked "FRL: No" claims nothing. */
     public static String claimable(String a) {
         return "(CASE WHEN " + a + ".invoice_type = 'Proforma' THEN (CASE WHEN " + settled(a) + " THEN 0 ELSE " + a + ".amount END) "
+             + "WHEN " + a + ".frl_required = 0 THEN 0 "
              + "ELSE " + a + ".amount - " + advanceClaimed(a) + " END)";
     }
 
@@ -77,7 +78,7 @@ public class CsrInvoiceServlet extends HttpServlet {
           + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id "
           + "WHERE fi.invoice_id = i.id) AS frl_number, "
           + "(SELECT fi.claim_amount FROM kss_csr_frl_invoice fi WHERE fi.invoice_id = i.id) AS claim_amount, "
-          + "i.proforma_id, (SELECT p.invoice_number FROM kss_csr_invoice p WHERE p.id = i.proforma_id) AS proforma_number, "
+          + "i.frl_required, i.proforma_id, (SELECT p.invoice_number FROM kss_csr_invoice p WHERE p.id = i.proforma_id) AS proforma_number, "
           + "(SELECT p.amount FROM kss_csr_invoice p WHERE p.id = i.proforma_id) AS proforma_amount, "
           + "(SELECT s.id FROM kss_csr_invoice s WHERE s.proforma_id = i.id) AS settled_by_id, "
           + "(SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id) AS settled_by_number, "
@@ -239,6 +240,8 @@ public class CsrInvoiceServlet extends HttpServlet {
         String gstS = trim(request.getParameter("gst"));
         String type = trim(request.getParameter("invoiceType"));
         String proformaS = trim(request.getParameter("proformaId"));
+        // tax invoice: raise an FRL for it? ("0" = no, the money already came through the proforma advance)
+        int frlRequired = "Tax Invoice".equals(type) && "0".equals(trim(request.getParameter("frlRequired"))) ? 0 : 1;
 
         if (!TYPES.contains(type)) { sendJson(response, 400, fail("Please select the Invoice Type (Proforma / Tax Invoice).")); return; }
         if (!woParam.matches("\\d+"))  { sendJson(response, 400, fail("Please select the Work Order.")); return; }
@@ -298,10 +301,10 @@ public class CsrInvoiceServlet extends HttpServlet {
 
         if (!isNew) {
             String oldType = null, frl = null, settledBy = null;
-            int oldWo = 0, oldPf = 0;
+            int oldWo = 0, oldPf = 0, oldFrlReq = 1;
             BigDecimal oldAmount = null;
             try (PreparedStatement ps = con.prepareStatement(
-                    "SELECT i.invoice_type, i.work_order_id, i.amount, COALESCE(i.proforma_id, 0), "
+                    "SELECT i.invoice_type, i.work_order_id, i.amount, COALESCE(i.proforma_id, 0), i.frl_required, "
                   + "(SELECT r.frl_number FROM kss_csr_frl_invoice fi JOIN kss_csr_fund_request r ON r.id = fi.frl_id WHERE fi.invoice_id = i.id), "
                   + "(SELECT s.invoice_number FROM kss_csr_invoice s WHERE s.proforma_id = i.id) "
                   + "FROM kss_csr_invoice i WHERE i.id = ?")) {
@@ -309,7 +312,7 @@ public class CsrInvoiceServlet extends HttpServlet {
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         oldType = rs.getString(1); oldWo = rs.getInt(2); oldAmount = rs.getBigDecimal(3);
-                        oldPf = rs.getInt(4); frl = rs.getString(5); settledBy = rs.getString(6);
+                        oldPf = rs.getInt(4); oldFrlReq = rs.getInt(5); frl = rs.getString(6); settledBy = rs.getString(7);
                     }
                 }
             }
@@ -321,9 +324,10 @@ public class CsrInvoiceServlet extends HttpServlet {
                 return;
             }
             // an invoice already in an FRL keeps its type, work order, amount and proforma link
-            if (frl != null && (!oldType.equals(type) || oldWo != woId || oldAmount.compareTo(amount) != 0 || oldPf != proformaId)) {
+            if (frl != null && (!oldType.equals(type) || oldWo != woId || oldAmount.compareTo(amount) != 0 || oldPf != proformaId
+                    || oldFrlReq != frlRequired)) {
                 sendJson(response, 400, fail("This invoice is included in FRL " + frl
-                        + ", so its type, work order, amount and proforma cannot be changed. Remove it from the FRL first."));
+                        + ", so its type, work order, amount, proforma and FRL choice cannot be changed. Remove it from the FRL first."));
                 return;
             }
         }
@@ -370,35 +374,33 @@ public class CsrInvoiceServlet extends HttpServlet {
             try (ResultSet rs = ps.executeQuery()) { if (rs.next()) { woTotal = rs.getBigDecimal(1); woNumber = rs.getString(2); } }
         }
         if (woTotal == null) { sendJson(response, 400, fail("Work order not found. Please reload the page.")); return; }
-        // other invoices of the work order: tax invoices + proformas not settled (ignoring this invoice and the proforma it settles)
+        // already billed on the work order: tax invoices only (a proforma is an advance, not a bill)
         BigDecimal others;
         try (PreparedStatement ps = con.prepareStatement(
-                "SELECT COALESCE(SUM(CASE WHEN i.invoice_type = 'Proforma' AND EXISTS (SELECT 1 FROM kss_csr_invoice s "
-              + "WHERE s.proforma_id = i.id AND s.id <> ?) THEN 0 ELSE i.amount END), 0) "
-              + "FROM kss_csr_invoice i WHERE i.work_order_id = ? AND i.id <> ? AND i.id <> ?")) {
-            ps.setInt(1, id);
-            ps.setInt(2, woId);
-            ps.setInt(3, id);
-            ps.setInt(4, proformaId);
+                "SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i "
+              + "WHERE i.work_order_id = ? AND i.id <> ? AND i.invoice_type = 'Tax Invoice'")) {
+            ps.setInt(1, woId);
+            ps.setInt(2, id);
             try (ResultSet rs = ps.executeQuery()) { rs.next(); others = rs.getBigDecimal(1); }
         }
         BigDecimal balance = woTotal.subtract(others);
         if (amount.compareTo(balance) > 0) {
-            sendJson(response, 400, fail("Invoice amount Rs " + amount.toPlainString() + " exceeds the balance Rs "
-                    + balance.toPlainString() + " of work order " + woNumber + "."));
+            sendJson(response, 400, fail(("Proforma".equals(type) ? "Advance" : "Invoice") + " amount Rs " + amount.toPlainString()
+                    + " exceeds the balance Rs " + balance.toPlainString() + " (not yet billed) of work order " + woNumber + "."));
             return;
         }
 
         try {
             if (isNew) {
                 try (PreparedStatement ps = con.prepareStatement(
-                        "INSERT INTO kss_csr_invoice (work_order_id, invoice_type, proforma_id, invoice_number, invoice_date, price, gst_percent, gst_amount, amount, "
-                      + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        "INSERT INTO kss_csr_invoice (work_order_id, invoice_type, proforma_id, frl_required, invoice_number, invoice_date, price, gst_percent, gst_amount, amount, "
+                      + "attachment, attachment_name, attachment_type, attachment_size, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         Statement.RETURN_GENERATED_KEYS)) {
                     int i = 1;
                     ps.setInt(i++, woId);
                     ps.setString(i++, type);
                     if (proformaId > 0) ps.setInt(i++, proformaId); else ps.setNull(i++, java.sql.Types.INTEGER);
+                    ps.setInt(i++, frlRequired);
                     ps.setString(i++, invNumber);
                     ps.setDate(i++, Date.valueOf(date));
                     ps.setBigDecimal(i++, price);
@@ -415,7 +417,7 @@ public class CsrInvoiceServlet extends HttpServlet {
                     try (ResultSet keys = ps.getGeneratedKeys()) { keys.next(); id = keys.getInt(1); }
                 }
             } else {
-                String sql = "UPDATE kss_csr_invoice SET work_order_id=?, invoice_type=?, proforma_id=?, invoice_number=?, invoice_date=?, price=?, gst_percent=?, "
+                String sql = "UPDATE kss_csr_invoice SET work_order_id=?, invoice_type=?, proforma_id=?, frl_required=?, invoice_number=?, invoice_date=?, price=?, gst_percent=?, "
                            + "gst_amount=?, amount=?, updated_by=?"
                            + (file != null ? ", attachment=?, attachment_name=?, attachment_type=?, attachment_size=?" : "")
                            + " WHERE id=?";
@@ -424,6 +426,7 @@ public class CsrInvoiceServlet extends HttpServlet {
                     ps.setInt(i++, woId);
                     ps.setString(i++, type);
                     if (proformaId > 0) ps.setInt(i++, proformaId); else ps.setNull(i++, java.sql.Types.INTEGER);
+                    ps.setInt(i++, frlRequired);
                     ps.setString(i++, invNumber);
                     ps.setDate(i++, Date.valueOf(date));
                     ps.setBigDecimal(i++, price);
@@ -543,6 +546,7 @@ public class CsrInvoiceServlet extends HttpServlet {
         int frlId = rs.getInt("frl_id");
         r.put("frlId", rs.wasNull() ? "" : String.valueOf(frlId));
         r.put("frlNumber", rs.getString("frl_number"));
+        r.put("frlRequired", String.valueOf(rs.getInt("frl_required")));
         r.put("claimAmount", rs.getBigDecimal("claim_amount") == null ? "" : money2(rs.getBigDecimal("claim_amount")));
         int pf = rs.getInt("proforma_id");
         r.put("proformaId", rs.wasNull() ? "" : String.valueOf(pf));

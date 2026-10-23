@@ -36,7 +36,7 @@
     <div class="csr-stats">
       <div class="csr-stat"><div class="csr-stat-label">Invoices</div><div class="csr-stat-value" id="statCount">0</div></div>
       <div class="csr-stat"><div class="csr-stat-label" id="statWoLabel">Work Order Total</div><div class="csr-stat-value" id="statWo">-</div></div>
-      <div class="csr-stat"><div class="csr-stat-label">Billed + Open Advance</div><div class="csr-stat-value" id="statInvoiced">-</div></div>
+      <div class="csr-stat"><div class="csr-stat-label">Billed (Tax Invoices)</div><div class="csr-stat-value" id="statInvoiced">-</div></div>
       <div class="csr-stat"><div class="csr-stat-label">Balance</div><div class="csr-stat-value" id="statBalance">-</div></div>
     </div>
   </div>
@@ -151,7 +151,8 @@ $(function () {
       if (Number(r.claimable) !== Number(r.amount))
         $f.append($('<div class="csr-small"></div>').text('To claim ' + money(r.claimable)));
     } else {
-      $f.append($('<span class="csr-small"></span>').text(isPi ? 'Settled, not claimed' : 'Covered by advance'));
+      $f.append($('<span class="csr-small"></span>').text(isPi ? 'Settled, not claimed'
+        : (r.frlRequired === '0' ? 'No FRL (received via proforma)' : 'Covered by advance')));
     }
     $tr.append($f);
     var $a = $('<td></td>');

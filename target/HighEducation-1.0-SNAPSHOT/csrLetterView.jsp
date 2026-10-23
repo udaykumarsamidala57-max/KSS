@@ -250,6 +250,7 @@ $(function () {
   if (loadError) $('#csrError').text(loadError).show();
 
   // ---------- helpers
+  function noFrl(v) { var x = String(v.frl_required); return x === '0' || x === 'false'; }   // tax invoice marked "No FRL"
   function r2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
   function amt(v) {                       // accounts style: 1,23,456.00 ; zero "-" ; negative in brackets
     v = r2(v);
@@ -298,6 +299,15 @@ $(function () {
     if (!v.frl_number) U += +v.claimable;
   });
   C = r2(C); PO = r2(PO); POC = r2(POC); U = r2(U);
+  // tax invoices marked "No FRL": amount less any advance already claimed on their proforma is not claimed from KSS
+  var NF = 0;
+  INV.forEach(function (v) {
+    if (v.invoice_type === 'Proforma' || !noFrl(v)) return;
+    var adv = 0;
+    INV.forEach(function (p) { if (p.invoice_type === 'Proforma' && p.invoice_number === v.proforma_number && p.frl_number) adv = +p.claim_amount; });
+    NF += +v.amount - adv;
+  });
+  NF = r2(NF);
   var D = 0; FRL.forEach(function (r) { D += +r.amount; }); D = r2(D);       // claimed through FRLs
   var E = 0, OTH = 0;                                                        // received against FRL / without FRL
   RC.forEach(function (f) { if (f.frl_id) E += +f.amount; else OTH += +f.amount; });
@@ -335,7 +345,8 @@ $(function () {
   var $f = $('#stFunds');
   line($f, 'C', 'Bills received (tax invoices)', C);
   line($f, '', 'Add: open advances (proforma not yet settled)', PO, 'lv-sub');
-  line($f, 'T', 'Total to be claimed from KSS', C + PO, 'lv-tot', 'C + advances');
+  if (NF) line($f, '', 'Less: bills marked No FRL (received via proforma)', -NF, 'lv-sub');
+  line($f, 'T', 'Total to be claimed from KSS', C + PO - NF, 'lv-tot', NF ? 'C + advances - No FRL' : 'C + advances');
   line($f, 'D', 'Claimed from KSS through FRLs', D, '', FRL.length + ' FRL' + (FRL.length === 1 ? '' : 's'));
   line($f, '', 'Not yet claimed', U, U > 0 ? 'lv-due' : '', 'T - D');
   line($f, 'E', 'Received from KSS against FRLs', E, 'lv-tot');
@@ -407,7 +418,7 @@ $(function () {
       .append(nTd(v.frl_number ? v.claim_amount : v.claimable))
       .append(v.frl_number ? td(v.frl_number)
         : (+v.claimable > 0 ? $('<td></td>').append($('<span class="csr-small" style="color:#b45309;font-weight:600;">Not claimed</span>'))
-                            : td('-', 'csr-small')))
+                            : td(!pi && noFrl(v) ? 'No FRL' : '-', 'csr-small')))
       .append(fileTd(v.attachment_size, 'CsrInvoiceServlet?action=file&id=' + v.id))
       .append(actTd(btn('&#9998; Edit', 'CsrInvoiceServlet?action=form&id=' + v.id, true))));
   });
