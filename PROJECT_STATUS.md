@@ -1,44 +1,54 @@
 # PROJECT_STATUS — HighEducation
-Last updated: 2026-10-23 (Vendor Payments added)
+Last updated: 2026-10-23 (evening)
 
 ## Summary
-Scholarship module is stable. The KSS CSR module (Global only) is feature-complete for the flow **Management Approval → Work Orders → Proforma/Tax Invoices → Funds Request Letters → Fund Receipts**, with accounting view per approval, a CSR dashboard, a 9-dots launcher and the finance theme on all Global pages.
+One application, two institutions on the same MySQL server:
+* **KSS** (schema `KSS`): Scholarship portal + CSR Amount Spending. Stable.
+* **SSS** (schema `SSS_CSR`): CSR Amount Spending only.
+Global users choose KSS or SSS after login and switch from the header ("KSS ⇄ SSS"). Other users always work in the KSS scholarship portal.
+CSR flow is complete: Management Approval → Work Orders → Proforma / Tax Invoices → FRLs → Fund Receipts, plus **Vendor Payments** (advances, payment vouchers with deductions, part payments) and a work-order ledger.
 
 ## Done
 | Area | Status |
 |---|---|
-| 9-dots launcher (Approvals, KSS CSR, Masters), Global only | Done |
-| Finance theme (IBM Plex Sans, slate/teal, compact) on all Global pages | Done (re-done twice after owner feedback) |
-| Approval letters CRUD + signed PDF | Done |
-| Work orders with line items, GST, attachment | Done |
-| Invoices: Proforma / Tax Invoice, settle proforma, "Raise FRL Yes/No" | Done |
-| Funds Request Letters: many invoices per FRL, per-invoice claim, remarks, required copy | Done |
-| Fund receipts against FRL | Done |
-| Approval letter view page (accounts statement A–E/T, tabs, ledger, print) | Done |
-| CSR Dashboard (`CsrDashboardServlet`/`csrDashboard.jsp`) | Added by owner/another session on the PC |
-| Rename to "Management Approvals", "SMIORE Ledger", per-WO bills panel | Done on the PC copy |
-| All example placeholders removed | Done |
-| Vendor Payments (2026-10-23): advances to vendors per WO, payment voucher per tax invoice (debit note, TDS, retention, advance adjusted, net paid), Vendor Payments tab + summary statement on the letter page, invoice particulars, locks | Built and tested locally (34 rule checks + page regression). Needs `KSS_csr_vendor_payment.sql` on Railway **before** deploying. |
+| 9-dots launcher (Approvals, CSR, Masters), Global only | Done |
+| Finance theme (IBM Plex Sans, slate/teal, compact) on Global pages | Done |
+| Management Approvals, Work Orders, Invoices (Proforma / Tax, settle proforma, Raise FRL Yes/No), FRLs, Fund Receipts | Done |
+| Management Approval page: statements A–E/T, tabs, SMIORE ledger, pending points | Done |
+| CSR Dashboard | Done (added by owner) |
+| Invoice **Particulars** field | Done 2026-10-23 |
+| **Vendor advances** per work order (+ Advance on each WO) | Done 2026-10-23 |
+| **Payment vouchers** per tax invoice: debit note, TDS (194C / 194J), retention, advance adjusted, amount paid; **part payments** (one bill, several vouchers) | Done 2026-10-23 |
+| **Work Orders tab:** Debit / Credit ledger under each work order (bill = Credit, payments and deductions = Debit, closing balance) | Done 2026-10-23 |
+| **Vendor Payments tab:** Vendor-wise Summary + Bills Awaiting Payment (paid so far, balance due) | Done 2026-10-23 |
+| **Popup** for any payment / advance / bill (statement, amount in words, Edit / Print / Delete) | Done 2026-10-23 |
+| **Print** of a Management Approval: one-page A4 statement (summary, WO position, bills, FRLs, pending, signatures) | Done 2026-10-23 |
+| **SSS institution:** choose / switch after login, SSS data in `SSS_CSR`, scholarship pages hidden in SSS | Done 2026-10-23, tested locally |
+| Locks: invoice with a voucher cannot change amount / be deleted; advance cannot go below adjusted; WO with advances cannot be deleted | Done |
+
+## Database state (as reported by owner, 2026-10-23)
+* `KSS`: vendor payment tables created, `kss_csr_invoice.particulars` added, `idx_csr_pay_invoice` non-unique (part payments allowed).
+* `SSS_CSR`: created from `NEW_INSTITUTION_CSR_database.sql` (all CSR tables). Its `users` table is not used (logins come from `KSS.users`).
 
 ## Open items (in priority order)
-00. **SSS (second institution, CSR only)** — done in code and tested locally (2026-10-23): one app, Global users choose KSS / SSS after login and switch from the header; non-Global users stay in KSS scholarship; SSS data in schema `SSS_CSR` on the same server. Pending: SSS full name (AppConfig.SSS), deploy. Not needed any more (from the earlier two-service idea): `KSS_users_institutions.sql`, Railway `APP_DB_*` / `AUTH_DB_*` / `INSTITUTION_*` variables, MySQL users `sss_app` / `sss_login`. Known: CSR dashboard shows amounts in western grouping (₹500,000.00), not Indian.
-0. **Vendor Payments go-live:** run `Dump20261016\KSS_csr_vendor_payment.sql` on Railway first (if it was already run before part payments were added, run `KSS_csr_vendor_payment_partial.sql` instead of re-running it) (invoice list/form and letter page payment tab need it), then F5 + restart Tomcat, then commit + push. Delete the four files of the withdrawn first attempt if still present: `CsrPaymentProcedureServlet.java`, `csrPaymentProcedures.jsp`, `csrPaymentProcedureForm.jsp`, `Dump20261016\KSS_csr_payment_procedure.sql`. Not built yet (ask owner): retention release entry, printable payment voucher, TDS register, `&back=letter` on WO / FRL / receipt forms.
-1. **"+ New Receipt" from the approval letter page — built and tested, NOT on the PC yet.** The PC's `csrLetterView.jsp` and `csrFundForm.jsp` were modified after my copy (renames, WO bills panel), so overwriting would lose those edits. Changes must be merged, not copied — see HANDOVER §4 for the exact edits.
-2. **Run SQL on the Railway DB:** `KSS_csr_invoice_frl_required.sql`, and finish `claim_amount` (`UPDATE` then `MODIFY ... NOT NULL`, with `SET SQL_SAFE_UPDATES=0` if error 1175). Confirm with `SHOW COLUMNS FROM kss_csr_frl_invoice;` and `SHOW COLUMNS FROM kss_csr_invoice;`.
-3. **Re-verify** that the "+ New Receipt" button is hidden when the letter has no FRL due (last test still showed it visible; the hide line `else $('#btnRc').hide();` exists — check for a stale JSP cache or tab/hash effect).
-4. Owner to **confirm two proforma assumptions**: (a) one proforma ↔ one tax invoice; (b) tax-invoice FRL claim = invoice amount − advance already claimed.
-5. **Security (recommended before wider use):** move DB credentials out of `DBUtil.java` into environment variables and rotate the Railway password (it is in git history); hash user passwords; add CSRF protection to the AJAX posts.
-6. Commit + push to git so Railway redeploys (after item 1–2).
-7. `Approved List`, `Rejected List`, `Reimbursement` menu entries are placeholders (`#`).
-8. `kss_course_master` has no CREATE TABLE in the dumps — add one to the schema folder.
+1. **Clean and test in Eclipse, then deploy.** F5 → Project → Clean → Tomcat Clean + Restart → Ctrl+F5. Test: login as Global → choose SSS → add a Management Approval → switch to KSS (must not show it). Then `git add -A`, commit, push.
+2. **Delete files that are no longer used** (cannot be deleted from the cloud session):
+   `src\main\java\com\Controller\CsrPaymentProcedureServlet.java`, `src\main\webapp\csrPaymentProcedures.jsp`, `src\main\webapp\csrPaymentProcedureForm.jsp`, `Dump20261016\KSS_csr_payment_procedure.sql`, `Dump20261016\KSS_users_institutions.sql`.
+3. **Railway clean-up** from an earlier idea (two services), if any of it was added: remove variables `APP_DB_*`, `AUTH_DB_*`, `INSTITUTION_*`, `APP_MODULES`; drop MySQL users `sss_app` / `sss_login`. Column `users.institutions` is harmless and can stay.
+4. **SSS full name** — owner to give it; set in `AppConfig.SSS` (header currently shows "SSS").
+5. **CSR Dashboard money format** shows ₹500,000.00 (western grouping); should be Indian ₹5,00,000.00.
+6. **"+ New Receipt" from the Management Approval page** — designed, not merged on the PC. See HANDOVER §5.
+7. **Check on the KSS database** that `kss_csr_invoice.frl_required` exists and `kss_csr_frl_invoice.claim_amount` is NOT NULL (`SHOW COLUMNS ...`). If not, run the statements in HANDOVER §4.
+8. Owner to **confirm two proforma rules**: (a) one proforma ↔ one tax invoice; (b) tax-invoice FRL claim = invoice amount − advance already claimed.
+9. **Security (before wider use):** DB password is hard-coded in `DBUtil.java` and in git history — move to a Railway variable and rotate it; hash user passwords; add CSRF protection to AJAX posts.
+10. Not built yet (ask owner first): retention release to vendor, TDS register, plain words for "Vch Type / Vch No. / Journal" in the ledger, `&back=letter` on Work Order / FRL / Receipt forms.
+11. Menu placeholders `Approved List`, `Rejected List`, `Reimbursement` (`#`); `kss_course_master` has no CREATE TABLE in the dumps.
 
 ## Known behaviours / not bugs
-* Stale Eclipse copy hides new JSPs — F5 + restart Tomcat.
-* Playwright test server dies on its time limit — harmless, restart it with a background run.
-* Deleting is blocked (by design) for: letters with WOs/FRLs/receipts; invoices inside an FRL; settled proformas; FRLs with receipts.
+* "My change is not showing" = stale Eclipse copy: F5, Project → Clean, restart Tomcat, Ctrl+F5.
+* Deleting is blocked by design for: letters with WOs / FRLs / receipts; invoices in an FRL or with a payment voucher; settled proformas; FRLs with receipts; advances already adjusted; work orders with invoices or advances.
+* Proformas are not bills: they are not in the work-order ledger and never get a payment voucher.
+* A CSR schema change must be run in **both** schemas: `KSS` and `SSS_CSR`.
 
-## Owner decisions so far (for context)
-Type on the same Invoice page · many invoices in one FRL · count both (proforma and tax) at first, later changed: proforma is **not** a bill · open tab in URL hash · dedicated accounts-style page per approval letter · FRL columns order WO → Invoices → FRLs → Funds Received.
-
-## Account note
-The previous conversation ended on a usage limit. Billing/credit status cannot be seen from the session; check the Claude account's usage and billing settings.
+## Owner decisions (for context)
+Type on the same Invoice page · many invoices in one FRL · proforma is not a bill · open tab kept in the URL · dedicated accounts page per Management Approval · most work and navigation through the Management Approval page · ledger under each work order (not a separate tab) · bill = Credit, payment = Debit · one bill may have several part payments · TDS sections 194C and 194J only · no "Sundry" wording · short one-page print · one application for KSS and SSS, Global users switch, others KSS only.
