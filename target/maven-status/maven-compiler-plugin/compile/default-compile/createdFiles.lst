@@ -9,6 +9,7 @@ com\Bean\DBUtil.class
 com\Controller\UpdateStatusServlet.class
 com\Controller\CsrFrlServlet.class
 com\Controller\KssCourseServlet.class
+com\Controller\CsrDashboardServlet.class
 com\Controller\ScholarshipDocumentUploadServlet.class
 com\Controller\ScholarshipViewServlet.class
 com\DAO\scholarshipViewDAO.class

@@ -67,6 +67,13 @@
   .lv-none { padding: 14px; text-align: center; color: #64748b; font-size: 12.5px; }
   .lv-cr { color: #047857; }
   .lv-note { font-size: 11px; color: #64748b; padding: 6px 12px 8px; }
+  .lv-wo-bills { padding: 10px 12px; background: #f8fafc; }
+  .lv-wo-bills-summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 8px; color: #334155; font-size: 12px; }
+  .lv-wo-bills-summary strong { color: #0f172a; }
+  .lv-wo-bills table { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; }
+  .lv-wo-bills th, .lv-wo-bills td { padding: 6px 8px; border: 1px solid #e2e8f0; text-align: left; }
+  .lv-wo-bills th { color: #64748b; font-size: 10px; letter-spacing: .35px; text-transform: uppercase; }
+  .lv-wo-bills .csr-num { text-align: right; white-space: nowrap; }
 
   @media (max-width: 1000px) {
     .lv-info { grid-template-columns: 1fr 1fr; }
@@ -91,13 +98,13 @@
 
   <div class="csr-header">
     <div>
-      <div class="csr-subtitle"><a href="CsrLetterServlet" style="color:inherit;">KSS CSR Amount Spending &rsaquo; Approval Letters</a></div>
+      <div class="csr-subtitle"><a href="CsrLetterServlet" style="color:inherit;">KSS CSR Amount Spending &rsaquo; Management Approvals</a></div>
       <h1 class="csr-title" id="lvTitle"></h1>
       <div id="lvName" style="font-size:13px; color:#334155;"></div>
     </div>
     <div class="csr-actions lv-noprint" id="lvActions">
       <button type="button" class="csr-btn csr-btn-sm csr-btn-outline" onclick="window.print()">&#128424; Print</button>
-      <a href="CsrLetterServlet" class="csr-btn csr-btn-sm csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+      <a href="CsrLetterServlet" class="csr-btn csr-btn-sm csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
     </div>
   </div>
 
@@ -111,7 +118,7 @@
     <button type="button" class="lv-tab" data-tab="bills">Bills <span class="lv-n" id="nInv">0</span></button>
     <button type="button" class="lv-tab" data-tab="frl">Fund Requests (FRL) <span class="lv-n" id="nFrl">0</span></button>
     <button type="button" class="lv-tab" data-tab="rcpt">Receipts <span class="lv-n" id="nRc">0</span></button>
-    <button type="button" class="lv-tab" data-tab="ledger">KSS Ledger</button>
+    <button type="button" class="lv-tab" data-tab="ledger">SMIORE Ledger</button>
   </div>
 
   <!-- ================= SUMMARY ================= -->
@@ -122,7 +129,7 @@
         <table class="lv-stmt" id="stBudget"></table>
       </div>
       <div class="csr-card">
-        <div class="csr-card-head"><div class="csr-card-title">Funds from KSS <span class="csr-small">(&#8377;)</span></div></div>
+        <div class="csr-card-head"><div class="csr-card-title">Funds from SMIORE <span class="csr-small">(&#8377;)</span></div></div>
         <table class="lv-stmt" id="stFunds"></table>
       </div>
     </div>
@@ -138,7 +145,7 @@
         <table class="csr-table">
           <thead><tr>
             <th>WO No</th><th>Vendor</th><th class="csr-num">WO Value</th><th class="csr-num">Billed (Tax Inv)</th>
-            <th class="csr-num">To be Billed</th><th class="csr-num">Open Advance</th><th class="csr-num">Claimed (FRL)</th>
+            <th class="csr-num">To be Billed</th><th class="csr-num">Open Proforma Invoices</th><th class="csr-num">Claimed (FRL)</th>
             <th class="csr-num">Not Claimed</th>
           </tr></thead>
           <tbody id="bWoPos"></tbody>
@@ -174,7 +181,7 @@
         <table class="csr-table">
           <thead><tr>
             <th>Date</th><th>Type</th><th>Bill No</th><th>WO No</th><th>Vendor</th><th class="csr-num">Taxable Value</th>
-            <th class="csr-num">GST %</th><th class="csr-num">GST</th><th class="csr-num">Amount</th><th>Advance / Settlement</th>
+            <th class="csr-num">GST %</th><th class="csr-num">GST</th><th class="csr-num">Amount</th><th>Proforma / Settlement</th>
             <th class="csr-num">Claim</th><th>FRL</th><th>Copy</th><th class="lv-act">Action</th>
           </tr></thead>
           <tbody id="bInv"></tbody>
@@ -187,7 +194,7 @@
   <div class="lv-pane" id="tab-frl" data-title="Fund Requests (FRL)">
     <div class="csr-card">
       <div class="csr-card-head">
-        <div class="csr-card-title">Fund Requests sent to KSS <span class="csr-small">(&#8377;)</span></div>
+        <div class="csr-card-title">Fund Requests sent to SMIORE <span class="csr-small">(&#8377;)</span></div>
         <a class="csr-btn csr-btn-sm csr-link-btn lv-act" id="btnFrl">+ New FRL</a>
       </div>
       <div class="csr-table-wrap">
@@ -205,7 +212,7 @@
   <!-- ================= RECEIPTS ================= -->
   <div class="lv-pane" id="tab-rcpt" data-title="Receipts">
     <div class="csr-card">
-      <div class="csr-card-head"><div class="csr-card-title">Funds Received from KSS <span class="csr-small">(&#8377;)</span></div></div>
+      <div class="csr-card-head"><div class="csr-card-title">Funds Received from SMIORE <span class="csr-small">(&#8377;)</span></div></div>
       <div class="csr-table-wrap">
         <table class="csr-table">
           <thead><tr>
@@ -219,9 +226,9 @@
   </div>
 
   <!-- ================= LEDGER ================= -->
-  <div class="lv-pane" id="tab-ledger" data-title="KSS Ledger">
+  <div class="lv-pane" id="tab-ledger" data-title="SMIORE Ledger">
     <div class="csr-card">
-      <div class="csr-card-head"><div class="csr-card-title">KSS Receivable Ledger <span class="csr-small">(&#8377;)</span></div></div>
+      <div class="csr-card-head"><div class="csr-card-title">SMIORE Receivable Ledger <span class="csr-small">(&#8377;)</span></div></div>
       <div class="csr-table-wrap">
         <table class="csr-table">
           <thead><tr>
@@ -231,7 +238,7 @@
           <tbody id="bLed"></tbody>
         </table>
       </div>
-      <div class="lv-note">Debit: amount claimed from KSS through an FRL. Credit: amount received. Balance Dr: still to be received from KSS; Cr: received more than claimed.</div>
+      <div class="lv-note">Debit: amount claimed from SMIORE through an FRL. Credit: amount received. Balance Dr: still to be received from SMIORE; Cr: received more than claimed.</div>
     </div>
   </div>
 </div>
@@ -288,8 +295,8 @@ $(function () {
   // ---------- figures
   var A  = r2(L.amount);                                   // sanctioned
   var B  = 0; WO.forEach(function (w) { B += +w.total_amount; }); B = r2(B);
-  // C = bills (tax invoices only). A proforma is an advance request: it counts only while open (not settled by a tax invoice).
-  var C = 0, PO = 0, POC = 0, U = 0;                       // bills, open advances, open advances already claimed, not yet claimed
+  // C = tax invoices only. Proforma invoices count separately while open (not settled by a tax invoice).
+  var C = 0, PO = 0, POC = 0, U = 0;                       // tax invoices, open proformas, claimed open proformas, not yet claimed
   INV.forEach(function (v) {
     if (v.invoice_type === 'Proforma') {
       if (!v.settled_by) { PO += +v.amount; if (v.frl_number) POC += +v.claim_amount; }
@@ -299,7 +306,7 @@ $(function () {
     if (!v.frl_number) U += +v.claimable;
   });
   C = r2(C); PO = r2(PO); POC = r2(POC); U = r2(U);
-  // tax invoices marked "No FRL": amount less any advance already claimed on their proforma is not claimed from KSS
+  // Tax invoices marked "No FRL": subtract any amount already claimed against their proforma invoice.
   var NF = 0;
   INV.forEach(function (v) {
     if (v.invoice_type === 'Proforma' || !noFrl(v)) return;
@@ -340,17 +347,17 @@ $(function () {
   line($b, '', 'Balance available for new work orders', A - B, A - B < 0 ? 'lv-bad' : 'lv-ok', 'A - B');
   line($b, 'C', 'Bills received (tax invoices)', C, 'lv-tot');
   line($b, '', 'Work order value not yet billed', B - C, B - C < 0 ? 'lv-bad' : '', 'B - C');
-  line($b, '', 'of which advance asked on proforma (open)', PO, 'lv-sub');
+  line($b, '', 'of which open proforma invoices', PO, 'lv-sub');
 
   var $f = $('#stFunds');
   line($f, 'C', 'Bills received (tax invoices)', C);
-  line($f, '', 'Add: open advances (proforma not yet settled)', PO, 'lv-sub');
-  if (NF) line($f, '', 'Less: bills marked No FRL (received via proforma)', -NF, 'lv-sub');
-  line($f, 'T', 'Total to be claimed from KSS', C + PO - NF, 'lv-tot', NF ? 'C + advances - No FRL' : 'C + advances');
-  line($f, 'D', 'Claimed from KSS through FRLs', D, '', FRL.length + ' FRL' + (FRL.length === 1 ? '' : 's'));
+  line($f, '', 'Add: open proforma invoices', PO, 'lv-sub');
+  if (NF) line($f, '', 'Less: bills marked No FRL (covered by proforma invoices)', -NF, 'lv-sub');
+  line($f, 'T', 'Total to be claimed from SMIORE', C + PO - NF, 'lv-tot', NF ? 'C + proforma invoices - No FRL' : 'C + proforma invoices');
+  line($f, 'D', 'Claimed from SMIORE through FRLs', D, '', FRL.length + ' FRL' + (FRL.length === 1 ? '' : 's'));
   line($f, '', 'Not yet claimed', U, U > 0 ? 'lv-due' : '', 'T - D');
-  line($f, 'E', 'Received from KSS against FRLs', E, 'lv-tot');
-  line($f, '', 'Outstanding from KSS', D - E, D - E > 0 ? 'lv-due' : (D - E < 0 ? 'lv-bad' : 'lv-ok'), 'D - E');
+  line($f, 'E', 'Received from SMIORE against FRLs', E, 'lv-tot');
+  line($f, '', 'Outstanding from SMIORE', D - E, D - E > 0 ? 'lv-due' : (D - E < 0 ? 'lv-bad' : 'lv-ok'), 'D - E');
   if (OTH) {
     line($f, '', 'Received without FRL (old entries)', OTH, 'lv-sub');
     line($f, '', 'Total received', E + OTH, 'lv-tot');
@@ -367,9 +374,9 @@ $(function () {
   }
   if (!WO.length && A > 0) point('No work order issued yet', A, btn('+ Work Order', 'CsrWorkOrderServlet?action=form&letterId=' + L.id));
   if (B - C > 0)  point('Work order value not yet billed by vendors (tax invoice awaited)', B - C);
-  if (POC > 0)    point('Advance claimed on proforma, final tax invoice awaited', POC);
-  if (U > 0)      point('Bills / advances not yet claimed from KSS', U, btn('+ Raise FRL', 'CsrFrlServlet?action=form&letterId=' + L.id));
-  if (D - E > 0)  point('Claimed from KSS, not yet received', D - E);
+  if (POC > 0)    point('Proforma invoice claimed; final tax invoice awaited', POC);
+  if (U > 0)      point('Bills / proforma invoices not yet claimed from SMIORE', U, btn('+ Raise FRL', 'CsrFrlServlet?action=form&letterId=' + L.id));
+  if (D - E > 0)  point('Claimed from SMIORE, not yet received', D - E);
   if (!pts) $p.append($('<div class="lv-pt ok"></div>').append('<span class="lv-dot"></span>')
                  .append($('<span></span>').text('Nothing pending. All work billed, all bills claimed and all claims received.')));
 
@@ -398,6 +405,34 @@ $(function () {
       .append(nTd(w.subtotal)).append(nTd(w.gst_total)).append(nTd(w.total_amount, true))
       .append(fileTd(w.attachment_size, 'CsrWorkOrderServlet?action=file&id=' + w.id))
       .append(actTd(btn('+ Bill', 'CsrInvoiceServlet?action=form&woId=' + w.id), btn('&#9998; Edit', 'CsrWorkOrderServlet?action=form&id=' + w.id, true))));
+
+    var woBills = INV.filter(function (v) { return String(v.wo_id) === String(w.id); })
+      .sort(function (a, b) { return dmy(a.invoice_date) < dmy(b.invoice_date) ? -1 : 1; });
+    var taxBills = woBills.filter(function (v) { return v.invoice_type !== 'Proforma'; });
+    var taxBilled = taxBills.reduce(function (sum, v) { return sum + (+v.amount || 0); }, 0);
+    var openProformas = woBills.filter(function (v) { return v.invoice_type === 'Proforma' && !v.settled_by; });
+    var $details = $('<div class="lv-wo-bills"></div>');
+    $('<div class="lv-wo-bills-summary"></div>').append(
+      $('<span></span>').append('<strong>Work order:</strong> ').append(document.createTextNode(money(w.total_amount))),
+      $('<span></span>').append('<strong>Tax bills raised (' + taxBills.length + '):</strong> ').append(document.createTextNode(money(taxBilled))),
+      $('<span></span>').append('<strong>Remaining to bill:</strong> ').append(document.createTextNode(money(+w.total_amount - taxBilled))),
+      $('<span></span>').append('<strong>Open proforma invoices (' + openProformas.length + '):</strong> ').append(document.createTextNode(money(w.pi_open)))
+    ).appendTo($details);
+    if (woBills.length) {
+      var $billTable = $('<table><thead><tr><th>Date</th><th>Type</th><th>Bill No</th><th class="csr-num">Amount</th><th>Copy</th></tr></thead><tbody></tbody></table>');
+      woBills.forEach(function (v) {
+        $billTable.find('tbody').append($('<tr></tr>')
+          .append(td(v.invoice_date))
+          .append(td(v.invoice_type))
+          .append(td(v.invoice_number, 'csr-strong'))
+          .append(nTd(v.amount, true))
+          .append(fileTd(v.attachment_size, 'CsrInvoiceServlet?action=file&id=' + v.id)));
+      });
+      $details.append($billTable);
+    } else {
+      $details.append($('<div class="csr-small"></div>').text('No bills raised for this work order yet.'));
+    }
+    $('#bWo').append($('<tr class="lv-wo-bills-row"></tr>').append($('<td colspan="9"></td>').append($details)));
   });
   if (WO.length) $('#bWo').append(totRow(['Total', '', '', '', s1[0], s1[1], s1[2], '', 'ACT']));
   else $('#bWo').append(none(9, 'No work orders yet.'));
@@ -411,10 +446,10 @@ $(function () {
     var pi = v.invoice_type === 'Proforma';
     $('#bInv').append($('<tr class="csr-row"></tr>')
       .append(td(v.invoice_date))
-      .append($('<td></td>').append($('<span class="csr-badge"></span>').text(pi ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', pi)))
+      .append($('<td></td>').append($('<span class="csr-badge"></span>').text(pi ? 'Proforma Invoice' : 'Tax Invoice').toggleClass('csr-badge-pi', pi)))
       .append(td(v.invoice_number, 'csr-strong')).append(td(v.wo_number)).append(td(v.vendor_name))
       .append(nTd(v.price)).append(td(Number(v.gst_percent) + ' %', 'csr-num')).append(nTd(v.gst_amount)).append(nTd(v.amount, true))
-      .append(td(pi ? (v.settled_by ? 'Settled by ' + v.settled_by : 'Open advance') : (v.proforma_number ? 'Against ' + v.proforma_number : '-'), 'csr-small'))
+      .append(td(pi ? (v.settled_by ? 'Settled by ' + v.settled_by : 'Open proforma invoice') : (v.proforma_number ? 'Against proforma invoice ' + v.proforma_number : '-'), 'csr-small'))
       .append(nTd(v.frl_number ? v.claim_amount : v.claimable))
       .append(v.frl_number ? td(v.frl_number)
         : (+v.claimable > 0 ? $('<td></td>').append($('<span class="csr-small" style="color:#b45309;font-weight:600;">Not claimed</span>'))
@@ -425,7 +460,7 @@ $(function () {
   if (INV.length) $('#bInv').append(totRow(['Total bills (tax invoices)', '', '', '', '', s2[0], '', s2[1], s2[2], '', s2[3], '', '', 'ACT']));
   else $('#bInv').append(none(14, 'No bills yet.'));
   $('#tab-bills .csr-table-wrap').after($('<div class="lv-note"></div>').text(
-    'Proforma = advance request, not a bill. Claim = amount put in the FRL (tax invoice less advance already claimed on its proforma).'));
+    'Proforma invoices are shown separately from tax invoices. Claim = amount put in the FRL (tax invoice less amount already claimed against its proforma invoice).'));
 
   // ---------- FRLs
   $('#nFrl').text(FRL.length);

@@ -50,9 +50,9 @@
     <div class="csr-card-head">
       <div class="csr-card-title">Work Orders <small id="listCount"></small></div>
       <div class="csr-controls">
-        <select id="letterFilter"><option value="ALL">All Approval Letters</option></select>
+        <select id="letterFilter"><option value="ALL">All Management Approvals</option></select>
         <input type="text" id="searchBox" placeholder="Search WO no / vendor / letter">
-        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
         <a href="CsrWorkOrderServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New Work Order</a>
       </div>
     </div>

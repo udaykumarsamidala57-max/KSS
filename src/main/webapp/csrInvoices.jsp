@@ -55,7 +55,7 @@
         </select>
         <select id="woFilter"><option value="ALL">All Work Orders</option></select>
         <input type="text" id="searchBox" placeholder="Search invoice no / WO / vendor">
-        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+        <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
         <a href="CsrInvoiceServlet?action=form" class="csr-btn csr-link-btn" id="btnNew">+ New Invoice</a>
       </div>
     </div>
@@ -126,10 +126,10 @@ $(function () {
     var $tr = $('<tr class="csr-row inv-row"></tr>').attr('data-id', r.id);
     $tr.append($('<td></td>').text(n));
     var isPi = r.invoiceType === 'Proforma';
-    var sub = isPi ? (r.settledByNumber ? 'Settled by ' + r.settledByNumber : 'Open advance')
-                   : (r.proformaNumber ? 'Against ' + r.proformaNumber : '');
+    var sub = isPi ? (r.settledByNumber ? 'Settled by ' + r.settledByNumber : 'Open proforma invoice')
+                   : (r.proformaNumber ? 'Against proforma invoice ' + r.proformaNumber : '');
     $tr.append($('<td></td>').append($('<span class="csr-badge"></span>')
-      .text(isPi ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', isPi))
+      .text(isPi ? 'Proforma Invoice' : 'Tax Invoice').toggleClass('csr-badge-pi', isPi))
       .append($('<div class="csr-small" style="margin-top:3px;"></div>').text(sub)));
     $tr.append($('<td></td>')
       .append($('<div class="csr-strong"></div>').text(r.invoiceNumber))
@@ -153,7 +153,7 @@ $(function () {
         $f.append($('<div class="csr-small"></div>').text('To claim ' + money(r.claimable)));
     } else {
       $f.append($('<span class="csr-small"></span>').text(isPi ? 'Settled, not claimed'
-        : (r.frlRequired === '0' ? 'No FRL (received via proforma)' : 'Covered by advance')));
+        : (r.frlRequired === '0' ? 'No FRL (received via proforma invoice)' : 'Covered by proforma invoice')));
     }
     $tr.append($f);
     var $a = $('<td></td>');

@@ -1,13 +1,14 @@
 # Project Status
 
 **Snapshot date:** October 23, 2026  
-**Status:** Existing application project; documentation and schema references added.
+**Status:** Existing application project; AI-readable schema/project references added and a KSS CSR dashboard implemented.
 
 ## Current state observed
 
 - Maven WAR project configured for Java 17, Servlet API 4, JSP/JSTL, and MySQL.
 - Dockerfile packages the application into a Tomcat 9 / JDK 17 image.
 - Scholarship and CSR pages/controllers are present.
+- KSS CSR has an admin-only dashboard entry at `CsrDashboardServlet` / `csrDashboard.jsp`, with all-time totals for approvals, work orders, invoices, FRLs, FRL claims, and receipts.
 - Dated SQL snapshots cover scholarship, organization, users, and CSR workflows.
 - Course pages/controllers refer to `kss_course_master`, whose DDL was not found in the inspected SQL snapshots.
 - A recent working-tree state includes edits to two CSR servlets and three JSP files; these were not changed as part of this request.

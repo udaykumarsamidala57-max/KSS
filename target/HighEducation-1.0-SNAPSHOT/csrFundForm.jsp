@@ -37,7 +37,7 @@
       <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Fund Receipts</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>

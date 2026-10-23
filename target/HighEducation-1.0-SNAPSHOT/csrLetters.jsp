@@ -16,7 +16,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSS CSR Approval Letters</title>
+<title>KSS CSR Management Approvals</title>
 
 <!-- INCLUDE SHARED HEADER & MENU -->
 <%@ include file="header.jsp" %>
@@ -36,7 +36,7 @@
   <div class="csr-header">
     <div>
       <div class="csr-subtitle">KSS CSR Amount Spending</div>
-      <h1 class="csr-title">Approval Letters</h1>
+      <h1 class="csr-title">Management Approvals</h1>
     </div>
     <div class="csr-stats">
       <div class="csr-stat"><div class="csr-stat-label">Letters</div><div class="csr-stat-value" id="statCount">0</div></div>
@@ -49,7 +49,7 @@
 
   <div class="csr-card">
     <div class="csr-card-head">
-      <div class="csr-card-title">Approval Letters <small id="listCount"></small></div>
+      <div class="csr-card-title">Management Approvals <small id="listCount"></small></div>
       <div class="csr-controls">
         <select id="kindFilter"><option value="ALL">All Activities</option></select>
         <input type="text" id="searchBox" placeholder="Search letter no / name / place">
@@ -179,7 +179,7 @@ $(function () {
     });
     if (n === 0) {
       $body.append('<tr><td colspan="12" class="csr-empty">' + (rows.length ? 'No letters match the filter.'
-        : 'No approval letters yet. Click <b>+ New Approval Letter</b> to add the first one.') + '</td></tr>');
+        : 'No Management Approvals yet. Click <b>+ New Approval Letter</b> to add the first one.') + '</td></tr>');
     }
     $('#totalShown').text(money(shownTotal));
     $('#totalRow').toggle(n > 0);

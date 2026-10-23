@@ -37,7 +37,7 @@
       <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Funds Request Letters</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>
@@ -68,7 +68,7 @@
                   <th>Date</th>
                   <th>Work Order / Vendor</th>
                   <th class="csr-num">Bill Amount</th>
-                  <th class="csr-num">Less Advance</th>
+                  <th class="csr-num">Less Proforma Invoice</th>
                   <th class="csr-num">Claim</th>
                 </tr>
               </thead>
@@ -161,14 +161,14 @@ $(function () {
       var on = ticked ? ticked.indexOf(String(v.id)) !== -1 : (mine || String(v.id) === String(presetInv));
       var $tr = $('<tr></tr>');
       $tr.append($('<td></td>').append($('<input type="checkbox" class="inv-tick">').val(v.id).prop('checked', on)));
-      $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(v.invoiceType === 'Proforma' ? 'Proforma' : 'Tax Invoice').toggleClass('csr-badge-pi', v.invoiceType === 'Proforma')));
+      $tr.append($('<td></td>').append($('<span class="csr-badge"></span>').text(v.invoiceType === 'Proforma' ? 'Proforma Invoice' : 'Tax Invoice').toggleClass('csr-badge-pi', v.invoiceType === 'Proforma')));
       $tr.append($('<td></td>').append($('<div class="csr-strong"></div>').text(v.invoiceNumber))
-        .append($('<div class="csr-small"></div>').text(v.invoiceType === 'Proforma' ? 'Advance' : (v.proformaNumber ? 'Against ' + v.proformaNumber : ''))));
+        .append($('<div class="csr-small"></div>').text(v.invoiceType === 'Proforma' ? 'Proforma Invoice' : (v.proformaNumber ? 'Against ' + v.proformaNumber : ''))));
       $tr.append($('<td></td>').text(v.invoiceDateTxt));
       $tr.append($('<td></td>').append($('<div></div>').text(v.woNumber)).append($('<div class="csr-small"></div>').text(v.vendorName)));
       $tr.append($('<td class="csr-num"></td>').text(money(v.amount)));
       $tr.append($('<td class="csr-num"></td>').text(less > 0 ? money(less) : '-')
-        .attr('title', less > 0 ? 'Advance already claimed on ' + (v.proformaNumber || 'the proforma') : ''));
+        .attr('title', less > 0 ? 'Amount already claimed against ' + (v.proformaNumber || 'the proforma invoice') : ''));
       $tr.append($('<td class="csr-num csr-strong"></td>').text(money(claim)).attr('data-amt', claim));
       $b.append($tr); n++;
     });
@@ -220,7 +220,7 @@ $(function () {
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
   renderInvoices(false);
-  if (!letters.length && !loadError) $('#csrError').text('No approval letters yet. Add an approval letter first.').show();
+  if (!letters.length && !loadError) $('#csrError').text('No Management Approvals yet. Add an approval letter first.').show();
 
   $('#frlForm').on('submit', function (e) {
     e.preventDefault();

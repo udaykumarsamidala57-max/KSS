@@ -37,7 +37,7 @@
       <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Step 3</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>
@@ -77,15 +77,15 @@
         </div>
 
         <div class="csr-field span-2" id="pfWrap">
-          <label for="fPf">Against Proforma (advance)</label>
+          <label for="fPf">Against Proforma Invoice</label>
           <select id="fPf" name="proformaId" class="csr-input"></select>
           <div class="csr-budget" id="pfInfo" style="display:none;"></div>
         </div>
         <div class="csr-field" id="frlReqWrap">
           <label for="fFrlReq">Raise FRL for this bill? <span class="req">*</span></label>
           <select id="fFrlReq" name="frlRequired" class="csr-input">
-            <option value="1">Yes - claim from KSS</option>
-            <option value="0">No - already received (proforma)</option>
+            <option value="1">Yes - claim from SMIORE</option>
+            <option value="0">No - already received under proforma invoice</option>
           </select>
         </div>
 
@@ -187,13 +187,13 @@ $(function () {
   }
   function fillProformas() {
     var keep = $('#fPf').val() || (inv && inv.proformaId) || '';
-    var $pf = $('#fPf').empty().append('<option value="">-- No proforma (bill without advance) --</option>'), n = 0;
+  var $pf = $('#fPf').empty().append('<option value="">-- No proforma invoice --</option>'), n = 0;
     allInv.forEach(function (p) {
       if (p.invoiceType !== 'Proforma' || String(p.woId) !== String($wo.val())) return;
       if (inv && String(p.id) === String(inv.id)) return;
       if (p.settledById && !(inv && String(p.settledById) === String(inv.id))) return;
       $pf.append($('<option></option>').attr('value', p.id)
-        .text(p.invoiceNumber + '  |  ' + p.invoiceDateTxt + '  |  Advance ' + money(p.amount)
+        .text(p.invoiceNumber + '  |  ' + p.invoiceDateTxt + '  |  Proforma invoice ' + money(p.amount)
               + (p.frlNumber ? '  |  claimed in ' + p.frlNumber : '  |  not claimed')));
       n++;
     });
@@ -207,12 +207,12 @@ $(function () {
     if (p) {
       var adv = p.frlNumber ? Number(p.claimAmount || p.amount) : 0;
       $('#pfInfo').empty()
-        .append($('<span></span>').text('Advance ').append($('<b></b>').text(money(p.amount))))
-        .append($('<span></span>').text('Already claimed from KSS ').append($('<b></b>').text(money(adv))))
+        .append($('<span></span>').text('Proforma invoice ').append($('<b></b>').text(money(p.amount))))
+        .append($('<span></span>').text('Already claimed from SMIORE ').append($('<b></b>').text(money(adv))))
         .append($('<span></span>').text('This bill will claim ').append($('<b></b>')
           .text($('#fFrlReq').val() === '0' ? 'nothing (No FRL)' : (price ? money(r2(amt - adv)) : '-'))))
         .show();
-      if (price && amt < Number(p.amount)) pfMsg = 'Tax invoice amount ' + money(amt) + ' is less than the proforma advance ' + money(p.amount) + '.';
+      if (price && amt < Number(p.amount)) pfMsg = 'Tax invoice amount ' + money(amt) + ' is less than the proforma invoice amount ' + money(p.amount) + '.';
     } else {
       $('#pfInfo').hide();
     }
@@ -228,7 +228,7 @@ $(function () {
     if (pfMsg) {
       $('#overWarn').text(pfMsg).show();
     } else if (b && amt > b.avail) {
-      $('#overWarn').text((isTax() ? 'Invoice' : 'Advance') + ' amount ' + money(amt) + ' is more than the balance to bill ' + money(b.avail) + ' on this work order.').show();
+      $('#overWarn').text((isTax() ? 'Invoice' : 'Proforma invoice') + ' amount ' + money(amt) + ' is more than the balance to bill ' + money(b.avail) + ' on this work order.').show();
     } else {
       $('#overWarn').hide();
     }

@@ -38,7 +38,7 @@
       <div class="csr-subtitle">KSS CSR Amount Spending &rsaquo; Step 2</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Approval Letters</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>
@@ -180,7 +180,7 @@ $(function () {
     $('html, body').animate({ scrollTop: 0 }, 150);
   }
 
-  // ---------------------------------------------------------------- approval letters + budget
+  // ---------------------------------------------------------------- Management Approvals + budget
   var $sel = $('#fLetter').append('<option value="">-- Select approval letter --</option>');
   letters.forEach(function (l) {
     var others = Number(l.committed) - (wo && String(wo.letterId) === String(l.id) ? Number(wo.total) : 0);

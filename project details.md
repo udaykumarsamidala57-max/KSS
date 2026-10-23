@@ -32,6 +32,7 @@
 
 ### CSR funding administration
 
+- Provide an admin-only KSS CSR dashboard summarizing approved amounts, work orders, invoices, FRLs, FRL claims, and receipts.
 - Store CSR approval letters, activity details, approved amounts, and files.
 - Create vendor work orders and itemized charges with GST.
 - Record proforma and tax invoices against work orders, including proforma settlement links.
@@ -78,7 +79,7 @@ Key controller groups:
 
 - Scholarship submission/list/view: `SholarshipServelt`, `ScholarshipListServelt`, `ScholarshipViewServlet`, `UpdateStatusServlet`.
 - Documents and review: `ScholarshipDocumentUploadServlet`, `ScholarshipDocumentDownloadServlet`, `VerifyDocumentsServlet`, `ApproveScholarshipServlet`.
-- CSR: `CsrLetterServlet`, `CsrWorkOrderServlet`, `CsrInvoiceServlet`, `CsrFrlServlet`, `CsrFundServlet`.
+- CSR: `CsrDashboardServlet`, `CsrLetterServlet`, `CsrWorkOrderServlet`, `CsrInvoiceServlet`, `CsrFrlServlet`, `CsrFundServlet`.
 - Course and account flows: `KssCourseServlet`, `KssCourseMasterServlet`, `LoginServlet`.
 
 Some class names retain spelling/capitalization inconsistencies from the existing code; preserve exact names when following current servlet mappings and references.
@@ -89,7 +90,7 @@ The JSP application is in `src/main/webapp/`. Pages include:
 
 - Scholarship: `ScholarshipApplication.jsp`, `scholarshipList.jsp`, `scholarshipView.jsp`, `submitted_list.jsp`, `printScholarshipApplication.jsp`.
 - Document review and decision: `scholarshipDocumentStatus.jsp`, `verifyDocuments.jsp`, `approveScholarship.jsp`, `updateStatus.jsp`.
-- CSR: `csrLetters.jsp`, `csrLetterForm.jsp`, `csrLetterView.jsp`, `csrWorkOrders.jsp`, `csrWorkOrderForm.jsp`, `csrInvoices.jsp`, `csrInvoiceForm.jsp`, `csrFrls.jsp`, `csrFrlForm.jsp`, `csrFunds.jsp`, `csrFundForm.jsp`.
+- CSR: `csrDashboard.jsp`, `csrLetters.jsp`, `csrLetterForm.jsp`, `csrLetterView.jsp`, `csrWorkOrders.jsp`, `csrWorkOrderForm.jsp`, `csrInvoices.jsp`, `csrInvoiceForm.jsp`, `csrFrls.jsp`, `csrFrlForm.jsp`, `csrFunds.jsp`, `csrFundForm.jsp`.
 - Supporting pages: `Dashboard.jsp`, `login.jsp`, `Logout.jsp`, `organization.jsp`, `kssCourse.jsp`, `kssCourseMaster.jsp`, and shared `header.jsp`.
 
 Static stylesheets are in `src/main/webapp/css/`.
