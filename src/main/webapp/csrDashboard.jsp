@@ -56,6 +56,55 @@
 </style>
 <style>
 <%@ include file="css/finance.css" %>
+.csr-page { padding:18px 22px !important; }
+.csr-header { align-items:flex-end !important; margin-bottom:16px !important; }
+.csr-title { font-size:25px !important; letter-spacing:-.35px; }
+.csr-subtitle { font-weight:600; }
+.csr-export-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0 0 16px; padding:10px 12px; background:#fff; border:1px solid var(--fin-line); border-radius:8px; box-shadow:0 1px 2px rgba(15,23,42,.05); }
+.csr-export-toolbar button { min-height:34px; padding:0 13px; border:1px solid var(--fin-line); border-radius:5px; color:var(--fin-ink-2); background:#fff; font-size:12px; font-weight:600; cursor:pointer; transition:background .15s ease,border-color .15s ease,color .15s ease; }
+.csr-export-toolbar button:first-child { color:#fff; background:var(--fin-teal); border-color:var(--fin-teal); }
+.csr-export-toolbar button:first-child:hover { background:#115e59; border-color:#115e59; }
+.csr-export-toolbar button:not(:first-child):hover { color:var(--fin-teal); background:#f0fdfa; border-color:var(--fin-teal); }
+.csr-export-toolbar > span { margin-left:auto !important; display:flex; align-items:center; gap:8px; }
+.csr-export-toolbar select { min-height:34px; padding:0 10px !important; border:1px solid var(--fin-line); border-radius:5px; color:var(--fin-ink); background:#fff; font:inherit; }
+.csr-dashboard-prime { margin-top:0; border:1px solid var(--fin-line); border-top:3px solid var(--fin-teal); border-radius:9px; box-shadow:0 3px 12px rgba(15,23,42,.05); overflow:hidden; }
+.csr-dashboard-prime-item { padding:20px 22px; background:#fff; }
+.csr-dashboard-prime-item + .csr-dashboard-prime-item { border-left:1px solid var(--fin-line); }
+.csr-dashboard-prime .csr-dashboard-label { display:flex; align-items:center; gap:8px; margin:0 0 12px; color:var(--fin-ink-2); font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
+.csr-dashboard-prime .csr-dashboard-label::before { content:""; width:7px; height:7px; flex:0 0 7px; border-radius:50%; background:#0f766e; }
+.csr-dashboard-prime .csr-dashboard-prime-item:nth-child(2) .csr-dashboard-label::before { background:var(--fin-teal); }
+.csr-dashboard-prime .csr-dashboard-prime-item:nth-child(3) .csr-dashboard-label::before { background:var(--fin-teal); }
+.csr-dashboard-prime .csr-dashboard-value { color:var(--fin-ink); font-size:clamp(26px,2.4vw,34px); font-weight:700; letter-spacing:-.5px; font-variant-numeric:tabular-nums; }
+.csr-dashboard-balance { margin-top:10px; padding-top:9px; border-top:1px solid #eef2f6; color:var(--fin-muted); font-size:12px; }
+.csr-dashboard-balance b { color:var(--fin-teal); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
+.csr-dashboard-subline { align-items:baseline; margin:0; padding:7px 0; border-bottom:1px solid var(--fin-line-soft); color:#64748b; font-size:12px; line-height:1.4; }
+.csr-dashboard-subline:last-of-type { border-bottom:0; }
+.csr-dashboard-subline b { color:var(--fin-ink); font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+.csr-letter-summary { margin-top:18px; padding:16px 18px; border-color:var(--fin-line); border-radius:9px; box-shadow:0 3px 12px rgba(15,23,42,.05); }
+.csr-letter-card-title { margin-bottom:12px; font-size:15px; letter-spacing:-.1px; }
+.csr-letter-filter select { min-width:min(460px,75vw); height:38px; border-color:#cbd5e1; border-radius:5px; }
+.csr-letter-filter select:focus, .csr-export-toolbar select:focus { outline:0; border-color:var(--fin-teal); box-shadow:0 0 0 3px rgba(15,118,110,.12); }
+.csr-letter-status { min-height:0; margin:0 0 8px; }
+.csr-pdf-list { padding-top:11px; border-top:1px solid #eef2f6; }
+.csr-pdf-link { min-width:190px; padding:9px 11px; border-color:var(--fin-line); border-radius:6px; font-size:12px; font-weight:600; transition:background .15s ease,border-color .15s ease; }
+.csr-pdf-link:hover { border-color:var(--fin-teal); }
+.csr-co-card { margin-top:18px; border-color:var(--fin-line); border-radius:9px; box-shadow:0 3px 12px rgba(15,23,42,.05); }
+.csr-co-card .csr-card-head { min-height:44px; padding:12px 16px; background:var(--fin-head); }
+.csr-co-card .csr-card-title { font-size:14px; letter-spacing:-.1px; }
+.csr-co-table { min-width:100%; }
+.csr-co-table th { padding:9px 10px !important; color:var(--fin-ink-2) !important; background:var(--fin-head) !important; font-size:10px !important; letter-spacing:.55px !important; }
+.csr-co-table td { padding:8px 10px !important; line-height:1.4 !important; }
+.csr-co-table tbody tr.csr-row:hover td { background:#f0fdfa !important; }
+.csr-co-table td.csr-num { color:var(--fin-ink); font-variant-numeric:tabular-nums; }
+.csr-co-table tr.csr-co-total td { background:var(--fin-head) !important; border-top:2px solid #cbd5e1 !important; }
+.csr-co-table td.csr-co-neg, .csr-co-table td.csr-cum-neg { color:#b91c1c; }
+.csr-co-note { padding:9px 16px 12px; font-size:11.5px; line-height:1.5; }
+.csr-co-fy { font-weight:600; }
+.csr-co-fy select { height:34px; padding:0 9px; border-color:#cbd5e1; border-radius:5px; }
+.csr-co-fy select:focus { outline:0; border-color:var(--fin-teal); box-shadow:0 0 0 3px rgba(15,118,110,.12); }
+.csr-pj-table { min-width:1080px; }
+.csr-co-card .csr-table-wrap { overflow-x:auto; scrollbar-color:#cbd5e1 #f8fafc; }
+.csr-export-toolbar button:focus-visible, .csr-pdf-link:focus-visible, .csr-co-table a:focus-visible { outline:3px solid rgba(15,118,110,.28); outline-offset:2px; }
 .csr-dashboard-label {
   margin-bottom: 7px;
   color: var(--fin-muted);
@@ -88,7 +137,7 @@
 .csr-letter-status { min-height:18px; margin:2px 0 8px; color:var(--fin-muted); font-size:12px; }
 .csr-pdf-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
 .csr-pdf-link { display:flex; flex-direction:column; gap:2px; min-width:160px; max-width:280px; padding:8px 10px; border:1px solid var(--fin-line); border-radius:5px; color:var(--fin-teal); text-decoration:none; background:#fff; }
-.csr-pdf-link:hover { background:#f0fdfa; border-color:#99c9c1; }
+.csr-pdf-link:hover { background:#f0fdfa; border-color:var(--fin-teal); }
 .csr-pdf-link small { color:var(--fin-muted); font-size:10px; overflow-wrap:anywhere; }
 .csr-co-card { margin-top:14px; background:#fff; border:1px solid var(--fin-line); border-radius:7px; box-shadow:0 1px 2px rgba(15,23,42,.05); }
 .csr-co-card .csr-card-head { padding:10px 14px; border-bottom:1px solid var(--fin-line); }
@@ -136,6 +185,7 @@
 .csr-export-toolbar { display:flex; gap:8px; margin-bottom:14px; padding:0 0 10px; border-bottom:1px solid var(--fin-line); }
 .csr-export-toolbar button { padding:8px 12px; border:1px solid var(--fin-line); background:#fff; color:var(--fin-ink); font-size:12px; font-weight:600; border-radius:4px; cursor:pointer; }
 .csr-export-toolbar button:hover { background:var(--fin-head); border-color:#cbd5e1; }
+
 @media print {
   body { background:#fff; color:#000; font-size:10pt; }
   .csr-page { max-width:100%; padding:0; }
@@ -159,6 +209,86 @@
   .csr-dashboard-prime-item + .csr-dashboard-prime-item { border-left:0; border-top:1px solid var(--fin-line); }
   .csr-dashboard-prime-item:nth-child(3) { grid-column:auto; }
 }
+/* Final dashboard theme overrides */
+body { background:var(--fin-head); color:var(--fin-ink); }
+.csr-page { max-width:none !important; padding:18px 22px !important; }
+.csr-export-toolbar { align-items:center; flex-wrap:wrap; margin:0 0 12px; padding:7px 9px; background:#fff; border:1px solid var(--fin-line); border-radius:6px; box-shadow:none; }
+.csr-export-toolbar button { min-height:34px; padding:0 14px; border:1px solid var(--fin-line); border-radius:4px; color:var(--fin-ink); background:#fff; font-weight:600; }
+.csr-export-toolbar button:first-child { color:#fff; background:var(--fin-teal); border-color:var(--fin-teal); }
+.csr-export-toolbar button:first-child:hover { background:#115e59; border-color:#115e59; }
+.csr-export-toolbar button:not(:first-child):hover { color:#115e59; background:var(--fin-head); border-color:var(--fin-teal); }
+.csr-dashboard-prime { margin-top:0; border:1px solid var(--fin-line); border-top:3px solid var(--fin-teal); border-radius:6px; box-shadow:0 1px 2px rgba(15,23,42,.05); overflow:hidden; }
+.csr-dashboard-prime-item { padding:14px 16px; background:#fff; }
+.csr-dashboard-prime-item + .csr-dashboard-prime-item { border-left:1px solid var(--fin-line); }
+.csr-dashboard-prime .csr-dashboard-label { display:flex; align-items:center; gap:8px; margin:0 0 12px; color:var(--fin-ink-2); font-size:12px; font-weight:700; letter-spacing:.65px; text-transform:uppercase; }
+.csr-dashboard-prime .csr-dashboard-label::before { content:""; width:3px; height:16px; flex:0 0 3px; border-radius:1px; background:var(--fin-teal); }
+.csr-dashboard-prime .csr-dashboard-prime-item:nth-child(2) .csr-dashboard-label::before,
+.csr-dashboard-prime .csr-dashboard-prime-item:nth-child(3) .csr-dashboard-label::before { background:var(--fin-teal); }
+.csr-dashboard-prime .csr-dashboard-value { color:var(--fin-ink); font-size:clamp(26px,2.4vw,34px); font-weight:700; letter-spacing:-.35px; font-variant-numeric:tabular-nums; }
+.csr-dashboard-subline { align-items:baseline; margin:0; padding:7px 0; border-bottom:1px solid var(--fin-head); color:var(--fin-muted); font-size:12px; line-height:1.45; }
+.csr-dashboard-subline b { color:var(--fin-ink); font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+.csr-dashboard-balance { margin-top:10px; padding-top:9px; border-top:1px solid var(--fin-line); color:var(--fin-muted); font-size:12px; }
+.csr-dashboard-balance b { color:#115e59; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
+.csr-letter-summary, .csr-co-card { border-color:var(--fin-line); border-radius:6px; box-shadow:0 1px 2px rgba(15,23,42,.05); }
+.csr-letter-summary { margin-top:12px; padding:10px 12px; }
+.csr-letter-card-title { color:var(--fin-ink); font-size:15px; font-weight:700; }
+.csr-co-card { margin-top:12px; overflow:hidden; }
+.csr-co-card .csr-card-head { min-height:38px; padding:8px 12px; background:var(--fin-head); }
+.csr-co-card .csr-card-title { color:var(--fin-ink); font-size:14px; font-weight:700; letter-spacing:0; }
+.csr-co-table th { padding:6px 8px !important; color:var(--fin-ink-2) !important; background:var(--fin-head) !important; font-size:10px !important; letter-spacing:.45px !important; }
+.csr-co-table td { padding:5px 8px !important; line-height:1.35 !important; }
+.csr-co-table tbody tr.csr-row:hover td { background:#f0fdfa !important; }
+.csr-co-table td.csr-num { color:var(--fin-ink); font-variant-numeric:tabular-nums; }
+.csr-co-table tr.csr-co-total td { background:var(--fin-head) !important; border-top:2px solid #cbd5e1 !important; }
+.csr-co-note { padding:9px 16px 12px; color:var(--fin-muted); font-size:11.5px; line-height:1.5; }
+.csr-co-table a.dd-link { border-bottom-color:var(--fin-teal); }
+.csr-co-table a.dd-link:hover { color:#115e59; background:#f0fdfa; }
+.csr-letter-filter select { border-color:var(--fin-line); border-radius:4px; }
+.csr-letter-filter select:focus, .csr-co-fy select:focus, .csr-export-toolbar select:focus { outline:0; border-color:var(--fin-teal); box-shadow:0 0 0 1px var(--fin-teal); }
+.csr-pdf-link { border-color:var(--fin-line); border-radius:4px; color:var(--fin-teal); }
+.csr-pdf-link:hover { background:#f0fdfa; border-color:var(--fin-teal); }
+.csr-co-card .csr-table-wrap { overflow-x:auto; scrollbar-color:#cbd5e1 #f8fafc; }
+.csr-position-grid { display:block; }
+body.report-abstract .csr-position-grid { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:4px; }
+body.report-abstract .csr-position-grid .csr-co-card { min-width:0; margin-top:12px; }
+body.report-abstract .csr-position-grid .csr-co-card { border-top:2px solid var(--fin-teal); box-shadow:0 1px 3px rgba(15,23,42,.07); }
+body.report-abstract .csr-position-grid .csr-card-head { min-height:42px; padding:9px 12px; background:#fff; }
+body.report-abstract .csr-position-grid .csr-card-title { font-size:13px; font-weight:700; }
+body.report-abstract .csr-position-grid .csr-table-wrap { padding:0 8px 8px; }
+body.report-abstract .csr-position-grid .csr-co-table { border-collapse:separate; border-spacing:0; }
+body.report-abstract .csr-position-grid .csr-co-table thead th { padding:7px 7px !important; border-bottom:1px solid var(--fin-line); white-space:nowrap; }
+body.report-abstract .csr-position-grid .csr-co-table tbody td { padding:7px !important; border-bottom:1px solid var(--fin-line-soft); background:#fff; }
+body.report-abstract .csr-position-grid .csr-co-table tbody tr:last-child td { border-bottom:0; }
+body.report-abstract .csr-position-grid .csr-co-table tbody td:first-child { color:var(--fin-ink); font-weight:600; }
+body.report-abstract .csr-position-grid .csr-co-table tbody tr.csr-co-total td { background:var(--fin-head) !important; border-top:1px solid var(--fin-line); color:var(--fin-ink); font-weight:700; }
+body.report-abstract .csr-position-grid .csr-co-table td.csr-num { font-size:11px; }
+.csr-export-toolbar button:focus-visible, .csr-pdf-link:focus-visible, .csr-co-table a:focus-visible { outline:2px solid var(--fin-teal); outline-offset:2px; }
+@media (max-width:900px) {
+  .csr-dashboard-prime-item { padding:17px; }
+  .csr-co-fy { flex-wrap:wrap; }
+}
+@media (max-width:560px) {
+  .csr-page { padding:10px 12px !important; }
+  .csr-dashboard-prime-item { padding:12px; }
+  .csr-export-toolbar > span { margin-left:0 !important; width:100%; }
+  .csr-letter-summary { padding:13px; }
+  .csr-letter-filter select { min-width:0; width:100%; }
+  .csr-letter-filter label { width:100%; }
+  .csr-co-card .csr-card-head { align-items:flex-start; }
+  body.report-abstract .csr-position-grid { grid-template-columns:1fr; }
+}
+/* Abstract Report Mode */
+body.report-abstract .csr-co-table th:nth-child(8),
+body.report-abstract .csr-co-table td:nth-child(8),
+body.report-abstract .csr-co-table th:nth-child(9),
+body.report-abstract .csr-co-table td:nth-child(9),
+body.report-abstract .csr-co-table th:nth-child(10),
+body.report-abstract .csr-co-table td:nth-child(10) {
+  display: none;
+}
+body.report-abstract #monthPosition {
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -174,6 +304,13 @@
     <button type="button" id="btnExcelExport" onclick="exportDashboardToExcel();">Export to Excel</button>
     <button type="button" id="btnPdfExport" onclick="exportDashboardToPdf();">Export to PDF</button>
     <button type="button" id="btnPrint" onclick="window.print();">Print</button>
+    <span style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+      <label style="color: var(--fin-muted); font-size: 12px; font-weight: 600; margin: 0;">Report Type:</label>
+      <select id="reportTypeSelect" onchange="switchReportType(this.value);" style="height: 34px; padding: 0 9px; border: 1px solid var(--fin-line); border-radius: 4px; color: var(--fin-ink); background: #fff; font: inherit; cursor: pointer;">
+        <option value="detailed" selected>Detailed</option>
+        <option value="abstract">Abstract</option>
+      </select>
+    </span>
   </div>
 
   <% if (loadError != null) { %>
@@ -200,6 +337,7 @@
       <div class="csr-dashboard-balance">Balance to receive: <b><%= stats.getOrDefault("fundsBalance", "₹0.00") %></b></div>
     </div>
   </section>
+  <div class="csr-position-grid">
   <%-- Company-wise and Unit-wise Position (unit = Kind of CSR Activity of the approval): same columns and formulas --%>
   <% Object[][] positions = { { "co", "Company-wise Position", "Company", companyPosition },
                               { "unit", "Unit / Institution-wise Position", "Unit", unitPosition } };
@@ -257,25 +395,7 @@
     <% } %>
   </section>
   <% if (companyError != null) break; } %>
-
-  <%-- Project-wise & Approval-wise Summary Filter --%>
-  <% if (projectPosition != null && companyError == null && approvalLetters != null && approvalLetters.size() > 0) { %>
-  <section class="csr-co-card">
-    <div class="csr-card-head">
-      <div class="csr-card-title">Project-wise Position & Approval-wise Summary</div>
-      <label class="csr-letter-filter" style="margin: 0;">
-        Select Project:
-        <select id="projSelect" onchange="loadProjectDetails(this.value);">
-          <option value="">-- Select a Project --</option>
-          <% for (Map<String, String> letter : approvalLetters) { %>
-          <option value="<%= letter.get("id") %>"><%= escapeHtml(letter.get("number")) %> - <%= escapeHtml(letter.get("name")) %></option>
-          <% } %>
-        </select>
-      </label>
-    </div>
-    <div id="projDetailsArea"></div>
-  </section>
-  <% } %>
+  </div>
 
   <% if (monthly != null) { %>
   <section class="csr-co-card" aria-labelledby="month-title" id="monthPosition">
@@ -508,38 +628,14 @@
   if (select.value) loadApproval();
 
   // Load Project Details
-  window.loadProjectDetails = function(letterId) {
-    var area = document.getElementById('projDetailsArea');
-    if (!letterId) {
-      area.innerHTML = '<div style="padding: 24px; text-align: center; color: #94a3b8; font-size: 14px; line-height: 1.6;">📋 Select a project to view summary and attachments</div>';
-      return;
+  // Switch between Abstract and Detailed reports
+  window.switchReportType = function(reportType) {
+    var body = document.body;
+    if (reportType === 'abstract') {
+      body.classList.add('report-abstract');
+    } else {
+      body.classList.remove('report-abstract');
     }
-    area.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b;"><span style="display: inline-block; font-size: 14px;">Loading project details...</span></div>';
-    fetch('CsrDashboardServlet?action=letterData&letterId=' + encodeURIComponent(letterId), { headers: { 'Accept': 'application/json' } })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (!d.ok) { area.innerHTML = '<div style="padding: 20px; color: #dc2626; font-size: 13px; text-align: center;">⚠️ Unable to load project details. Please try again.</div>'; return; }
-        var html = '<div style="padding: 0;">';
-        html += '<div style="margin-bottom: 24px;"><h4 style="margin: 0 0 16px; color: #1e293b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Summary</h4>';
-        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">';
-        html += '<div style="padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc;"><div style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Approved Budget</div><div style="color: #0f766e; font-size: 18px; font-weight: 700;">' + (d.stats.approvedAmount || '₹0.00') + '</div></div>';
-        html += '<div style="padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f0fdfa;"><div style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Funds Received</div><div style="color: #0f766e; font-size: 18px; font-weight: 700;">' + (d.stats.frlReceivedAmount || '₹0.00') + '</div></div>';
-        html += '<div style="padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc;"><div style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Balance to Receive</div><div style="color: #0f766e; font-size: 18px; font-weight: 700;">' + (d.stats.fundsBalance || '₹0.00') + '</div></div>';
-        html += '</div></div>';
-        if (d.pdfs && d.pdfs.length > 0) {
-          html += '<div><h4 style="margin: 0 0 12px; color: #1e293b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Documents</h4>';
-          html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
-          d.pdfs.forEach(function(pdf) {
-            html += '<a href="' + pdf.url + '" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #0f766e; text-decoration: none; font-size: 12px; font-weight: 500; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.background=\'#f0fdfa\'; this.style.borderColor=\'#99c9c1\';" onmouseout="this.style.background=\'#fff\'; this.style.borderColor=\'#cbd5e1\';">📄 ' + pdf.label + '</a>';
-          });
-          html += '</div></div>';
-        } else {
-          html += '<div style="padding: 16px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;"><div style="color: #64748b; font-size: 13px;">No documents attached</div></div>';
-        }
-        html += '</div>';
-        area.innerHTML = html;
-      })
-      .catch(function () { area.innerHTML = '<div style="padding: 20px; color: #dc2626; font-size: 13px; text-align: center;">⚠️ Error loading project details. Please try again.</div>'; });
   };
 
   // Export functions
