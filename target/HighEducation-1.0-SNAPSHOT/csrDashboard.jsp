@@ -133,6 +133,23 @@
 .csr-co-fy select { height:28px; padding:0 6px; border:1px solid var(--fin-line); border-radius:4px; font:inherit; color:var(--fin-ink); background:#fff; }
 .csr-co-card .csr-card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
 .csr-co-note { padding:8px 14px 10px; color:var(--fin-muted); font-size:11.5px; line-height:1.5; }
+.csr-export-toolbar { display:flex; gap:8px; margin-bottom:14px; padding:0 0 10px; border-bottom:1px solid var(--fin-line); }
+.csr-export-toolbar button { padding:8px 12px; border:1px solid var(--fin-line); background:#fff; color:var(--fin-ink); font-size:12px; font-weight:600; border-radius:4px; cursor:pointer; }
+.csr-export-toolbar button:hover { background:var(--fin-head); border-color:#cbd5e1; }
+@media print {
+  body { background:#fff; color:#000; font-size:10pt; }
+  .csr-page { max-width:100%; padding:0; }
+  .csr-header, .csr-export-toolbar, .csr-letter-summary, .dd-modal, .csr-dashboard-prime { display:none !important; }
+  .csr-co-card { page-break-inside:avoid; margin-bottom:20px; border:1px solid #000; }
+  .csr-co-card .csr-card-head { background:#f5f5f5; border-bottom:1px solid #000; padding:8px; font-weight:bold; }
+  .csr-co-table { width:100%; border-collapse:collapse; font-size:9pt; }
+  .csr-co-table th, .csr-co-table td { border:1px solid #000; padding:4px; text-align:left; }
+  .csr-co-table th { background:#f5f5f5; font-weight:bold; }
+  .csr-co-table .csr-num { text-align:right; }
+  .csr-co-table tr.csr-co-total { font-weight:bold; background:#f5f5f5; }
+  .csr-co-table a { color:#000; text-decoration:none; }
+  @page { size:A4; margin:10mm; }
+}
 @media (max-width: 900px) {
   .csr-dashboard-prime { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .csr-dashboard-prime-item:nth-child(3) { grid-column:1 / -1; border-left:0; border-top:1px solid var(--fin-line); }
@@ -151,6 +168,12 @@
       <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending</div>
       <h1 class="csr-title">Dashboard</h1>
     </div>
+  </div>
+
+  <div class="csr-export-toolbar">
+    <button type="button" id="btnExcelExport" onclick="exportDashboardToExcel();">Export to Excel</button>
+    <button type="button" id="btnPdfExport" onclick="exportDashboardToPdf();">Export to PDF</button>
+    <button type="button" id="btnPrint" onclick="window.print();">Print</button>
   </div>
 
   <% if (loadError != null) { %>
@@ -235,58 +258,22 @@
   </section>
   <% if (companyError != null) break; } %>
 
-  <% if (projectPosition != null && companyError == null) { %>
-  <section class="csr-co-card" aria-labelledby="proj-title" id="projPosition">
-    <div class="csr-card-head"><div class="csr-card-title" id="proj-title">Project-wise Position <span class="csr-small">(&#8377;)</span></div></div>
-    <div class="csr-table-wrap">
-      <table class="csr-table csr-co-table csr-pj-table">
-        <thead>
-          <tr>
-            <th>Project ID</th>
-            <th>Unit</th>
-            <th>Project / Purpose</th>
-            <th>Status</th>
-            <th class="csr-num">Approved</th>
-            <th class="csr-num">Received</th>
-            <th class="csr-num">Utilised</th>
-            <th class="csr-num">Unspent with <%= escapeHtml(instCodeD) %></th>
-            <th class="csr-num">Retention Held</th>
-            <th class="csr-num">Bills Unpaid</th>
-            <th class="csr-num">Free Balance</th>
-            <th class="csr-num">Util. %</th>
-            <th>Alert</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for (Map<String, String> pj : projectPosition) {
-               boolean tot = "1".equals(pj.get("total")); String pk = pj.get("key");
-               String st = pj.get("status"); %>
-          <tr class="<%= tot ? "csr-co-total" : "csr-row" %>">
-            <% if (tot) { %>
-            <td colspan="4">TOTAL (<%= escapeHtml(pj.get("projects")) %> projects)</td>
-            <% } else { %>
-            <td style="white-space:nowrap;"><a class="csr-open" href="CsrLetterServlet?action=view&id=<%= escapeHtml(pk) %>"><%= escapeHtml(pj.get("projectId")) %></a></td>
-            <td class="pj-unit"><%= escapeHtml(pj.get("unit")) %></td>
-            <td class="pj-text"><%= escapeHtml(pj.get("name")) %><% if (pj.get("descr") != null && !pj.get("descr").isEmpty()) { %><div class="pj-desc"><%= escapeHtml(pj.get("descr")) %></div><% } %></td>
-            <td><span class="csr-pj-st <%= "Completed".equals(st) ? "s-done" : ("Not started".equals(st) ? "s-ns" : "s-wip") %>"><%= escapeHtml(st) %></span></td>
-            <% } %>
-            <td class="csr-num"><%= dl(pj.get("approved"), "proj", pk, "approved", null) %></td>
-            <td class="csr-num"><%= dl(pj.get("received"), "proj", pk, "received", null) %></td>
-            <td class="csr-num"><%= dl(pj.get("utilised"), "proj", pk, "utilised", null) %></td>
-            <td class="csr-num <%= "1".equals(pj.get("unspentNeg")) ? "csr-co-neg" : "" %>"><%= dl(pj.get("unspent"), "proj", pk, "unspent", null) %></td>
-            <td class="csr-num"><%= dl(pj.get("retention"), "proj", pk, "retention", null) %></td>
-            <td class="csr-num"><%= dl(pj.get("unpaid"), "proj", pk, "unpaid", null) %></td>
-            <td class="csr-num <%= "1".equals(pj.get("freeNeg")) ? "csr-co-neg" : "" %>"><%= dl(pj.get("free"), "proj", pk, "free", null) %></td>
-            <td class="csr-num"><%= dl(pj.get("utilisation"), "proj", pk, "utilisation", null) %></td>
-            <td class="pj-alert <%= "1".equals(pj.get("alertBad")) ? "" : "ok" %>"><%= tot ? "" : escapeHtml(pj.get("alert")) %></td>
-          </tr>
+  <%-- Project-wise & Approval-wise Summary Filter --%>
+  <% if (projectPosition != null && companyError == null && approvalLetters != null && approvalLetters.size() > 0) { %>
+  <section class="csr-co-card">
+    <div class="csr-card-head">
+      <div class="csr-card-title">Project-wise Position & Approval-wise Summary</div>
+      <label class="csr-letter-filter" style="margin: 0;">
+        Select Project:
+        <select id="projSelect" onchange="loadProjectDetails(this.value);">
+          <option value="">-- Select a Project --</option>
+          <% for (Map<String, String> letter : approvalLetters) { %>
+          <option value="<%= letter.get("id") %>"><%= escapeHtml(letter.get("number")) %> - <%= escapeHtml(letter.get("name")) %></option>
           <% } %>
-          <% if (projectPosition.size() == 1) { %>
-          <tr><td colspan="13" class="csr-empty">No Management Approvals yet.</td></tr>
-          <% } %>
-        </tbody>
-      </table>
+        </select>
+      </label>
     </div>
+    <div id="projDetailsArea"></div>
   </section>
   <% } %>
 
@@ -519,6 +506,70 @@
     location.href = 'CsrDashboardServlet?fy=' + encodeURIComponent(fy.value) + (select.value ? '&letterId=' + encodeURIComponent(select.value) : '') + '#monthPosition';
   });
   if (select.value) loadApproval();
+
+  // Load Project Details
+  window.loadProjectDetails = function(letterId) {
+    var area = document.getElementById('projDetailsArea');
+    if (!letterId) {
+      area.innerHTML = '<div style="padding: 24px; text-align: center; color: #94a3b8; font-size: 14px; line-height: 1.6;">📋 Select a project to view summary and attachments</div>';
+      return;
+    }
+    area.innerHTML = '<div style="padding: 24px; text-align: center; color: #64748b;"><span style="display: inline-block; font-size: 14px;">Loading project details...</span></div>';
+    fetch('CsrDashboardServlet?action=letterData&letterId=' + encodeURIComponent(letterId), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) { area.innerHTML = '<div style="padding: 20px; color: #dc2626; font-size: 13px; text-align: center;">⚠️ Unable to load project details. Please try again.</div>'; return; }
+        var html = '<div style="padding: 0;">';
+        html += '<div style="margin-bottom: 24px;"><h4 style="margin: 0 0 16px; color: #1e293b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Summary</h4>';
+        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">';
+        html += '<div style="padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc;"><div style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Approved Budget</div><div style="color: #0f766e; font-size: 18px; font-weight: 700;">' + (d.stats.approvedAmount || '₹0.00') + '</div></div>';
+        html += '<div style="padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f0fdfa;"><div style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Funds Received</div><div style="color: #0f766e; font-size: 18px; font-weight: 700;">' + (d.stats.frlReceivedAmount || '₹0.00') + '</div></div>';
+        html += '<div style="padding: 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc;"><div style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Balance to Receive</div><div style="color: #0f766e; font-size: 18px; font-weight: 700;">' + (d.stats.fundsBalance || '₹0.00') + '</div></div>';
+        html += '</div></div>';
+        if (d.pdfs && d.pdfs.length > 0) {
+          html += '<div><h4 style="margin: 0 0 12px; color: #1e293b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Documents</h4>';
+          html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+          d.pdfs.forEach(function(pdf) {
+            html += '<a href="' + pdf.url + '" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #0f766e; text-decoration: none; font-size: 12px; font-weight: 500; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.background=\'#f0fdfa\'; this.style.borderColor=\'#99c9c1\';" onmouseout="this.style.background=\'#fff\'; this.style.borderColor=\'#cbd5e1\';">📄 ' + pdf.label + '</a>';
+          });
+          html += '</div></div>';
+        } else {
+          html += '<div style="padding: 16px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;"><div style="color: #64748b; font-size: 13px;">No documents attached</div></div>';
+        }
+        html += '</div>';
+        area.innerHTML = html;
+      })
+      .catch(function () { area.innerHTML = '<div style="padding: 20px; color: #dc2626; font-size: 13px; text-align: center;">⚠️ Error loading project details. Please try again.</div>'; });
+  };
+
+  // Export functions
+  window.exportDashboardToExcel = function() {
+    var btn = document.getElementById('btnExcelExport');
+    btn.disabled = true;
+    btn.textContent = 'Exporting...';
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'CsrDashboardServlet?action=exportExcel';
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    btn.disabled = false;
+    btn.textContent = 'Export to Excel';
+  };
+
+  window.exportDashboardToPdf = function() {
+    var btn = document.getElementById('btnPdfExport');
+    btn.disabled = true;
+    btn.textContent = 'Exporting...';
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'CsrDashboardServlet?action=exportPdf';
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    btn.disabled = false;
+    btn.textContent = 'Export to PDF';
+  };
 }());
 </script>
 </body>

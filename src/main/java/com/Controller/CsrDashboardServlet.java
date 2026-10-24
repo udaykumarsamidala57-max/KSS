@@ -1,10 +1,14 @@
 package com.Controller;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -15,6 +19,25 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font.FontFamily;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
 
 import com.Bean.DBUtil;
 import com.google.gson.Gson;
@@ -148,6 +171,14 @@ public class CsrDashboardServlet extends HttpServlet {
         }
         if ("letterData".equals(request.getParameter("action"))) {
             sendLetterData(request, response);
+            return;
+        }
+        if ("exportExcel".equals(request.getParameter("action"))) {
+            exportDashboardToExcel(request, response);
+            return;
+        }
+        if ("exportPdf".equals(request.getParameter("action"))) {
+            exportDashboardToPdf(request, response);
             return;
         }
 
@@ -682,14 +713,14 @@ public class CsrDashboardServlet extends HttpServlet {
                 for (int k = 0; k < total.length; k++) total[k] = total[k].add(t[k]);
                 Map<String, String> r = positionRow("", "", t);
                 rows.add(new String[] { rs.getString("letter_number") + " - " + rs.getString("letter_name"), rs.getString("descr"), r.get("approved"), r.get("received"),
-                    r.get("yetToReceive"), r.get("utilised"), r.get("unspent"), r.get("retention"), r.get("unpaid"), r.get("free"), r.get("utilisation") });
+                    r.get("receivedPct"), r.get("yetToReceive"), r.get("yetToReceivePct"), r.get("utilised"), r.get("unspent"), r.get("retention"), r.get("unpaid"), r.get("free"), r.get("utilisation") });
             }
         }
         Map<String, String> t = positionRow("", "", total);
         put(out, "Management Approvals: " + group + " (" + total[0].toPlainString() + ")",
-            new String[] { "Management Approval", "Description", "Approved", "Received", "Yet to Receive", "Utilised", "Unspent", "Retention", "Bills Unpaid", "Free Balance", "Utilisation %" },
-            new boolean[] { false, false, true, true, true, true, true, true, true, true, true }, rows,
-            new String[] { "Total", "", t.get("approved"), t.get("received"), t.get("yetToReceive"), t.get("utilised"), t.get("unspent"),
+            new String[] { "Management Approval", "Description", "Approved", "Received", "Received %", "Yet to Receive", "YTR %", "Utilised", "Unspent", "Retention", "Bills Unpaid", "Free Balance", "Utilisation %" },
+            new boolean[] { false, false, true, true, true, true, true, true, true, true, true, true, true }, rows,
+            new String[] { "Total", "", t.get("approved"), t.get("received"), t.get("receivedPct"), t.get("yetToReceive"), t.get("yetToReceivePct"), t.get("utilised"), t.get("unspent"),
                 t.get("retention"), t.get("unpaid"), t.get("free"), t.get("utilisation") });
     }
 
@@ -829,13 +860,18 @@ public class CsrDashboardServlet extends HttpServlet {
         BigDecimal approved = t[1], received = t[2], utilised = t[3], retention = t[4], unpaid = t[5];
         BigDecimal unspent = received.subtract(utilised);
         BigDecimal free = unspent.subtract(retention).subtract(unpaid);
+        BigDecimal yetToReceive = approved.subtract(received);
         Map<String, String> r = new LinkedHashMap<String, String>();
         r.put("name", name);
         r.put("companyId", id);
         r.put("projects", t[0].toPlainString());
         r.put("approved", acct(approved));
         r.put("received", acct(received));
-        r.put("yetToReceive", acct(approved.subtract(received)));
+        r.put("receivedPct", approved.signum() == 0 ? "-"
+                : received.multiply(BigDecimal.valueOf(100)).divide(approved, 1, java.math.RoundingMode.HALF_UP).toPlainString() + "%");
+        r.put("yetToReceive", acct(yetToReceive));
+        r.put("yetToReceivePct", approved.signum() == 0 ? "-"
+                : yetToReceive.multiply(BigDecimal.valueOf(100)).divide(approved, 1, java.math.RoundingMode.HALF_UP).toPlainString() + "%");
         r.put("utilised", acct(utilised));
         r.put("unspent", acct(unspent));
         r.put("retention", acct(retention));
@@ -968,6 +1004,174 @@ public class CsrDashboardServlet extends HttpServlet {
     private static String formatCurrency(BigDecimal amount) {
         BigDecimal v = amount == null ? BigDecimal.ZERO : amount;
         return (v.signum() < 0 ? "-" : "") + "\u20B9" + indian(v.abs());
+    }
+
+    private void exportDashboardToExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"CSR-Dashboard-" + System.currentTimeMillis() + ".xlsx\"");
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Dashboard");
+            sheet.setColumnWidth(0, 6000);
+            for (int i = 1; i < 15; i++) sheet.setColumnWidth(i, 2000);
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 11);
+            headerStyle.setFont(headerFont);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+
+            CellStyle dataStyle = workbook.createCellStyle();
+            dataStyle.setBorderTop(BorderStyle.THIN);
+            dataStyle.setBorderBottom(BorderStyle.THIN);
+            dataStyle.setBorderLeft(BorderStyle.THIN);
+            dataStyle.setBorderRight(BorderStyle.THIN);
+            dataStyle.setAlignment(HorizontalAlignment.RIGHT);
+
+            CellStyle textStyle = workbook.createCellStyle();
+            textStyle.setBorderTop(BorderStyle.THIN);
+            textStyle.setBorderBottom(BorderStyle.THIN);
+            textStyle.setBorderLeft(BorderStyle.THIN);
+            textStyle.setBorderRight(BorderStyle.THIN);
+            textStyle.setAlignment(HorizontalAlignment.LEFT);
+
+            int rowNum = 0;
+
+            // Title row
+            Row titleRow = sheet.createRow(rowNum++);
+            titleRow.setHeightInPoints(18);
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue(com.Bean.AppConfig.code() + " CSR Amount Spending Dashboard");
+            titleCell.setCellStyle(headerStyle);
+
+            // Key metrics section
+            rowNum++; // Empty row
+            Row metricsHeader = sheet.createRow(rowNum++);
+            metricsHeader.createCell(0).setCellValue("Approved Budget");
+            metricsHeader.createCell(1).setCellValue(request.getAttribute("stats") != null ?
+                ((Map<String, String>) request.getAttribute("stats")).get("approvedAmount") : "\u20B90.00");
+
+            // Company-wise Position Table
+            rowNum += 2;
+            Row tableHeader = sheet.createRow(rowNum++);
+            String[] headers = {"Company", "Projects", "Approved", "Received", "Received %", "Yet to Receive",
+                               "Yet to Receive %", "Utilised", "Unspent", "Retention Held", "Bills Unpaid", "Free Balance", "Utilisation %"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = tableHeader.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> companyPosition = (List<Map<String, String>>) request.getAttribute("companyPosition");
+            if (companyPosition != null) {
+                for (Map<String, String> row : companyPosition) {
+                    Row dataRow = sheet.createRow(rowNum++);
+                    dataRow.createCell(0).setCellValue(row.getOrDefault("name", ""));
+                    dataRow.createCell(1).setCellValue(row.getOrDefault("projects", "0"));
+                    dataRow.createCell(2).setCellValue(row.getOrDefault("approved", "0"));
+                    dataRow.createCell(3).setCellValue(row.getOrDefault("received", "0"));
+                    dataRow.createCell(4).setCellValue(row.getOrDefault("receivedPct", "0%"));
+                    dataRow.createCell(5).setCellValue(row.getOrDefault("yetToReceive", "0"));
+                    dataRow.createCell(6).setCellValue(row.getOrDefault("yetToReceivePct", "0%"));
+                    dataRow.createCell(7).setCellValue(row.getOrDefault("utilised", "0"));
+                    dataRow.createCell(8).setCellValue(row.getOrDefault("unspent", "0"));
+                    dataRow.createCell(9).setCellValue(row.getOrDefault("retention", "0"));
+                    dataRow.createCell(10).setCellValue(row.getOrDefault("unpaid", "0"));
+                    dataRow.createCell(11).setCellValue(row.getOrDefault("free", "0"));
+                    dataRow.createCell(12).setCellValue(row.getOrDefault("utilisation", "0%"));
+                    for (int i = 0; i < 13; i++) {
+                        dataRow.getCell(i).setCellStyle(i == 0 ? textStyle : dataStyle);
+                    }
+                }
+            }
+
+            try (OutputStream out = response.getOutputStream()) {
+                workbook.write(out);
+            }
+        } catch (Exception e) {
+            getServletContext().log("Error exporting dashboard to Excel", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to export dashboard");
+        }
+    }
+
+    private void exportDashboardToPdf(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=\"CSR-Dashboard-" + System.currentTimeMillis() + ".pdf\"");
+
+        try (OutputStream out = response.getOutputStream()) {
+            Document document = new Document(PageSize.A4, 10, 10, 10, 10);
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // Title
+            Paragraph title = new Paragraph(com.Bean.AppConfig.code() + " CSR Amount Spending Dashboard",
+                new com.itextpdf.text.Font(FontFamily.HELVETICA, 16, com.itextpdf.text.Font.BOLD));
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new Paragraph(" "));
+
+            // Metrics
+            Paragraph metrics = new Paragraph("Dashboard Metrics",
+                new com.itextpdf.text.Font(FontFamily.HELVETICA, 12, com.itextpdf.text.Font.BOLD));
+            document.add(metrics);
+
+            @SuppressWarnings("unchecked")
+            Map<String, String> stats = (Map<String, String>) request.getAttribute("stats");
+            if (stats != null) {
+                document.add(new Paragraph("Approved Budget: " + stats.getOrDefault("approvedAmount", "\u20B90.00")));
+                document.add(new Paragraph("Total Work Orders: " + stats.getOrDefault("workOrderAmount", "\u20B90.00")));
+                document.add(new Paragraph("Funds Received: " + stats.getOrDefault("frlReceivedAmount", "\u20B90.00")));
+            }
+            document.add(new Paragraph(" "));
+
+            // Company-wise table
+            Paragraph tableTitle = new Paragraph("Company-wise Position",
+                new com.itextpdf.text.Font(FontFamily.HELVETICA, 11, com.itextpdf.text.Font.BOLD));
+            document.add(tableTitle);
+
+            PdfPTable table = new PdfPTable(13);
+            table.setWidthPercentage(100);
+            String[] headers = {"Company", "Projects", "Approved", "Received", "Rec %", "Yet to Receive",
+                               "YTR %", "Utilised", "Unspent", "Retention", "Bills Unpaid", "Free Balance", "Util %"};
+            for (String header : headers) {
+                table.addCell(new Phrase(header, new com.itextpdf.text.Font(FontFamily.HELVETICA, 9, com.itextpdf.text.Font.BOLD)));
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> companyPosition = (List<Map<String, String>>) request.getAttribute("companyPosition");
+            if (companyPosition != null) {
+                for (Map<String, String> row : companyPosition) {
+                    table.addCell(row.getOrDefault("name", ""));
+                    table.addCell(row.getOrDefault("projects", ""));
+                    table.addCell(row.getOrDefault("approved", ""));
+                    table.addCell(row.getOrDefault("received", ""));
+                    table.addCell(row.getOrDefault("receivedPct", ""));
+                    table.addCell(row.getOrDefault("yetToReceive", ""));
+                    table.addCell(row.getOrDefault("yetToReceivePct", ""));
+                    table.addCell(row.getOrDefault("utilised", ""));
+                    table.addCell(row.getOrDefault("unspent", ""));
+                    table.addCell(row.getOrDefault("retention", ""));
+                    table.addCell(row.getOrDefault("unpaid", ""));
+                    table.addCell(row.getOrDefault("free", ""));
+                    table.addCell(row.getOrDefault("utilisation", ""));
+                }
+            }
+
+            document.add(table);
+            document.close();
+        } catch (Exception e) {
+            getServletContext().log("Error exporting dashboard to PDF", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to export dashboard");
+        }
     }
 
 }
