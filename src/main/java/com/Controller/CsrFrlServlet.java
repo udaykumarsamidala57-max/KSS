@@ -215,6 +215,7 @@ public class CsrFrlServlet extends HttpServlet {
         String number = trim(request.getParameter("frlNumber"));
         String dateS = trim(request.getParameter("frlDate"));
         String invoiceIdsS = trim(request.getParameter("invoiceIds"));
+        String claimAmountsS = trim(request.getParameter("claimAmounts"));
         String remarks = trim(request.getParameter("remarks"));
 
         if (!letterParam.matches("\\d+")) { sendJson(response, 400, fail("Please select the Approval Letter.")); return; }
@@ -236,6 +237,24 @@ public class CsrFrlServlet extends HttpServlet {
             if (!invoiceIds.contains(v)) invoiceIds.add(v);
         }
         if (invoiceIds.isEmpty()) { sendJson(response, 400, fail("Please tick at least one invoice for this FRL.")); return; }
+        Map<Integer, BigDecimal> requestedClaims = new LinkedHashMap<>();
+        for (String entry : claimAmountsS.split(",")) {
+            String[] pair = entry.split(":", 2);
+            if (pair.length != 2 || !pair[0].trim().matches("\\d+")) {
+                sendJson(response, 400, fail("Invalid requested amount. Please review the invoice claims.")); return;
+            }
+            try {
+                BigDecimal requested = new BigDecimal(pair[1].trim()).setScale(2, RoundingMode.UNNECESSARY);
+                if (requestedClaims.put(Integer.valueOf(pair[0].trim()), requested) != null) {
+                    sendJson(response, 400, fail("An invoice has more than one requested amount.")); return;
+                }
+            } catch (Exception invalidAmount) {
+                sendJson(response, 400, fail("Enter a valid amount for each invoice claim.")); return;
+            }
+        }
+        if (!requestedClaims.keySet().equals(new java.util.LinkedHashSet<>(invoiceIds))) {
+            sendJson(response, 400, fail("Invoice selections and requested amounts do not match. Please reload the page.")); return;
+        }
         if (remarks.length() > 500) { sendJson(response, 400, fail("Remarks are too long (maximum 500 characters).")); return; }
 
         // ---- attachment (required when adding)
@@ -259,7 +278,7 @@ public class CsrFrlServlet extends HttpServlet {
         int id = isNew ? 0 : Integer.parseInt(idParam);
 
         // ---- the ticked invoices: must exist, belong to this approval letter, and not be in another FRL
-        //      claim per invoice: already in this FRL -> keep what was claimed; otherwise what is still claimable
+        //      each requested claim must stay within the invoice's eligible claimable balance
         //      (proforma = advance; tax invoice = amount minus the advance already claimed on its proforma)
         BigDecimal amount = BigDecimal.ZERO;
         Map<Integer, BigDecimal> claims = new LinkedHashMap<>();
@@ -284,16 +303,25 @@ public class CsrFrlServlet extends HttpServlet {
                         sendJson(response, 400, fail("Invoice " + rs.getString("invoice_number") + " is already in FRL " + rs.getString("other_frl") + "."));
                         return;
                     }
-                    BigDecimal claim = rs.getBigDecimal("own_claim");
-                    if (claim == null) {
-                        claim = rs.getBigDecimal("claimable");
-                        if (claim == null || claim.signum() <= 0) {
-                            sendJson(response, 400, fail("Nothing is left to claim on invoice " + rs.getString("invoice_number")
-                                    + " (already covered by the proforma advance, or the proforma is settled)."));
-                            return;
-                        }
+                    BigDecimal maxClaim = rs.getBigDecimal("claimable");
+                    BigDecimal existingClaim = rs.getBigDecimal("own_claim");
+                    if ((maxClaim == null || maxClaim.signum() <= 0) && existingClaim != null && existingClaim.signum() > 0) {
+                        maxClaim = existingClaim;
                     }
-                    claim = claim.setScale(2, RoundingMode.HALF_UP);
+                    if (maxClaim == null || maxClaim.signum() <= 0) {
+                        sendJson(response, 400, fail("Nothing is left to claim on invoice " + rs.getString("invoice_number")
+                                + " (already covered by the proforma advance, or the proforma is settled)."));
+                        return;
+                    }
+                    maxClaim = maxClaim.setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal claim = requestedClaims.get(invId);
+                    if (claim == null || claim.signum() <= 0 || claim.compareTo(maxClaim) > 0
+                            || claim.compareTo(rs.getBigDecimal("amount")) > 0) {
+                        sendJson(response, 400, fail("Requested amount for invoice " + rs.getString("invoice_number")
+                                + " must be greater than zero and no more than its claimable invoice amount (Rs "
+                                + maxClaim.toPlainString() + ")."));
+                        return;
+                    }
                     claims.put(invId, claim);
                     amount = amount.add(claim);
                 }

@@ -47,6 +47,7 @@
     <input type="hidden" name="action" value="save">
     <input type="hidden" name="id" id="fId" value="">
     <input type="hidden" name="invoiceIds" id="fInvoiceIds" value="">
+    <input type="hidden" name="claimAmounts" id="fClaimAmounts" value="">
 
     <div class="csr-card">
       <div class="csr-card-head"><div class="csr-card-title">Funds Request Letter</div></div>
@@ -168,6 +169,8 @@ $(function () {
       if (v.frlId && !mine) return;
       var claim = mine ? Number(v.claimAmount || v.amount) : Number(v.claimable);
       if (!mine && !(claim > 0)) return;                       // nothing left to claim (settled proforma / fully covered by advance)
+      var maxClaim = Number(v.claimable);
+      if (mine && !(maxClaim > 0)) maxClaim = claim;            // preserve a settled proforma's existing claim while editing its FRL
       var less = Number(v.amount) - claim;
       var on = ticked ? ticked.indexOf(String(v.id)) !== -1 : (mine || String(v.id) === String(presetInv));
       var $tr = $('<tr></tr>');
@@ -180,7 +183,9 @@ $(function () {
       $tr.append($('<td class="csr-num"></td>').text(money(v.amount)));
       $tr.append($('<td class="csr-num"></td>').text(less > 0 ? money(less) : '-')
         .attr('title', less > 0 ? 'Amount already claimed against ' + (v.proformaNumber || 'the proforma invoice') : ''));
-      $tr.append($('<td class="csr-num csr-strong"></td>').text(money(claim)).attr('data-amt', claim));
+      var $claim = $('<input type="number" class="csr-input csr-num inv-claim" min="0.01" step="0.01">')
+        .attr('max', maxClaim).attr('data-max', maxClaim).val(claim.toFixed(2));
+      $tr.append($('<td class="csr-num"></td>').append($claim));
       $b.append($tr); n++;
     });
     if (!lid) $b.append('<tr><td colspan="8" class="csr-empty">Select the approval letter to see its invoices.</td></tr>');
@@ -188,23 +193,33 @@ $(function () {
     total();
   }
   function total() {
-    var sum = 0, ids = [];
+    var sum = 0, ids = [], msg = '';
     $('.inv-tick:checked').each(function () {
       ids.push(this.value);
-      sum += Number($(this).closest('tr').find('[data-amt]').attr('data-amt'));
+      var $claim = $(this).closest('tr').find('.inv-claim');
+      var amount = Number($claim.val());
+      var max = Number($claim.attr('data-max'));
+      if (!Number.isFinite(amount) || amount <= 0 || amount > max) {
+        msg = 'Each requested amount must be greater than zero and no more than its invoice claimable amount (' + money(max) + ').';
+      } else {
+        sum += amount;
+      }
     });
     sum = r2(sum);
     $('#fInvoiceIds').val(ids.join(','));
+    $('#fClaimAmounts').val($('.inv-tick:checked').map(function () {
+      return $(this).val() + ':' + $(this).closest('tr').find('.inv-claim').val();
+    }).get().join(','));
     $('#vAmount').text(ids.length ? money(sum) : '-');
     $('#tickAll').prop('checked', ids.length > 0 && ids.length === $('.inv-tick').length);
-    var msg = '';
-    if (frl && ids.length && sum < Number(frl.received))
+    if (!msg && frl && ids.length && sum < Number(frl.received))
       msg = 'The ticked invoices total ' + money(sum) + ', less than the ' + money(frl.received) + ' already received against this FRL.';
     if (msg) $('#overWarn').text(msg).show(); else $('#overWarn').hide();
     return { ids: ids, sum: sum, msg: msg };
   }
   $sel.on('change', function () { presetInv = ''; renderInvoices(false); });
   $(document).on('change', '.inv-tick', total);
+  $(document).on('input change', '.inv-claim', total);
   $('#tickAll').on('change', function () { $('.inv-tick').prop('checked', this.checked); total(); });
 
   if (frl) {
