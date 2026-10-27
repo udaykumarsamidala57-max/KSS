@@ -29,3 +29,4 @@ com\Bean\ScholarshipBean.class
 com\Controller\ScholarshipDocumentDownloadServlet.class
 com\Controller\VerifyDocumentsServlet.class
 com\Bean\AuditUtil.class
+com\Controller\CsrActivityPlaceServlet.class

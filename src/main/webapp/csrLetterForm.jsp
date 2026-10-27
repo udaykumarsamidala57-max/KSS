@@ -11,6 +11,8 @@
     @SuppressWarnings("unchecked")
     List<String> kinds = (List<String>) request.getAttribute("kinds");
     @SuppressWarnings("unchecked")
+    List<String> places = (List<String>) request.getAttribute("places");
+    @SuppressWarnings("unchecked")
     List<Map<String, String>> companies = (List<Map<String, String>>) request.getAttribute("companies");
     String loadError = (String) request.getAttribute("error");
     boolean isEdit = row != null;
@@ -76,16 +78,20 @@
 
       <div class="csr-field">
         <label for="fKind">Kind of CSR Activity <span class="req">*</span></label>
-        <input type="text" id="fKind" name="activityKind" class="csr-input" maxlength="150" list="kindList" placeholder="Select or type">
-        <datalist id="kindList"></datalist>
+        <select id="fKind" name="activityKind" class="csr-input"></select>
       </div>
       <div class="csr-field">
         <label for="fPlace">Place <span class="req">*</span></label>
-        <input type="text" id="fPlace" name="place" class="csr-input" maxlength="200">
+        <select id="fPlace" name="place" class="csr-input"></select>
       </div>
       <div class="csr-field">
         <label for="fAmount">Amount (&#8377;) <span class="req">*</span></label>
         <input type="number" id="fAmount" name="amount" class="csr-input csr-amount" min="0.01" step="0.01" placeholder="0.00">
+      </div>
+
+      <div class="csr-field span-3" style="margin-top:-6px;">
+        <div class="csr-hint" id="kindPlaceHint">Kinds of CSR Activity and Places are added in
+          <a href="CsrActivityPlaceServlet" target="_blank">Masters &gt; CSR Activities &amp; Places</a>; refresh this page after adding.</div>
       </div>
 
       <div class="csr-field span-3">
@@ -112,11 +118,10 @@
 <script>
 $(function () {
   var row = <%= gson.toJson(row) %>;          // null when adding
-  var usedKinds = <%= gson.toJson(kinds) %>;
+  var kinds = <%= gson.toJson(kinds) %>;      // Masters > CSR Activities & Places (Active + value already on this approval)
+  var places = <%= gson.toJson(places) %>;
   var companies = <%= gson.toJson(companies) %>;
   var loadError = <%= gson.toJson(loadError) %>;
-  var DEFAULT_KINDS = ['Education', 'Health Care', 'Rural Development', 'Environment', 'Sanitation & Drinking Water',
-                       'Women Empowerment', 'Sports', 'Disaster Relief', 'Art & Culture', 'Animal Welfare'];
 
   if (loadError) $('#csrError').text(loadError).show();
 
@@ -131,10 +136,14 @@ $(function () {
     $t.data('timer', setTimeout(function () { $t.fadeOut(300); }, 4000));
   }
 
-  // Kind of activity suggestions
-  var kinds = DEFAULT_KINDS.slice();
-  (usedKinds || []).forEach(function (k) { if (k && kinds.indexOf(k) === -1) kinds.push(k); });
-  kinds.forEach(function (k) { $('#kindList').append($('<option></option>').attr('value', k)); });
+  // Kind of CSR Activity and Place lists
+  function fillSelect($sel, list, label) {
+    $sel.empty().append($('<option value=""></option>').text('-- Select ' + label + ' --'));
+    (list || []).forEach(function (v) { $sel.append($('<option></option>').attr('value', v).text(v)); });
+  }
+  fillSelect($('#fKind'), kinds, 'Kind of CSR Activity');
+  fillSelect($('#fPlace'), places, 'Place');
+  if (!kinds || !kinds.length || !places || !places.length) $('#kindPlaceHint').css('color', '#b91c1c');
 
   // Funding companies (Active ones, plus the one already on this approval)
   var $co = $('#fCompany').append('<option value="">-- Select company --</option>');
@@ -184,7 +193,10 @@ $(function () {
     if (!$('#fCompany').val()) { showToast(false, 'Please select the Funding Company.'); $('#fCompany').trigger('focus'); return; }
     var checks = [['#fName', 'Letter Name'], ['#fNumber', 'Letter Number'], ['#fKind', 'Kind of CSR Activity'], ['#fPlace', 'Place']];
     for (var i = 0; i < checks.length; i++) {
-      if ($.trim($(checks[i][0]).val()) === '') { showToast(false, 'Please enter the ' + checks[i][1] + '.'); $(checks[i][0]).trigger('focus'); return; }
+      if ($.trim($(checks[i][0]).val() || '') === '') {
+        showToast(false, ($(checks[i][0]).is('select') ? 'Please select the ' : 'Please enter the ') + checks[i][1] + '.');
+        $(checks[i][0]).trigger('focus'); return;
+      }
     }
     if (!(Number($('#fAmount').val()) > 0)) { showToast(false, 'Please enter a valid Amount.'); $('#fAmount').trigger('focus'); return; }
     var file = $('#fPdf')[0].files[0];

@@ -17,6 +17,7 @@ kss_student_scholarship 1 ── 0..1 kss_scholarship_approval
 kss_student_scholarship 1 ── many kss_scholarship_audit (application logic; audit FK is not declared)
 
 kss_csr_company 1 ── many kss_csr_approval_letter (funding company; FRLs and receipts follow the approval's company)
+kss_csr_activity_place ·· kss_csr_approval_letter (by name, no FK: activity_kind / place hold the master's name as text)
 kss_csr_approval_letter 1 ── many kss_csr_work_order
 kss_csr_work_order 1 ── many kss_csr_work_order_item
 kss_csr_work_order 1 ── many kss_csr_invoice
@@ -180,6 +181,20 @@ Companies that fund CSR projects (Masters > Companies, `CsrCompanyServlet`). Add
 
 **Keys:** PK `id`; unique `company_name`.
 **Rules in code:** cannot be deleted while any approval uses it (set Inactive instead).
+
+### `kss_csr_activity_place`
+Kinds of CSR Activity and Places offered on the Management Approval form (Masters > CSR Activities & Places, `CsrActivityPlaceServlet`). Added by `KSS_csr_activity_place.sql` (2026-10-27), which also fills it from the values already used on approvals (trimmed, de-duplicated). Run in every institution schema.
+
+| Column | Definition / meaning |
+|---|---|
+| `id` | `INT NOT NULL AUTO_INCREMENT`; primary key. |
+| `kind` | `ENUM('Activity','Place') NOT NULL`; Activity = Kind of CSR Activity. Cannot change after saving. |
+| `name` | `VARCHAR(200) NOT NULL`; unique within its kind (`uq_csr_actplace`, case-insensitive by collation). The app limits Activity names to 150 (size of `activity_kind`). |
+| `status` | `ENUM('Active','Inactive') NOT NULL DEFAULT 'Active'`; Inactive = not offered for new approvals (an approval that already has it keeps it). |
+| `created_by/at`, `updated_by/at` | audit columns. |
+
+**Keys:** PK `id`; unique (`kind`, `name`). No FK: the approval stores the name as text in `activity_kind` / `place`, so the dashboard Unit grouping is unchanged.
+**Rules in code:** approval save accepts only an Active name of the right kind (or its own unchanged old value); renaming an entry also renames it on the approvals that use it (same transaction, matched ignoring outer spaces); delete only when no approval uses it.
 
 ### `kss_csr_approval_letter`
 Approved CSR activity/funding authorization, including its uploaded signed letter. This is the parent record for CSR work orders and fund requests/receipts.

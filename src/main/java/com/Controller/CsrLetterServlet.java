@@ -244,6 +244,7 @@ public class CsrLetterServlet extends HttpServlet {
         String idParam = request.getParameter("id");
         Map<String, String> row = null;
         List<String> kinds = new ArrayList<>();
+        List<String> places = new ArrayList<>();
         try (Connection con = DBUtil.getConnection()) {
             if (idParam != null && idParam.matches("\\d+")) {
                 try (PreparedStatement ps = con.prepareStatement(
@@ -258,12 +259,14 @@ public class CsrLetterServlet extends HttpServlet {
                     return;
                 }
             }
-            try (PreparedStatement ps = con.prepareStatement(
-                    "SELECT DISTINCT activity_kind FROM kss_csr_approval_letter ORDER BY activity_kind");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) kinds.add(rs.getString(1));
-            }
             request.setAttribute("companies", CsrCompanyServlet.loadChoices(con, row == null ? null : row.get("companyId")));
+            // Kind of CSR Activity / Place come from Masters > CSR Activities & Places
+            try {
+                kinds.addAll(CsrActivityPlaceServlet.loadChoices(con, CsrActivityPlaceServlet.ACTIVITY, row == null ? null : row.get("activityKind")));
+                places.addAll(CsrActivityPlaceServlet.loadChoices(con, CsrActivityPlaceServlet.PLACE, row == null ? null : row.get("place")));
+            } catch (java.sql.SQLSyntaxErrorException missing) {
+                request.setAttribute("error", "CSR Activities & Places master is not set up. " + CsrActivityPlaceServlet.SETUP_HINT);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Database error: " + e.getMessage()
@@ -272,6 +275,7 @@ public class CsrLetterServlet extends HttpServlet {
         if (request.getAttribute("companies") == null) request.setAttribute("companies", new ArrayList<Map<String, String>>());
         request.setAttribute("row", row);
         request.setAttribute("kinds", kinds);
+        request.setAttribute("places", places);
         request.getRequestDispatcher("/csrLetterForm.jsp").forward(request, response);
     }
 
@@ -362,8 +366,8 @@ public class CsrLetterServlet extends HttpServlet {
         int companyId = Integer.parseInt(companyParam);
         if (letterName.isEmpty())   { sendJson(response, 400, fail("Please enter the Letter Name.")); return; }
         if (letterNumber.isEmpty()) { sendJson(response, 400, fail("Please enter the Letter Number.")); return; }
-        if (activity.isEmpty())     { sendJson(response, 400, fail("Please enter the Kind of CSR activity.")); return; }
-        if (place.isEmpty())        { sendJson(response, 400, fail("Please enter the Place.")); return; }
+        if (activity.isEmpty())     { sendJson(response, 400, fail("Please select the Kind of CSR Activity.")); return; }
+        if (place.isEmpty())        { sendJson(response, 400, fail("Please select the Place.")); return; }
         if (letterName.length() > 200 || letterNumber.length() > 100 || activity.length() > 150 || place.length() > 200) {
             sendJson(response, 400, fail("One of the fields is too long."));
             return;
@@ -432,6 +436,18 @@ public class CsrLetterServlet extends HttpServlet {
             sendJson(response, 409, fail("The funding company cannot be changed: FRLs or receipts have already been recorded with the present company."));
             return;
         }
+        // ---- Kind of CSR Activity / Place: from Masters > CSR Activities & Places (an unchanged old value is kept)
+        String oldActivity = null, oldPlace = null;
+        if (!isNew) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT activity_kind, place FROM kss_csr_approval_letter WHERE id = ?")) {
+                ps.setInt(1, Integer.parseInt(idParam));
+                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) { oldActivity = rs.getString(1); oldPlace = rs.getString(2); } }
+            }
+        }
+        String choiceError = CsrActivityPlaceServlet.checkChoice(con, CsrActivityPlaceServlet.ACTIVITY, activity, oldActivity);
+        if (choiceError == null) choiceError = CsrActivityPlaceServlet.checkChoice(con, CsrActivityPlaceServlet.PLACE, place, oldPlace);
+        if (choiceError != null) { sendJson(response, 400, fail(choiceError)); return; }
 
         int id;
         try {

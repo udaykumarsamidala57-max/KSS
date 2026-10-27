@@ -97,6 +97,7 @@
         </div>
 
         <div class="csr-form-actions">
+          <span id="delBox" style="display:none; margin-right:auto;"><button type="button" class="csr-btn csr-btn-bad" id="btnDel">Delete Advance</button></span>
           <a class="csr-btn csr-btn-outline csr-link-btn" id="btnCancel">Cancel</a>
           <button type="submit" class="csr-btn" id="btnSave"></button>
         </div>
@@ -221,6 +222,27 @@ $(function () {
     }).fail(function (xhr) {
       showToast(false, (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not save. Please try again.');
       $btn.prop('disabled', false).text(label);
+    });
+  });
+  // ---------- delete (edit only): inline confirm, then back to the approval page
+  if (A) $('#delBox').show();
+  $(document).on('click', '#btnDel', function () {
+    $('#delBox').html('<span class="csr-confirm">Delete this advance?</span> '
+      + '<button type="button" class="csr-btn csr-btn-bad" id="btnDelYes">Yes, delete</button> '
+      + '<button type="button" class="csr-btn csr-btn-outline" id="btnDelNo">No</button>');
+  });
+  $(document).on('click', '#btnDelNo', function () {
+    $('#delBox').html('<button type="button" class="csr-btn csr-btn-bad" id="btnDel">Delete Advance</button>');
+  });
+  $(document).on('click', '#btnDelYes', function () {
+    var $b = $(this).prop('disabled', true).text('Deleting...');
+    $.ajax({ url: 'CsrPaymentServlet', type: 'POST', dataType: 'json', data: { action: 'deleteAdvance', id: A.id }
+    }).done(function (res) {
+      if (!res.ok) { showToast(false, res.message); $('#btnDelNo').trigger('click'); return; }
+      window.location.href = letterUrl + '&msg=' + encodeURIComponent(res.message) + '#pay';
+    }).fail(function (xhr) {
+      showToast(false, (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not delete. Please try again.');
+      $('#btnDelNo').trigger('click');
     });
   });
 });

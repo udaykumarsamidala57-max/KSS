@@ -630,6 +630,7 @@
            { "KSS CSR",   "Funds Request Letters",       "CsrFrlServlet",             "&#9997;",  "a", "CsrFrlServlet", "csrFrl" },
            { "KSS CSR",   "Fund Receipts",               "CsrFundServlet",            "&#8377;",  "c", "CsrFundServlet", "csrFund" },
            { "Masters",   "Companies (CSR Funders)",     "CsrCompanyServlet",         "&#9733;",  "f", "CsrCompanyServlet", "csrCompan" },
+           { "Masters",   "CSR Activities &amp; Places", "CsrActivityPlaceServlet",   "&#9776;",  "f", "CsrActivityPlaceServlet", "csrActivityPlace" },
            { "Masters",   "Organization Master",         "organization.jsp",          "&#9873;",  "f", "organization.jsp" },
            { "Masters",   "KSS Course Master",           "KssCourseMasterServlet",    "&#9881;",  "f", "KssCourseMasterServlet", "kssCourseMaster.jsp" }
          };
