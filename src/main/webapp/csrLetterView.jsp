@@ -362,7 +362,10 @@
   <!-- ================= LEDGER ================= -->
   <div class="lv-pane" id="tab-ledger" data-title="<%= coH %> Ledger">
     <div class="csr-card">
-      <div class="csr-card-head"><div class="csr-card-title"><%= coH %> Receivable Ledger <span class="csr-small">(&#8377;)</span></div></div>
+      <div class="csr-card-head">
+        <div class="csr-card-title"><%= coH %> Receivable Ledger <span class="csr-small">(&#8377;)</span></div>
+        <a class="csr-btn csr-btn-sm csr-link-btn lv-act" id="btnDirectFrl" title="Raise an FRL on this approval without any invoice">+ Direct FRL</a>
+      </div>
       <div class="csr-table-wrap">
         <table class="csr-table">
           <thead><tr>
@@ -951,6 +954,7 @@ $(function () {
   // ---------- FRLs
   $('#nFrl').text(FRL.length);
   $('#btnFrl').attr('href', 'CsrFrlServlet?action=form&letterId=' + L.id);
+  $('#btnDirectFrl').attr('href', 'CsrFrlServlet?action=form&direct=1&back=letter&letterId=' + L.id);
   var s3 = [0, 0, 0];
   FRL.forEach(function (r) {
     var o = r2(+r.amount - +r.received);
@@ -961,7 +965,7 @@ $(function () {
     $act.append(btn('&#9998; Edit', 'CsrFrlServlet?action=form&id=' + r.id, true));
     $('#bFrl').append($('<tr class="csr-row"></tr>')
       .append(td(r.frl_date)).append(td(r.frl_number, 'csr-strong'))
-      .append(td(r.invoice_numbers || '-', 'csr-small').css('max-width', '220px'))
+      .append(td(r.invoice_numbers || 'Direct (no invoice)', 'csr-small').css('max-width', '220px'))
       .append(nTd(r.amount, true)).append(nTd(r.received))
       .append($('<td class="csr-num"></td>').text(amt(o)).css({ color: o > 0 ? '#b45309' : '', fontWeight: 600 }))
       .append($('<td></td>').append($('<span class="csr-badge"></span>').text(st).toggleClass('csr-badge-pi', st !== 'Received')))
@@ -992,7 +996,7 @@ $(function () {
   var led = [];
   FRL.forEach(function (r) {
     led.push({ k: dmy(r.frl_date) + '1' + ('000000' + r.id).slice(-6), date: r.frl_date, vch: 'FRL', ref: r.frl_number,
-               part: 'Claim for bills ' + (r.invoice_numbers || '-'), dr: +r.amount, cr: 0 });
+               part: r.invoice_numbers ? 'Claim for bills ' + r.invoice_numbers : 'Direct request (no invoice)', dr: +r.amount, cr: 0 });
   });
   RC.forEach(function (f) {
     led.push({ k: dmy(f.receipt_date) + '2' + ('000000' + f.id).slice(-6), date: f.receipt_date, vch: 'Receipt', ref: f.reference_no || '-',
@@ -1096,7 +1100,7 @@ $(function () {
     var tf = [0, 0, 0];
     FRL.forEach(function (r) {
       var o = r2(+r.amount - +r.received); tf[0] += +r.amount; tf[1] += +r.received; tf[2] += o;
-      $f.append(row([[tdate(r.frl_date)], [r.frl_number], [r.invoice_numbers || '-'], [+r.amount, true], [+r.received, true], [o, true]]));
+      $f.append(row([[tdate(r.frl_date)], [r.frl_number], [r.invoice_numbers || 'Direct (no invoice)'], [+r.amount, true], [+r.received, true], [o, true]]));
     });
     if (FRL.length) $f.append(row([['Total'], [''], [''], [tf[0], true], [tf[1], true], [tf[2], true]], 't'));
     else $f.append(row([['No FRLs']]));

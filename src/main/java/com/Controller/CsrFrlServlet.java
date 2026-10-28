@@ -217,6 +217,9 @@ public class CsrFrlServlet extends HttpServlet {
         String invoiceIdsS = trim(request.getParameter("invoiceIds"));
         String claimAmountsS = trim(request.getParameter("claimAmounts"));
         String remarks = trim(request.getParameter("remarks"));
+        // direct FRL: a request for funds against the approval itself, with no invoices behind it
+        boolean direct = "1".equals(trim(request.getParameter("direct")));
+        String directAmountS = trim(request.getParameter("amount"));
 
         if (!letterParam.matches("\\d+")) { sendJson(response, 400, fail("Please select the Approval Letter.")); return; }
         if (number.isEmpty()) { sendJson(response, 400, fail("Please enter the FRL Number.")); return; }
@@ -229,16 +232,16 @@ public class CsrFrlServlet extends HttpServlet {
             return;
         }
         List<Integer> invoiceIds = new ArrayList<>();
-        for (String part : invoiceIdsS.split(",")) {
+        for (String part : direct ? new String[0] : invoiceIdsS.split(",")) {
             String t = part.trim();
             if (t.isEmpty()) continue;
             if (!t.matches("\\d+")) { sendJson(response, 400, fail("Invalid invoice selection.")); return; }
             Integer v = Integer.valueOf(t);
             if (!invoiceIds.contains(v)) invoiceIds.add(v);
         }
-        if (invoiceIds.isEmpty()) { sendJson(response, 400, fail("Please tick at least one invoice for this FRL.")); return; }
+        if (!direct && invoiceIds.isEmpty()) { sendJson(response, 400, fail("Please tick at least one invoice for this FRL.")); return; }
         Map<Integer, BigDecimal> requestedClaims = new LinkedHashMap<>();
-        for (String entry : claimAmountsS.split(",")) {
+        for (String entry : direct ? new String[0] : claimAmountsS.split(",")) {
             String[] pair = entry.split(":", 2);
             if (pair.length != 2 || !pair[0].trim().matches("\\d+")) {
                 sendJson(response, 400, fail("Invalid requested amount. Please review the invoice claims.")); return;
@@ -324,6 +327,27 @@ public class CsrFrlServlet extends HttpServlet {
                     }
                     claims.put(invId, claim);
                     amount = amount.add(claim);
+                }
+            }
+        }
+        if (direct) {
+            try {
+                amount = new BigDecimal(directAmountS).setScale(2, RoundingMode.UNNECESSARY);
+            } catch (Exception invalidAmount) {
+                sendJson(response, 400, fail("Please enter a valid amount for the direct FRL (up to 2 decimals).")); return;
+            }
+            if (amount.signum() <= 0 || amount.compareTo(new BigDecimal("999999999999.99")) > 0) {
+                sendJson(response, 400, fail("The FRL amount must be greater than zero.")); return;
+            }
+            if (!isNew) {
+                try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM kss_csr_frl_invoice WHERE frl_id = ?")) {
+                    ps.setInt(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            sendJson(response, 400, fail("This FRL was raised against invoices. Edit it from its invoice list, not as a direct FRL."));
+                            return;
+                        }
+                    }
                 }
             }
         }

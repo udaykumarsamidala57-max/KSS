@@ -8,6 +8,10 @@
     @SuppressWarnings("unchecked")
     Map<String, String> frl = (Map<String, String>) request.getAttribute("frl");   // null = new
     boolean isEdit = frl != null;
+    // direct FRL = raised against the approval itself, no invoices (?direct=1, or editing an FRL that has no invoices)
+    boolean isDirect = "1".equals(request.getParameter("direct"))
+            || (isEdit && (frl.get("invoiceIds") == null || frl.get("invoiceIds").trim().isEmpty()));
+    boolean backToLetter = "letter".equals(request.getParameter("back"));
     com.google.gson.Gson gson = new com.google.gson.Gson();   // escapes < > & : safe inside <script>
 %>
 <!DOCTYPE html>
@@ -15,7 +19,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><%= isEdit ? "Edit Funds Request Letter" : "New Funds Request Letter" %></title>
+<title><%= isEdit ? "Edit Funds Request Letter" : (isDirect ? "New Direct FRL" : "New Funds Request Letter") %></title>
 
 <!-- INCLUDE SHARED HEADER & MENU -->
 <%@ include file="header.jsp" %>
@@ -37,7 +41,7 @@
       <div class="csr-subtitle"><%= com.Bean.AppConfig.code() %> CSR Amount Spending &rsaquo; Funds Request Letters</div>
       <h1 class="csr-title" id="pageTitle"></h1>
     </div>
-    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn">&#8592; Back to Management Approvals</a>
+    <a href="CsrLetterServlet" class="csr-btn csr-btn-outline csr-link-btn" id="lnkBack">&#8592; Back to Management Approvals</a>
   </div>
 
   <div id="csrError" class="csr-alert csr-alert-err" style="display:none;"></div>
@@ -48,6 +52,7 @@
     <input type="hidden" name="id" id="fId" value="">
     <input type="hidden" name="invoiceIds" id="fInvoiceIds" value="">
     <input type="hidden" name="claimAmounts" id="fClaimAmounts" value="">
+    <% if (isDirect) { %><input type="hidden" name="direct" value="1"><% } %>
 
     <div class="csr-card">
       <div class="csr-card-head"><div class="csr-card-title">Funds Request Letter</div></div>
@@ -58,6 +63,7 @@
           <div class="csr-hint" id="coHint"></div>
         </div>
 
+        <% if (!isDirect) { %>
         <div class="csr-field span-3">
           <label>Invoices in this FRL <span class="req">*</span></label>
           <div class="csr-table-wrap csr-inv-pick">
@@ -78,6 +84,7 @@
             </table>
           </div>
         </div>
+        <% } %>
 
         <div class="csr-field">
           <label for="fNumber">FRL Number <span class="req">*</span></label>
@@ -88,8 +95,13 @@
           <input type="date" id="fDate" name="frlDate" class="csr-input">
         </div>
         <div class="csr-field">
+          <% if (isDirect) { %>
+          <label for="fAmount">Amount Requested (&#8377;) <span class="req">*</span></label>
+          <input type="number" id="fAmount" name="amount" class="csr-input csr-num" min="0.01" step="0.01">
+          <% } else { %>
           <label>Amount Requested (&#8377;)</label>
           <div class="csr-readonly csr-num" id="vAmount">-</div>
+          <% } %>
         </div>
 
         <div class="csr-field span-3">
@@ -124,6 +136,8 @@ $(function () {
   var presetInv = <%= gson.toJson(request.getAttribute("presetInvoiceId")) %>;
   var loadError = <%= gson.toJson(request.getAttribute("error")) %>;
   var RS = String.fromCharCode(8377);
+  var DIRECT = <%= isDirect %>;                                 // raised against the approval itself, no invoices
+  var backToLetter = <%= backToLetter %>;                       // opened from the ledger of an approval letter
 
   if (loadError) $('#csrError').text(loadError).show();
 
@@ -193,6 +207,12 @@ $(function () {
     total();
   }
   function total() {
+    if (DIRECT) {
+      var amt = r2($('#fAmount').val()), m = '';
+      if (frl && amt > 0 && amt < Number(frl.received)) m = 'The amount is less than the ' + money(frl.received) + ' already received against this FRL.';
+      if (m) $('#overWarn').text(m).show(); else $('#overWarn').hide();
+      return { ids: [], sum: amt, msg: m };
+    }
     var sum = 0, ids = [], msg = '';
     $('.inv-tick:checked').each(function () {
       ids.push(this.value);
@@ -217,13 +237,14 @@ $(function () {
     if (msg) $('#overWarn').text(msg).show(); else $('#overWarn').hide();
     return { ids: ids, sum: sum, msg: msg };
   }
-  $sel.on('change', function () { presetInv = ''; renderInvoices(false); });
+  $sel.on('change', function () { presetInv = ''; if (!DIRECT) renderInvoices(false); });
+  $('#fAmount').on('input change', total);
   $(document).on('change', '.inv-tick', total);
   $(document).on('input change', '.inv-claim', total);
   $('#tickAll').on('change', function () { $('.inv-tick').prop('checked', this.checked); total(); });
 
   if (frl) {
-    $('#pageTitle').text('Edit Funds Request Letter');
+    $('#pageTitle').text(DIRECT ? 'Edit Direct FRL' : 'Edit Funds Request Letter');
     $('#btnSave').text('Update FRL');
     $('#fId').val(frl.id);
     $sel.val(frl.letterId);
@@ -231,6 +252,7 @@ $(function () {
     $('#fNumber').val(frl.frlNumber);
     $('#fDate').val(frl.frlDate);
     $('#fRemarks').val(frl.remarks || '');
+    if (DIRECT) $('#fAmount').val(Number(frl.amount).toFixed(2));
     $('#fileReq').hide();
     $('#fileKeepHint').show();
     if (frl.attachmentSize) {
@@ -239,21 +261,28 @@ $(function () {
         .append(' (' + kb(frl.attachmentSize) + ')');
     }
   } else {
-    $('#pageTitle').text('New Funds Request Letter');
+    $('#pageTitle').text(DIRECT ? 'New Direct FRL (without invoice)' : 'New Funds Request Letter');
     $('#btnSave').text('Save FRL');
     if (preset) $sel.val(preset);
     var d = new Date();
     $('#fDate').val(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2));
   }
-  renderInvoices(false);
+  if (!DIRECT) renderInvoices(false);
   showCompany();
+  if (backToLetter) {
+    var back = function () { return $sel.val() ? 'CsrLetterServlet?action=view&id=' + $sel.val() : 'CsrLetterServlet'; };
+    $('#lnkBack, .csr-form-actions a').attr('href', back());
+    $sel.on('change', function () { $('#lnkBack, .csr-form-actions a').attr('href', back()); });
+    $('#lnkBack').html('&#8592; Back to the ledger');
+  }
   if (!letters.length && !loadError) $('#csrError').text('No Management Approvals yet. Add an approval letter first.').show();
 
   $('#frlForm').on('submit', function (e) {
     e.preventDefault();
     if (!$sel.val()) { showToast(false, 'Please select the Approval Letter.'); return; }
     var t = total();
-    if (!t.ids.length) { showToast(false, 'Please tick at least one invoice for this FRL.'); return; }
+    if (DIRECT) { if (!(t.sum > 0)) { showToast(false, 'Please enter the amount requested.'); $('#fAmount').trigger('focus'); return; } }
+    else if (!t.ids.length) { showToast(false, 'Please tick at least one invoice for this FRL.'); return; }
     if (t.msg) { showToast(false, t.msg); return; }
     if ($.trim($('#fNumber').val()) === '') { showToast(false, 'Please enter the FRL Number.'); $('#fNumber').trigger('focus'); return; }
     if (!$('#fDate').val()) { showToast(false, 'Please enter the FRL Date.'); return; }
@@ -270,7 +299,9 @@ $(function () {
       data: new FormData(this), processData: false, contentType: false
     }).done(function (res) {
       if (!res.ok) { showToast(false, res.message); $btn.prop('disabled', false).text(label); return; }
-      window.location.href = 'CsrFrlServlet?msg=' + encodeURIComponent(res.message) + '&hl=' + res.id;
+      window.location.href = backToLetter
+        ? 'CsrLetterServlet?action=view&id=' + $sel.val() + '&msg=' + encodeURIComponent(res.message) + '#ledger'
+        : 'CsrFrlServlet?msg=' + encodeURIComponent(res.message) + '&hl=' + res.id;
     }).fail(function (xhr) {
       showToast(false, (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not save. Please try again.');
       $btn.prop('disabled', false).text(label);

@@ -148,7 +148,7 @@ $(function () {
       .append($('<div class="csr-strong"></div>').text(r.letterNumber))
       .append($('<div class="csr-small"></div>').text(r.letterName))
       .append($('<div class="csr-small"></div>').text('To: ' + (r.companyName || 'company not set'))));
-    $tr.append($('<td class="csr-small"></td>').css('max-width', '220px').text(r.invoiceNumbers || '-'));
+    $tr.append($('<td class="csr-small"></td>').css('max-width', '220px').text(r.invoiceNumbers || 'Direct (no invoice)'));
     $tr.append($('<td class="csr-num"></td>').text(money(r.amount)));
     var $rec = $('<td class="csr-num"></td>');
     if (cnt) {
