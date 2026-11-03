@@ -447,7 +447,7 @@ public class CsrDashboardServlet extends HttpServlet {
      */
     private static final java.util.Set<String> POS_COLS = new java.util.HashSet<String>(java.util.Arrays.asList(
             "projects", "approved", "received", "yetToReceive", "utilised", "unspent", "retention", "unpaid", "free", "utilisation",
-            "receivedOpening", "receivedCurrent", "woAmount", "invoiced", "invoicePaid"));
+            "receivedOpening", "receivedCurrent", "woAmount", "invoiced", "invoicePaid", "toBill"));
     private static final java.util.Set<String> MONTH_COLS = new java.util.HashSet<String>(java.util.Arrays.asList(
             "received", "paid", "tds", "utilised", "flow", "cumulative"));
 
@@ -899,7 +899,10 @@ public class CsrDashboardServlet extends HttpServlet {
         r.put("receivedCurrent", acct(received.subtract(t[6])));
         r.put("woAmount", acct(t[7]));
         r.put("invoiced", acct(t[8]));
-        r.put("invoicePaid", acct(t[8].subtract(unpaid)));   // yet to be paid = Bills Unpaid
+        r.put("invoicePaid", acct(t[8].subtract(unpaid)));   // balance to pay = Bills Unpaid
+        BigDecimal toBill = t[7].subtract(t[8]);              // work order value not yet billed in tax invoices
+        r.put("toBill", acct(toBill));
+        r.put("toBillNeg", toBill.signum() < 0 ? "1" : "");
         r.put("utilisation", approved.signum() == 0 ? "-"
                 : utilised.multiply(BigDecimal.valueOf(100)).divide(approved, 1, java.math.RoundingMode.HALF_UP).toPlainString() + "%");
         return r;

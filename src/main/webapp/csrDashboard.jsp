@@ -389,11 +389,12 @@ body { background:#f3f4f6 !important; }
 
 /* grouped position tables: Budget | Invoicing | Received from Sponsor */
 .csr-page .csr-pos-table tr.csr-co-group th { vertical-align:middle !important; color:var(--d-ink) !important; font-size:12px !important; }
-.csr-page .csr-pos-table tr.csr-co-group th.csr-co-g1, .csr-page .csr-pos-table tr.csr-co-group th.csr-co-g2, .csr-page .csr-pos-table tr.csr-co-group th.csr-co-g3 {
+.csr-page .csr-pos-table tr.csr-co-group th.csr-co-g1, .csr-page .csr-pos-table tr.csr-co-group th.csr-co-g2,
+.csr-page .csr-pos-table tr.csr-co-group th.csr-co-g3, .csr-page .csr-pos-table tr.csr-co-group th.csr-co-g4 {
   text-align:center; background:#fff !important; border-bottom:2px solid var(--d-brand) !important; padding:8px 12px !important; }
-.csr-page .csr-pos-table .csr-co-g1, .csr-page .csr-pos-table .csr-co-g2, .csr-page .csr-pos-table .csr-co-g3,
-.csr-page .csr-pos-table .csr-co-g1s, .csr-page .csr-pos-table .csr-co-g2s, .csr-page .csr-pos-table .csr-co-g3s { border-left:1px solid var(--d-rule) !important; }
-.csr-page .csr-pos-table td.k1, .csr-page .csr-pos-table td.k2, .csr-page .csr-pos-table td.k3 { font-weight:600 !important; }
+.csr-page .csr-pos-table .csr-co-g1, .csr-page .csr-pos-table .csr-co-g2, .csr-page .csr-pos-table .csr-co-g3, .csr-page .csr-pos-table .csr-co-g4,
+.csr-page .csr-pos-table .csr-co-g1s, .csr-page .csr-pos-table .csr-co-g2s, .csr-page .csr-pos-table .csr-co-g3s, .csr-page .csr-pos-table .csr-co-g4s { border-left:1px solid var(--d-rule) !important; }
+.csr-page .csr-pos-table td.k1, .csr-page .csr-pos-table td.k2, .csr-page .csr-pos-table td.k3, .csr-page .csr-pos-table td.k4 { font-weight:600 !important; }
 .csr-page .csr-pos-table tr.csr-co-group th:first-child, .csr-page .csr-pos-table thead tr:only-child th:first-child,
 .csr-page .csr-pos-table tbody td:first-child { position:sticky; left:0; z-index:2; min-width:110px; box-shadow:inset -1px 0 0 var(--d-rule); }
 
@@ -465,13 +466,14 @@ body { background:#f3f4f6 !important; }
     <div class="csr-table-wrap">
       <table class="csr-table csr-co-table csr-pos-table">
         <thead>
-          <%-- owner layout (2026-11-03): 1. Budget  2. Invoicing  3. Received from Sponsor --%>
+          <%-- owner layout (2026-11-03): 1. Budget  2. Work Orders  3. Payment  4. Received from Sponsor --%>
           <tr class="csr-co-group">
             <th rowspan="2"><%= pos[2] %></th>
             <th rowspan="2" class="csr-num">Projects</th>
             <th colspan="6" class="csr-co-g1">1. Budget</th>
-            <th colspan="4" class="csr-co-g2">2. Invoicing</th>
-            <th colspan="3" class="csr-co-g3">3. Received from Sponsor</th>
+            <th colspan="3" class="csr-co-g2">2. Work Orders</th>
+            <th colspan="3" class="csr-co-g3">3. Payment</th>
+            <th colspan="3" class="csr-co-g4">4. Received from Sponsor</th>
           </tr>
           <tr>
             <th class="csr-num b1 csr-co-g1s">Approved</th>
@@ -480,13 +482,15 @@ body { background:#f3f4f6 !important; }
             <th class="csr-num b1">Received<small>Total</small></th>
             <th class="csr-num b1">Yet to Receive</th>
             <th class="csr-num b1">% to Receive</th>
-            <th class="csr-num b2 csr-co-g2s">WO Amount</th>
-            <th class="csr-num b2">Invoice Received</th>
-            <th class="csr-num b2">Payment Made</th>
-            <th class="csr-num b2">Yet to be Paid</th>
-            <th class="csr-num b3 csr-co-g3s">Total Received</th>
-            <th class="csr-num b3">Paid to Vendors</th>
-            <th class="csr-num b3">Balance</th>
+            <th class="csr-num b2 csr-co-g2s">Work Order Amount</th>
+            <th class="csr-num b2">Invoice Raised</th>
+            <th class="csr-num b2">Balance to be Billed</th>
+            <th class="csr-num b3 csr-co-g3s">Invoice Received</th>
+            <th class="csr-num b3">Amount Paid</th>
+            <th class="csr-num b3">Balance to Pay</th>
+            <th class="csr-num b4 csr-co-g4s">Total Received</th>
+            <th class="csr-num b4">Paid to Vendors</th>
+            <th class="csr-num b4">Balance</th>
           </tr>
         </thead>
         <tbody>
@@ -507,15 +511,17 @@ body { background:#f3f4f6 !important; }
             <td class="csr-num"><%= escapeHtml(ytrPct) %></td>
             <td class="csr-num csr-co-g2s"><%= dl0(c.get("woAmount"), vw, k, "woAmount") %></td>
             <td class="csr-num"><%= dl0(c.get("invoiced"), vw, k, "invoiced") %></td>
+            <td class="csr-num k2 <%= "1".equals(c.get("toBillNeg")) && !"-".equals(c.get("toBill")) ? "csr-co-neg" : "" %>"><%= dl0(c.get("toBill"), vw, k, "toBill") %></td>
+            <td class="csr-num csr-co-g3s"><%= dl0(c.get("invoiced"), vw, k, "invoiced") %></td>
             <td class="csr-num"><%= dl0(c.get("invoicePaid"), vw, k, "invoicePaid") %></td>
-            <td class="csr-num k2"><%= dl0(c.get("unpaid"), vw, k, "unpaid") %></td>
-            <td class="csr-num csr-co-g3s"><%= dl0(c.get("received"), vw, k, "received") %></td>
+            <td class="csr-num k3"><%= dl0(c.get("unpaid"), vw, k, "unpaid") %></td>
+            <td class="csr-num csr-co-g4s"><%= dl0(c.get("received"), vw, k, "received") %></td>
             <td class="csr-num"><%= dl0(c.get("utilised"), vw, k, "utilised") %></td>
-            <td class="csr-num k3 <%= "1".equals(c.get("unspentNeg")) && !"-".equals(c.get("unspent")) ? "csr-co-neg" : "" %>"><%= dl0(c.get("unspent"), vw, k, "unspent") %></td>
+            <td class="csr-num k4 <%= "1".equals(c.get("unspentNeg")) && !"-".equals(c.get("unspent")) ? "csr-co-neg" : "" %>"><%= dl0(c.get("unspent"), vw, k, "unspent") %></td>
           </tr>
           <% } %>
           <% if (posRows.size() == 1) { %>
-          <tr><td colspan="15" class="csr-empty">No Management Approvals yet.</td></tr>
+          <tr><td colspan="17" class="csr-empty">No Management Approvals yet.</td></tr>
           <% } %>
         </tbody>
       </table>
