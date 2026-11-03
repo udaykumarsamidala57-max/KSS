@@ -391,6 +391,20 @@ public class CsrPaymentServlet extends HttpServlet {
         }
         BigDecimal dueAfter = due.subtract(settles);
         if (tdsSection.isEmpty()) tdsPct = BigDecimal.ZERO.setScale(2);
+        // cash out of this voucher = amount paid now + TDS (advance adjusted was already counted when the advance was paid)
+        BigDecimal oldOut = BigDecimal.ZERO;
+        LocalDate oldDate = null;
+        if (id > 0) {
+            try (PreparedStatement ps = con.prepareStatement("SELECT payment_date, net_paid + tds_amount FROM kss_csr_vendor_payment WHERE id = ?")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) { oldDate = rs.getDate(1).toLocalDate(); oldOut = rs.getBigDecimal(2); }
+                }
+            }
+        }
+        int letterId = Integer.parseInt(bill.get("letter_id"));
+        String overFunds = overFunds(con, letterId, 0, id, date, net.add(tds), letterId, oldDate, oldOut);
+        if (overFunds != null) { sendJson(response, 400, fail(overFunds)); return false; }
 
         // ---- payment proof (optional)
         byte[] file = null;
@@ -531,13 +545,20 @@ public class CsrPaymentServlet extends HttpServlet {
             return false;
         }
 
-        int oldWo = 0;
+        int oldWo = 0, oldLetter = 0;
         BigDecimal oldAmount = BigDecimal.ZERO;
+        LocalDate oldDate = null;
         if (id > 0) {
-            Map<String, String> old = one(con, "SELECT work_order_id, amount FROM kss_csr_vendor_advance WHERE id = ? FOR UPDATE", id);
-            if (old == null) { sendJson(response, 404, fail("Advance not found. Please reload the page.")); return false; }
-            oldWo = Integer.parseInt(old.get("work_order_id"));
-            oldAmount = new BigDecimal(old.get("amount"));
+            try (PreparedStatement ps = con.prepareStatement("SELECT a.work_order_id, a.amount, a.advance_date, w.letter_id "
+                    + "FROM kss_csr_vendor_advance a JOIN kss_csr_work_order w ON w.id = a.work_order_id WHERE a.id = ? FOR UPDATE")) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        oldWo = rs.getInt(1); oldAmount = rs.getBigDecimal(2); oldDate = rs.getDate(3).toLocalDate(); oldLetter = rs.getInt(4);
+                    }
+                }
+            }
+            if (oldWo == 0) { sendJson(response, 404, fail("Advance not found. Please reload the page.")); return false; }
         }
         Map<String, String> w = lockWorkOrder(con, woId);
         if (w == null) { sendJson(response, 400, fail("Work order not found. Please reload the page.")); return false; }
@@ -562,6 +583,8 @@ public class CsrPaymentServlet extends HttpServlet {
                     + w.get("wo_number") + ". The total advance cannot be less than that."));
             return false;
         }
+        String overFunds = overFunds(con, Integer.parseInt(w.get("letter_id")), id, 0, date, amount, oldLetter, oldDate, oldAmount);
+        if (overFunds != null) { sendJson(response, 400, fail(overFunds)); return false; }
 
         byte[] file = null;
         String fileName = null, fileType = null;
@@ -654,6 +677,96 @@ public class CsrPaymentServlet extends HttpServlet {
         json.addProperty("message", "Advance deleted: " + inr(new BigDecimal(a.get("amount"))) + " (" + w.get("wo_number") + ")");
         sendJson(response, 200, json);
         return true;
+    }
+
+    // ================================================================== funds rule
+    /*
+     * Owner rule (2026-11-03): no payment to a vendor (advance or bill payment) without the company's funds.
+     * For a Management Approval, on every payment date:
+     *     funds received up to that date  >=  paid out up to that date   (paid out = advances + net paid + TDS)
+     * A receipt on the same day as a payment counts as available.
+     * A change that does not make the position worse than it already was is allowed, so old entries can be corrected.
+     */
+
+    /** One money movement of an approval: receipt (+) or payment (-). */
+    static final class FundEvent {
+        final LocalDate date; final BigDecimal amount; final boolean payment;
+        FundEvent(LocalDate date, BigDecimal amount, boolean payment) { this.date = date; this.amount = amount; this.payment = payment; }
+    }
+
+    /** Worst point of an approval: lowest (received - paid) on any payment date. */
+    static final class FundLow {
+        LocalDate date; BigDecimal margin, received, paid;
+    }
+
+    /**
+     * Locks the approval row and returns all its receipts and payments, leaving out one advance / voucher / receipt
+     * (0 = none). Locking reads, so a change committed by another user at the same moment is seen.
+     * Returns null if the approval does not exist.
+     */
+    static List<FundEvent> fundEvents(Connection con, int letterId, int advId, int payId, int rcptId) throws Exception {
+        if (one(con, "SELECT id FROM kss_csr_approval_letter WHERE id = ? FOR UPDATE", letterId) == null) return null;
+        List<FundEvent> ev = new ArrayList<>();
+        String[][] q = {
+            { "SELECT receipt_date, amount FROM kss_csr_fund_receipt WHERE letter_id = ? AND id <> ? FOR UPDATE", "R", String.valueOf(rcptId) },
+            { "SELECT a.advance_date, a.amount FROM kss_csr_vendor_advance a JOIN kss_csr_work_order w ON w.id = a.work_order_id "
+            + "WHERE w.letter_id = ? AND a.id <> ? FOR UPDATE", "P", String.valueOf(advId) },
+            { "SELECT p.payment_date, p.net_paid + p.tds_amount FROM kss_csr_vendor_payment p "
+            + "JOIN kss_csr_invoice i ON i.id = p.invoice_id JOIN kss_csr_work_order w ON w.id = i.work_order_id "
+            + "WHERE w.letter_id = ? AND p.id <> ? FOR UPDATE", "P", String.valueOf(payId) } };
+        for (String[] s : q) {
+            try (PreparedStatement ps = con.prepareStatement(s[0])) {
+                ps.setInt(1, letterId);
+                ps.setInt(2, Integer.parseInt(s[2]));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) ev.add(new FundEvent(rs.getDate(1).toLocalDate(), rs.getBigDecimal(2), "P".equals(s[1])));
+                }
+            }
+        }
+        return ev;
+    }
+
+    /** Lowest (received - paid) on any payment date; null when there are no payments. */
+    static FundLow fundLow(List<FundEvent> events) {
+        java.util.TreeMap<LocalDate, BigDecimal[]> byDay = new java.util.TreeMap<>();   // {received, paid, hasPayment}
+        for (FundEvent e : events) {
+            BigDecimal[] d = byDay.computeIfAbsent(e.date, k -> new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO });
+            if (e.payment) { d[1] = d[1].add(e.amount); d[2] = BigDecimal.ONE; } else d[0] = d[0].add(e.amount);
+        }
+        BigDecimal rec = BigDecimal.ZERO, paid = BigDecimal.ZERO;
+        FundLow low = null;
+        for (Map.Entry<LocalDate, BigDecimal[]> d : byDay.entrySet()) {
+            rec = rec.add(d.getValue()[0]);
+            paid = paid.add(d.getValue()[1]);
+            if (d.getValue()[2].signum() == 0) continue;
+            BigDecimal m = rec.subtract(paid);
+            if (low == null || m.compareTo(low.margin) < 0) {
+                low = new FundLow(); low.date = d.getKey(); low.margin = m; low.received = rec; low.paid = paid;
+            }
+        }
+        return low;
+    }
+
+    /** Error message when "after" breaks the rule and is worse than "before"; null when allowed. */
+    static String fundsError(List<FundEvent> before, List<FundEvent> after, String what) {
+        FundLow a = fundLow(after);
+        if (a == null || a.margin.signum() >= 0) return null;
+        FundLow b = fundLow(before);
+        if (b != null && a.margin.compareTo(b.margin) >= 0) return null;   // not worse than it already was
+        return what + " On " + a.date.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                + " payments to vendors for this approval would be " + inr(a.paid) + " but funds received from the company up to that date are only "
+                + inr(a.received) + " (short by " + inr(a.margin.negate()) + "). Payments cannot be made before the funds are received.";
+    }
+
+    /** Check for saving an advance or voucher: old* describe the saved record (oldOut 0 for a new one). */
+    private static String overFunds(Connection con, int letterId, int advId, int payId, LocalDate newDate, BigDecimal newOut,
+                                    int oldLetter, LocalDate oldDate, BigDecimal oldOut) throws Exception {
+        List<FundEvent> ev = fundEvents(con, letterId, advId, payId, 0);
+        if (ev == null) return "Management approval not found. Please reload the page.";
+        List<FundEvent> before = new ArrayList<>(ev), after = new ArrayList<>(ev);
+        if (oldLetter == letterId && oldDate != null && oldOut.signum() > 0) before.add(new FundEvent(oldDate, oldOut, true));
+        after.add(new FundEvent(newDate, newOut, true));
+        return fundsError(before, after, "Not enough funds.");
     }
 
     /** Locks the work order row and returns its advance figures. */

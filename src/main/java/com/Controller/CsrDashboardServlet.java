@@ -112,6 +112,9 @@ public class CsrDashboardServlet extends HttpServlet {
      *   Bills unpaid  = per work order: balance due on tax invoices less advances not yet adjusted (never below 0)
      *   Free balance  = unspent - retention held - bills unpaid
      */
+    /** 1 April of the current financial year (April to March), worked out by MySQL. */
+    private static final String FY_START_SQL = "(MAKEDATE(YEAR(CURDATE()) - (MONTH(CURDATE()) < 4), 1) + INTERVAL 3 MONTH)";
+
     private static final String POSITION_SQL =
             "SELECT l.id, l.company_id, l.activity_kind, l.letter_number, l.letter_name, COALESCE(l.particulars, '') AS descr, l.amount AS approved, "
           + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = l.id) AS received, "
@@ -131,6 +134,7 @@ public class CsrDashboardServlet extends HttpServlet {
           + "     - (SELECT COALESCE(SUM(p.advance_adjusted), 0) FROM kss_csr_vendor_payment p JOIN kss_csr_invoice i ON i.id = p.invoice_id "
           + "        WHERE i.work_order_id = w.id)))), 0) "
           + " FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS unpaid, "
+          + "(SELECT COALESCE(SUM(f.amount), 0) FROM kss_csr_fund_receipt f WHERE f.letter_id = l.id AND f.receipt_date < " + FY_START_SQL + ") AS received_opening, "
           + "(SELECT COUNT(*) FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS wo_count, "
           + "(SELECT COALESCE(SUM(w.total_amount), 0) FROM kss_csr_work_order w WHERE w.letter_id = l.id) AS wo_total, "
           + "(SELECT COALESCE(SUM(i.amount), 0) FROM kss_csr_invoice i JOIN kss_csr_work_order w ON w.id = i.work_order_id "
@@ -442,7 +446,8 @@ public class CsrDashboardServlet extends HttpServlet {
      * key = all for the TOTAL row. col = the clicked column. Answer: { ok, title, cols, num, rows, foot } with formatted cells.
      */
     private static final java.util.Set<String> POS_COLS = new java.util.HashSet<String>(java.util.Arrays.asList(
-            "projects", "approved", "received", "yetToReceive", "utilised", "unspent", "retention", "unpaid", "free", "utilisation"));
+            "projects", "approved", "received", "yetToReceive", "utilised", "unspent", "retention", "unpaid", "free", "utilisation",
+            "receivedOpening", "receivedCurrent", "woAmount", "invoiced", "invoicePaid"));
     private static final java.util.Set<String> MONTH_COLS = new java.util.HashSet<String>(java.util.Arrays.asList(
             "received", "paid", "tds", "utilised", "flow", "cumulative"));
 
@@ -547,7 +552,11 @@ public class CsrDashboardServlet extends HttpServlet {
         String group = "all".equals(key) ? "All" : ("co".equals(view) ? companyLabel(con, key)
                      : "proj".equals(view) ? projectLabel(con, key) : key);
         java.sql.Date from = java.sql.Date.valueOf("1900-01-01"), to = java.sql.Date.valueOf("9999-12-31");
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        java.sql.Date fyStart = java.sql.Date.valueOf(java.time.LocalDate.of(today.getMonthValue() >= 4 ? today.getYear() : today.getYear() - 1, 4, 1));
         if ("received".equals(col)) receiptsTable(con, ids, from, to, "Received: " + group, out);
+        else if ("receivedOpening".equals(col)) receiptsTable(con, ids, from, fyStart, "Received before " + fyStart.toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ": " + group, out);
+        else if ("receivedCurrent".equals(col)) receiptsTable(con, ids, fyStart, to, "Received this financial year: " + group, out);
         else if ("utilised".equals(col)) outflowTable(con, ids, from, to, "Utilised: " + group, false, out);
         else if ("retention".equals(col)) retentionTable(con, ids, "Retention Held: " + group, out);
         else if ("unpaid".equals(col)) unpaidTable(con, ids, "Bills Unpaid: " + group, out);
@@ -850,10 +859,16 @@ public class CsrDashboardServlet extends HttpServlet {
                    .add(zeroIfNull(rs.getBigDecimal("tds")));
         t[4] = t[4].add(zeroIfNull(rs.getBigDecimal("retention")));
         t[5] = t[5].add(zeroIfNull(rs.getBigDecimal("unpaid")));
+        t[6] = t[6].add(zeroIfNull(rs.getBigDecimal("received_opening")));
+        t[7] = t[7].add(zeroIfNull(rs.getBigDecimal("wo_total")));
+        t[8] = t[8].add(zeroIfNull(rs.getBigDecimal("billed")));
     }
 
     private static BigDecimal[] zeros() {
-        return new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO };
+        // projects, approved, received, utilised, retention, unpaid, received before this FY, work order value, tax invoices
+        BigDecimal[] z = new BigDecimal[9];
+        java.util.Arrays.fill(z, BigDecimal.ZERO);
+        return z;
     }
 
     private static Map<String, String> positionRow(String name, String id, BigDecimal[] t) {
@@ -879,6 +894,12 @@ public class CsrDashboardServlet extends HttpServlet {
         r.put("free", acct(free));
         r.put("unspentNeg", unspent.signum() < 0 ? "1" : "");
         r.put("freeNeg", free.signum() < 0 ? "1" : "");
+        // owner layout (2026-11-03): Budget / Invoicing / Received from Sponsor
+        r.put("receivedOpening", acct(t[6]));
+        r.put("receivedCurrent", acct(received.subtract(t[6])));
+        r.put("woAmount", acct(t[7]));
+        r.put("invoiced", acct(t[8]));
+        r.put("invoicePaid", acct(t[8].subtract(unpaid)));   // yet to be paid = Bills Unpaid
         r.put("utilisation", approved.signum() == 0 ? "-"
                 : utilised.multiply(BigDecimal.valueOf(100)).divide(approved, 1, java.math.RoundingMode.HALF_UP).toPlainString() + "%");
         return r;
@@ -886,16 +907,17 @@ public class CsrDashboardServlet extends HttpServlet {
 
     /** Accounts style: Indian grouping, 2 decimals, negative in brackets, zero as "-". */
     private static String acct(BigDecimal v) {
-        if (v == null || v.signum() == 0) return "-";
+        if (v == null || v.setScale(0, java.math.RoundingMode.HALF_UP).signum() == 0) return "-";   // e.g. 0.46 shows as nil
         String s = indian(v.abs());
         return v.signum() < 0 ? "(" + s + ")" : s;
     }
 
-    /** 1234567.5 -> 12,34,567.50 (lakh / crore grouping; Java's en-IN DecimalFormat groups by 3 only). */
+    /**
+     * 1234567.5 -> 12,34,568 (lakh / crore grouping; Java's en-IN DecimalFormat groups by 3 only).
+     * Owner rule (2026-11-03): the dashboard shows whole rupees, rounded half up; stored amounts keep their paise.
+     */
     static String indian(BigDecimal v) {
-        String plain = v.setScale(2, java.math.RoundingMode.HALF_UP).abs().toPlainString();
-        int dot = plain.indexOf('.');
-        String whole = plain.substring(0, dot), dec = plain.substring(dot);
+        String whole = v.setScale(0, java.math.RoundingMode.HALF_UP).abs().toPlainString(), dec = "";
         StringBuilder b = new StringBuilder();
         int n = whole.length();
         if (n <= 3) b.append(whole);
@@ -1056,7 +1078,7 @@ public class CsrDashboardServlet extends HttpServlet {
             Row metricsHeader = sheet.createRow(rowNum++);
             metricsHeader.createCell(0).setCellValue("Approved Budget");
             metricsHeader.createCell(1).setCellValue(request.getAttribute("stats") != null ?
-                ((Map<String, String>) request.getAttribute("stats")).get("approvedAmount") : "\u20B90.00");
+                ((Map<String, String>) request.getAttribute("stats")).get("approvedAmount") : "\u20B90");
 
             // Company-wise Position Table
             rowNum += 2;
@@ -1127,9 +1149,9 @@ public class CsrDashboardServlet extends HttpServlet {
             @SuppressWarnings("unchecked")
             Map<String, String> stats = (Map<String, String>) request.getAttribute("stats");
             if (stats != null) {
-                document.add(new Paragraph("Approved Budget: " + stats.getOrDefault("approvedAmount", "\u20B90.00")));
-                document.add(new Paragraph("Total Work Orders: " + stats.getOrDefault("workOrderAmount", "\u20B90.00")));
-                document.add(new Paragraph("Funds Received: " + stats.getOrDefault("frlReceivedAmount", "\u20B90.00")));
+                document.add(new Paragraph("Approved Budget: " + stats.getOrDefault("approvedAmount", "\u20B90")));
+                document.add(new Paragraph("Total Work Orders: " + stats.getOrDefault("workOrderAmount", "\u20B90")));
+                document.add(new Paragraph("Funds Received: " + stats.getOrDefault("frlReceivedAmount", "\u20B90")));
             }
             document.add(new Paragraph(" "));
 

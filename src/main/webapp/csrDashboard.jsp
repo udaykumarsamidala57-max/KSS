@@ -28,6 +28,9 @@
     String monthlyFy = (String) request.getAttribute("monthlyFy");
     String monthlyOpening = (String) request.getAttribute("monthlyOpening");
     String instCodeD = com.Bean.AppConfig.code();
+    java.time.LocalDate todayD = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+    int fyYear = todayD.getMonthValue() >= 4 ? todayD.getYear() : todayD.getYear() - 1;   // financial year April to March
+    String fyLabel = fyYear + "-" + String.valueOf(fyYear + 1).substring(2);
 %>
 <%!
     /** An amount that opens the detail popup; "-" (nil) stays plain text. */
@@ -36,6 +39,27 @@
         return "<a href=\"#\" class=\"dd-link\" data-view=\"" + view + "\" data-key=\"" + escapeHtml(key) + "\" data-col=\"" + col + "\""
              + (fy == null ? "" : " data-fy=\"" + escapeHtml(fy) + "\"") + " title=\"Show details\">" + escapeHtml(value) + "</a>";
     }
+    /** Position tables show whole rupees: "4,57,36,880.28" -> "4,57,36,880", "(0.46)" -> "-" (rounded half up). */
+    private String r0(String value) {
+        if (value == null || "-".equals(value) || value.indexOf('.') < 0 || value.endsWith("%")) return value;
+        try {
+            boolean neg = value.startsWith("(");
+            java.math.BigDecimal v = new java.math.BigDecimal(value.replace("(", "").replace(")", "").replace(",", ""))
+                    .setScale(0, java.math.RoundingMode.HALF_UP);
+            if (v.signum() == 0) return "-";
+            String d = v.toPlainString(), out = "";
+            if (d.length() <= 3) out = d;
+            else {
+                String head = d.substring(0, d.length() - 3), tail = d.substring(d.length() - 3);
+                head = head.replaceAll("(\\d)(?=(\\d\\d)+$)", "$1,");
+                out = head + "," + tail;
+            }
+            return neg ? "(" + out + ")" : out;
+        } catch (NumberFormatException e) {
+            return value;
+        }
+    }
+    private String dl0(String value, String view, String key, String col) { return dl(r0(value), view, key, col, null); }
     private String escapeHtml(String value) {
         if (value == null) return "";
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -278,17 +302,106 @@ body.report-abstract .csr-position-grid .csr-co-table td.csr-num { font-size:11p
   body.report-abstract .csr-position-grid { grid-template-columns:1fr; }
 }
 /* Abstract Report Mode */
-body.report-abstract .csr-co-table th:nth-child(8),
-body.report-abstract .csr-co-table td:nth-child(8),
-body.report-abstract .csr-co-table th:nth-child(9),
-body.report-abstract .csr-co-table td:nth-child(9),
-body.report-abstract .csr-co-table th:nth-child(10),
-body.report-abstract .csr-co-table td:nth-child(10) {
+body.report-abstract .csr-co-table:not(.csr-pos-table) th:nth-child(8),
+body.report-abstract .csr-co-table:not(.csr-pos-table) td:nth-child(8),
+body.report-abstract .csr-co-table:not(.csr-pos-table) th:nth-child(9),
+body.report-abstract .csr-co-table:not(.csr-pos-table) td:nth-child(9),
+body.report-abstract .csr-co-table:not(.csr-pos-table) th:nth-child(10),
+body.report-abstract .csr-co-table:not(.csr-pos-table) td:nth-child(10) {
   display: none;
 }
 body.report-abstract #monthPosition {
   display: none;
 }
+
+/* =====================================================================================
+   Dashboard design (owner request 2026-11-03): one quiet, ledger-style look for the whole page.
+   Brand maroon (same as the SSS header) is the only accent; red only for negative amounts.
+   Totals are ruled like a ledger: single line above, double line below.
+   ===================================================================================== */
+body { background:#f3f4f6 !important; }
+.csr-page { --d-brand:#7a1f2b; --d-ink:#1d2430; --d-muted:#5f6b7a; --d-rule:#dde1e6; --d-rule-soft:#eef0f3; --d-head:#f7f8fa; --d-neg:#b42318;
+  color:var(--d-ink); font-variant-numeric:tabular-nums; }
+.csr-page .csr-small { color:var(--d-muted); font-weight:400; }
+
+/* page heading + toolbar */
+.csr-page .csr-header { margin-bottom:4px; }
+.csr-page .csr-subtitle { color:var(--d-muted) !important; font-size:12.5px !important; font-weight:500 !important; letter-spacing:0 !important; text-transform:none !important; }
+.csr-page .csr-title { color:var(--d-ink) !important; font-size:24px !important; font-weight:600 !important; letter-spacing:-.3px !important; margin-top:2px; }
+.csr-page .csr-export-toolbar { gap:8px; margin:10px 0 14px; padding:0; background:none; border:0; }
+.csr-page .csr-export-toolbar button { min-height:32px !important; padding:0 14px !important; border:1px solid var(--d-rule) !important; border-radius:4px !important;
+  color:var(--d-ink) !important; background:#fff !important; font-size:12.5px !important; font-weight:500 !important; }
+.csr-page .csr-export-toolbar button:hover { border-color:#b8bfc8 !important; background:var(--d-head) !important; }
+.csr-page .csr-export-toolbar button:first-child { color:#fff !important; background:var(--d-brand) !important; border-color:var(--d-brand) !important; }
+.csr-page .csr-export-toolbar button:first-child:hover { background:#64182a !important; border-color:#64182a !important; }
+.csr-page .csr-export-toolbar select, .csr-page .csr-co-fy select, .csr-page .csr-letter-filter select {
+  height:32px !important; border:1px solid var(--d-rule) !important; border-radius:4px !important; background:#fff !important; color:var(--d-ink) !important; font-size:12.5px !important; }
+.csr-page select:focus, .csr-page button:focus-visible, .csr-page a:focus-visible { outline:2px solid var(--d-brand) !important; outline-offset:1px; box-shadow:none !important; }
+
+/* summary strip (top) and the approval summary strip */
+.csr-page .csr-dashboard-prime { border:1px solid var(--d-rule) !important; border-top:3px solid var(--d-brand) !important; border-radius:4px !important;
+  box-shadow:none !important; background:#fff !important; }
+.csr-page .csr-letter-summary .csr-dashboard-prime { border-top:1px solid var(--d-rule) !important; }
+.csr-page .csr-dashboard-prime-item { padding:16px 20px !important; background:#fff !important; }
+.csr-page .csr-dashboard-prime-item + .csr-dashboard-prime-item { border-left:1px solid var(--d-rule) !important; }
+.csr-page .csr-dashboard-prime .csr-dashboard-label { display:block !important; margin:0 0 10px !important; color:var(--d-muted) !important; font-size:12.5px !important;
+  font-weight:600 !important; letter-spacing:0 !important; text-transform:none !important; }
+.csr-page .csr-dashboard-prime .csr-dashboard-label::before { display:none !important; }
+.csr-page .csr-dashboard-prime .csr-dashboard-value { color:var(--d-ink) !important; font-size:26px !important; font-weight:600 !important; letter-spacing:-.4px !important; line-height:1.2; }
+.csr-page .csr-dashboard-subline { display:flex !important; justify-content:space-between; gap:12px; margin:0 !important; padding:6px 0 !important;
+  border-bottom:1px solid var(--d-rule-soft) !important; color:var(--d-muted) !important; font-size:12.5px !important; }
+.csr-page .csr-dashboard-subline b { color:var(--d-ink) !important; font-size:12.5px !important; font-weight:600 !important; }
+.csr-page .csr-dashboard-balance { margin-top:10px !important; padding-top:8px !important; border-top:1px solid var(--d-rule) !important; color:var(--d-muted) !important; font-size:12.5px !important; }
+.csr-page .csr-dashboard-balance b { color:var(--d-ink) !important; font-size:13.5px !important; font-weight:700 !important; }
+
+/* section cards */
+.csr-page .csr-co-card, .csr-page .csr-letter-summary { margin-top:16px !important; border:1px solid var(--d-rule) !important; border-radius:4px !important;
+  box-shadow:none !important; background:#fff !important; overflow:hidden; padding:0 !important; }
+.csr-page .csr-co-card .csr-card-head { min-height:0 !important; padding:12px 16px !important; background:#fff !important; border-bottom:1px solid var(--d-rule) !important; }
+.csr-page .csr-co-card .csr-card-title, .csr-page .csr-letter-card-title { color:var(--d-ink) !important; font-size:15px !important; font-weight:600 !important; letter-spacing:-.1px !important; }
+.csr-page .csr-letter-summary .csr-letter-card-title { margin:0 !important; padding:12px 16px !important; border-bottom:1px solid var(--d-rule); background:#fff; }
+.csr-page .csr-letter-summary > :not(.csr-letter-card-title) { margin-left:16px; margin-right:16px; }
+.csr-page .csr-letter-summary .csr-letter-filter { margin-top:12px; }
+.csr-page .csr-letter-filter label, .csr-page .csr-co-fy { color:var(--d-muted) !important; font-size:12.5px !important; font-weight:500 !important; }
+.csr-page .csr-letter-status { color:var(--d-muted); font-size:12.5px; margin-bottom:12px; }
+.csr-page .csr-pdf-link { border:1px solid var(--d-rule) !important; border-radius:4px !important; color:var(--d-ink) !important; background:#fff !important; }
+.csr-page .csr-pdf-link:hover { border-color:var(--d-brand) !important; color:var(--d-brand) !important; }
+.csr-page .csr-table-wrap { padding:0 !important; }
+
+/* tables: horizontal rules, quiet header, ledger totals */
+.csr-page .csr-co-table { border-collapse:separate !important; border-spacing:0 !important; width:100%; font-size:12.5px; }
+.csr-page .csr-co-table th, .csr-page .csr-co-table td { border:0 !important; border-bottom:1px solid var(--d-rule-soft) !important; background:#fff !important;
+  color:var(--d-ink) !important; }
+.csr-page .csr-co-table thead th { padding:9px 12px !important; background:var(--d-head) !important; color:var(--d-muted) !important; font-size:11.5px !important;
+  font-weight:600 !important; letter-spacing:0 !important; text-transform:none !important; line-height:1.3 !important; vertical-align:bottom;
+  border-bottom:1px solid var(--d-rule) !important; }
+.csr-page .csr-co-table td { padding:9px 12px !important; line-height:1.35 !important; }
+.csr-page .csr-co-table tbody tr.csr-row:hover td { background:#fafbfc !important; }
+.csr-page .csr-co-table td:first-child { font-weight:500; }
+.csr-page .csr-co-table tbody tr.csr-co-total td { font-weight:700 !important; background:#fff !important;
+  border-top:1px solid var(--d-ink) !important; border-bottom:3px double var(--d-ink) !important; }
+.csr-page .csr-co-table tbody tr:has(+ tr.csr-co-total) td { border-bottom:0 !important; }
+.csr-page .csr-co-table td.csr-co-neg, .csr-page .csr-co-table td.csr-cum-neg,
+.csr-page .csr-co-table td.csr-co-neg a.dd-link, .csr-page .csr-co-table td.csr-cum-neg a.dd-link { color:var(--d-neg) !important; background:#fff !important; }
+.csr-page .csr-co-table a.dd-link, .csr-page .csr-co-table a.csr-open { color:inherit !important; text-decoration:none !important; border:0 !important; background:none !important; }
+.csr-page .csr-co-table a.dd-link:hover, .csr-page .csr-co-table a.csr-open:hover { color:var(--d-brand) !important; text-decoration:underline !important; text-underline-offset:3px; }
+.csr-page .csr-co-table th small { display:block; margin-top:2px; color:var(--d-muted); font-size:10.5px; font-weight:400; }
+
+/* grouped position tables: Budget | Invoicing | Received from Sponsor */
+.csr-page .csr-pos-table tr.csr-co-group th { vertical-align:middle !important; color:var(--d-ink) !important; font-size:12px !important; }
+.csr-page .csr-pos-table tr.csr-co-group th.csr-co-g1, .csr-page .csr-pos-table tr.csr-co-group th.csr-co-g2, .csr-page .csr-pos-table tr.csr-co-group th.csr-co-g3 {
+  text-align:center; background:#fff !important; border-bottom:2px solid var(--d-brand) !important; padding:8px 12px !important; }
+.csr-page .csr-pos-table .csr-co-g1, .csr-page .csr-pos-table .csr-co-g2, .csr-page .csr-pos-table .csr-co-g3,
+.csr-page .csr-pos-table .csr-co-g1s, .csr-page .csr-pos-table .csr-co-g2s, .csr-page .csr-pos-table .csr-co-g3s { border-left:1px solid var(--d-rule) !important; }
+.csr-page .csr-pos-table td.k1, .csr-page .csr-pos-table td.k2, .csr-page .csr-pos-table td.k3 { font-weight:600 !important; }
+.csr-page .csr-pos-table tr.csr-co-group th:first-child, .csr-page .csr-pos-table thead tr:only-child th:first-child,
+.csr-page .csr-pos-table tbody td:first-child { position:sticky; left:0; z-index:2; min-width:110px; box-shadow:inset -1px 0 0 var(--d-rule); }
+
+/* detail pop-up in the same style */
+.dd-modal .dd-box { border-radius:4px !important; border-top:3px solid #7a1f2b !important; }
+.dd-modal .dd-body .csr-table th { background:#f7f8fa !important; color:#5f6b7a !important; text-transform:none !important; letter-spacing:0 !important; font-size:11.5px !important; }
+.dd-modal .dd-body .csr-table td, .dd-modal .dd-body .csr-table th { border-bottom:1px solid #eef0f3 !important; }
+.dd-modal .dd-body .csr-table tfoot td { font-weight:700; border-top:1px solid #1d2430 !important; border-bottom:3px double #1d2430 !important; }
 </style>
 </head>
 <body>
@@ -320,21 +433,21 @@ body.report-abstract #monthPosition {
   <section class="csr-dashboard-prime" aria-label="Key CSR position">
     <div class="csr-dashboard-prime-item">
       <div class="csr-dashboard-label">Approved Budget</div>
-      <div class="csr-dashboard-value"><%= stats.getOrDefault("approvedAmount", "₹0.00") %></div>
-      <div class="csr-dashboard-balance">Balance: <b><%= stats.getOrDefault("workOrderBalance", "₹0.00") %></b></div>
+      <div class="csr-dashboard-value"><%= stats.getOrDefault("approvedAmount", "₹0") %></div>
+      <div class="csr-dashboard-balance">Balance: <b><%= stats.getOrDefault("workOrderBalance", "₹0") %></b></div>
     </div>
     <div class="csr-dashboard-prime-item">
       <div class="csr-dashboard-label">Work Orders Raised</div>
-      <div class="csr-dashboard-subline"><span>Work orders</span><b><%= stats.getOrDefault("workOrderCount", "0") %> nos. · <%= stats.getOrDefault("workOrderAmount", "₹0.00") %></b></div>
-      <div class="csr-dashboard-subline"><span>Tax invoices raised</span><b><%= stats.getOrDefault("taxInvoiceCount", "0") %> nos. · <%= stats.getOrDefault("taxInvoiceAmount", "₹0.00") %></b></div>
-      <div class="csr-dashboard-subline"><span>Payments done</span><b><%= stats.getOrDefault("paymentCount", "0") %> nos. · <%= stats.getOrDefault("paymentAmount", "₹0.00") %></b></div>
-      <div class="csr-dashboard-subline"><span>Balance to pay</span><b><%= stats.getOrDefault("balanceInvoiceCount", "0") %> nos. · <%= stats.getOrDefault("balanceToPay", "₹0.00") %></b></div>
+      <div class="csr-dashboard-subline"><span>Work orders</span><b><%= stats.getOrDefault("workOrderCount", "0") %> nos. · <%= stats.getOrDefault("workOrderAmount", "₹0") %></b></div>
+      <div class="csr-dashboard-subline"><span>Tax invoices raised</span><b><%= stats.getOrDefault("taxInvoiceCount", "0") %> nos. · <%= stats.getOrDefault("taxInvoiceAmount", "₹0") %></b></div>
+      <div class="csr-dashboard-subline"><span>Payments done</span><b><%= stats.getOrDefault("paymentCount", "0") %> nos. · <%= stats.getOrDefault("paymentAmount", "₹0") %></b></div>
+      <div class="csr-dashboard-subline"><span>Balance to pay</span><b><%= stats.getOrDefault("balanceInvoiceCount", "0") %> nos. · <%= stats.getOrDefault("balanceToPay", "₹0") %></b></div>
     </div>
     <div class="csr-dashboard-prime-item">
       <div class="csr-dashboard-label">Funds Received</div>
-      <div class="csr-dashboard-subline"><span>FRLs Raised</span><b><%= stats.getOrDefault("frlAmount", "₹0.00") %> · <%= stats.getOrDefault("frlCount", "0") %> nos.</b></div>
-      <div class="csr-dashboard-subline"><span>FRLs Received</span><b><%= stats.getOrDefault("frlReceivedAmount", "₹0.00") %> · <%= stats.getOrDefault("frlReceivedCount", "0") %> nos.</b></div>
-      <div class="csr-dashboard-balance">Balance to receive: <b><%= stats.getOrDefault("fundsBalance", "₹0.00") %></b></div>
+      <div class="csr-dashboard-subline"><span>FRLs Raised</span><b><%= stats.getOrDefault("frlAmount", "₹0") %> · <%= stats.getOrDefault("frlCount", "0") %> nos.</b></div>
+      <div class="csr-dashboard-subline"><span>FRLs Received</span><b><%= stats.getOrDefault("frlReceivedAmount", "₹0") %> · <%= stats.getOrDefault("frlReceivedCount", "0") %> nos.</b></div>
+      <div class="csr-dashboard-balance">Balance to receive: <b><%= stats.getOrDefault("fundsBalance", "₹0") %></b></div>
     </div>
   </section>
   <div class="csr-position-grid">
@@ -350,20 +463,30 @@ body.report-abstract #monthPosition {
     <div class="csr-alert csr-alert-err" style="margin:10px 14px;"><%= escapeHtml(companyError) %></div>
     <% } else if (posRows != null) { %>
     <div class="csr-table-wrap">
-      <table class="csr-table csr-co-table">
+      <table class="csr-table csr-co-table csr-pos-table">
         <thead>
+          <%-- owner layout (2026-11-03): 1. Budget  2. Invoicing  3. Received from Sponsor --%>
+          <tr class="csr-co-group">
+            <th rowspan="2"><%= pos[2] %></th>
+            <th rowspan="2" class="csr-num">Projects</th>
+            <th colspan="6" class="csr-co-g1">1. Budget</th>
+            <th colspan="4" class="csr-co-g2">2. Invoicing</th>
+            <th colspan="3" class="csr-co-g3">3. Received from Sponsor</th>
+          </tr>
           <tr>
-            <th><%= pos[2] %></th>
-            <th class="csr-num">Projects</th>
-            <th class="csr-num">Approved</th>
-            <th class="csr-num">Received</th>
-            <th class="csr-num">Yet to Receive</th>
-            <th class="csr-num">Utilised</th>
-            <th class="csr-num">Unspent with <%= escapeHtml(instCodeD) %></th>
-            <th class="csr-num">Retention Held</th>
-            <th class="csr-num">Bills Unpaid</th>
-            <th class="csr-num">Free Balance</th>
-            <th class="csr-num">Utilisation %</th>
+            <th class="csr-num b1 csr-co-g1s">Approved</th>
+            <th class="csr-num b1">Received &ndash; Opening<small>till 31-03-<%= fyYear %></small></th>
+            <th class="csr-num b1">Received &ndash; Current<small>FY <%= fyLabel %></small></th>
+            <th class="csr-num b1">Received<small>Total</small></th>
+            <th class="csr-num b1">Yet to Receive</th>
+            <th class="csr-num b1">% to Receive</th>
+            <th class="csr-num b2 csr-co-g2s">WO Amount</th>
+            <th class="csr-num b2">Invoice Received</th>
+            <th class="csr-num b2">Payment Made</th>
+            <th class="csr-num b2">Yet to be Paid</th>
+            <th class="csr-num b3 csr-co-g3s">Total Received</th>
+            <th class="csr-num b3">Paid to Vendors</th>
+            <th class="csr-num b3">Balance</th>
           </tr>
         </thead>
         <tbody>
@@ -375,19 +498,24 @@ body.report-abstract #monthPosition {
           <tr class="<%= tot ? "csr-co-total" : "csr-row" %>">
             <td><% if (!tot && cid != null && !cid.isEmpty() && !"0".equals(c.get("projects"))) { %><a class="csr-open" href="CsrLetterServlet?companyId=<%= escapeHtml(cid) %>"><%= escapeHtml(c.get("name")) %></a><% } else { %><%= escapeHtml(c.get("name")) %><% } %></td>
             <td class="csr-num"><%= dl(c.get("projects"), vw, k, "projects", null) %></td>
-            <td class="csr-num"><%= dl(c.get("approved"), vw, k, "approved", null) %></td>
-            <td class="csr-num"><%= dl(c.get("received"), vw, k, "received", null) %></td>
-            <td class="csr-num"><%= dl(c.get("yetToReceive"), vw, k, "yetToReceive", null) %></td>
-            <td class="csr-num"><%= dl(c.get("utilised"), vw, k, "utilised", null) %></td>
-            <td class="csr-num <%= "1".equals(c.get("unspentNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("unspent"), vw, k, "unspent", null) %></td>
-            <td class="csr-num"><%= dl(c.get("retention"), vw, k, "retention", null) %></td>
-            <td class="csr-num"><%= dl(c.get("unpaid"), vw, k, "unpaid", null) %></td>
-            <td class="csr-num <%= "1".equals(c.get("freeNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("free"), vw, k, "free", null) %></td>
-            <td class="csr-num"><%= dl(c.get("utilisation"), vw, k, "utilisation", null) %></td>
+            <td class="csr-num csr-co-g1s"><%= dl0(c.get("approved"), vw, k, "approved") %></td>
+            <td class="csr-num"><%= dl0(c.get("receivedOpening"), vw, k, "receivedOpening") %></td>
+            <td class="csr-num"><%= dl0(c.get("receivedCurrent"), vw, k, "receivedCurrent") %></td>
+            <td class="csr-num k1"><%= dl0(c.get("received"), vw, k, "received") %></td>
+            <td class="csr-num"><%= dl0(c.get("yetToReceive"), vw, k, "yetToReceive") %></td>
+            <% String ytrPct = c.get("yetToReceivePct"); %>
+            <td class="csr-num"><%= escapeHtml(ytrPct) %></td>
+            <td class="csr-num csr-co-g2s"><%= dl0(c.get("woAmount"), vw, k, "woAmount") %></td>
+            <td class="csr-num"><%= dl0(c.get("invoiced"), vw, k, "invoiced") %></td>
+            <td class="csr-num"><%= dl0(c.get("invoicePaid"), vw, k, "invoicePaid") %></td>
+            <td class="csr-num k2"><%= dl0(c.get("unpaid"), vw, k, "unpaid") %></td>
+            <td class="csr-num csr-co-g3s"><%= dl0(c.get("received"), vw, k, "received") %></td>
+            <td class="csr-num"><%= dl0(c.get("utilised"), vw, k, "utilised") %></td>
+            <td class="csr-num k3 <%= "1".equals(c.get("unspentNeg")) && !"-".equals(c.get("unspent")) ? "csr-co-neg" : "" %>"><%= dl0(c.get("unspent"), vw, k, "unspent") %></td>
           </tr>
           <% } %>
           <% if (posRows.size() == 1) { %>
-          <tr><td colspan="11" class="csr-empty">No Management Approvals yet.</td></tr>
+          <tr><td colspan="15" class="csr-empty">No Management Approvals yet.</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -411,7 +539,7 @@ body.report-abstract #monthPosition {
       </label>
     </div>
     <div class="csr-table-wrap">
-      <table class="csr-table csr-co-table">
+      <table class="csr-table csr-co-table csr-pos-table">
         <thead>
           <tr>
             <th>Month</th>
@@ -431,8 +559,8 @@ body.report-abstract #monthPosition {
             <td class="csr-num"><%= dl(mrow.get("paid"), "month", mk, "paid", monthlyFy) %></td>
             <td class="csr-num"><%= dl(mrow.get("tds"), "month", mk, "tds", monthlyFy) %></td>
             <td class="csr-num"><%= dl(mrow.get("utilised"), "month", mk, "utilised", monthlyFy) %></td>
-            <td class="csr-num <%= "1".equals(mrow.get("flowNeg")) ? "csr-co-neg" : "" %>"><%= dl(mrow.get("flow"), "month", mk, "flow", monthlyFy) %></td>
-            <td class="csr-num <%= "1".equals(mrow.get("cumNeg")) ? "csr-cum-neg" : "" %>"><%= dl(mrow.get("cumulative"), "month", mk, "cumulative", monthlyFy) %></td>
+            <td class="csr-num <%= "1".equals(mrow.get("flowNeg")) && !"-".equals(mrow.get("flow")) ? "csr-co-neg" : "" %>"><%= dl(mrow.get("flow"), "month", mk, "flow", monthlyFy) %></td>
+            <td class="csr-num <%= "1".equals(mrow.get("cumNeg")) && !"-".equals(mrow.get("cumulative")) ? "csr-cum-neg" : "" %>"><%= dl(mrow.get("cumulative"), "month", mk, "cumulative", monthlyFy) %></td>
           </tr>
           <% } %>
         </tbody>
@@ -461,21 +589,21 @@ body.report-abstract #monthPosition {
     <div class="csr-dashboard-prime" aria-label="Selected Management Approval summary">
       <div class="csr-dashboard-prime-item">
         <div class="csr-dashboard-label">Approved Budget</div>
-        <div class="csr-dashboard-value" id="letterApprovedAmount"><%= letterStats == null ? "₹0.00" : letterStats.getOrDefault("approvedAmount", "₹0.00") %></div>
-        <div class="csr-dashboard-balance">Balance: <b id="letterWorkOrderBalance"><%= letterStats == null ? "₹0.00" : letterStats.getOrDefault("workOrderBalance", "₹0.00") %></b></div>
+        <div class="csr-dashboard-value" id="letterApprovedAmount"><%= letterStats == null ? "₹0" : letterStats.getOrDefault("approvedAmount", "₹0") %></div>
+        <div class="csr-dashboard-balance">Balance: <b id="letterWorkOrderBalance"><%= letterStats == null ? "₹0" : letterStats.getOrDefault("workOrderBalance", "₹0") %></b></div>
       </div>
       <div class="csr-dashboard-prime-item">
         <div class="csr-dashboard-label">Work Orders Raised</div>
-        <div class="csr-dashboard-subline"><span>Work orders</span><b id="letterWorkOrderSummary"><%= letterStats == null ? "0 nos. · ₹0.00" : letterStats.getOrDefault("workOrderCount", "0") + " nos. · " + letterStats.getOrDefault("workOrderAmount", "₹0.00") %></b></div>
-        <div class="csr-dashboard-subline"><span>Tax invoices raised</span><b id="letterInvoiceSummary"><%= letterStats == null ? "0 nos. · ₹0.00" : letterStats.getOrDefault("taxInvoiceCount", "0") + " nos. · " + letterStats.getOrDefault("taxInvoiceAmount", "₹0.00") %></b></div>
-        <div class="csr-dashboard-subline"><span>Payments done</span><b id="letterPaymentSummary"><%= letterStats == null ? "0 nos. · ₹0.00" : letterStats.getOrDefault("paymentCount", "0") + " nos. · " + letterStats.getOrDefault("paymentAmount", "₹0.00") %></b></div>
-        <div class="csr-dashboard-subline"><span>Balance to pay</span><b id="letterBalanceToPaySummary"><%= letterStats == null ? "0 nos. · ₹0.00" : letterStats.getOrDefault("balanceInvoiceCount", "0") + " nos. · " + letterStats.getOrDefault("balanceToPay", "₹0.00") %></b></div>
+        <div class="csr-dashboard-subline"><span>Work orders</span><b id="letterWorkOrderSummary"><%= letterStats == null ? "0 nos. · ₹0" : letterStats.getOrDefault("workOrderCount", "0") + " nos. · " + letterStats.getOrDefault("workOrderAmount", "₹0") %></b></div>
+        <div class="csr-dashboard-subline"><span>Tax invoices raised</span><b id="letterInvoiceSummary"><%= letterStats == null ? "0 nos. · ₹0" : letterStats.getOrDefault("taxInvoiceCount", "0") + " nos. · " + letterStats.getOrDefault("taxInvoiceAmount", "₹0") %></b></div>
+        <div class="csr-dashboard-subline"><span>Payments done</span><b id="letterPaymentSummary"><%= letterStats == null ? "0 nos. · ₹0" : letterStats.getOrDefault("paymentCount", "0") + " nos. · " + letterStats.getOrDefault("paymentAmount", "₹0") %></b></div>
+        <div class="csr-dashboard-subline"><span>Balance to pay</span><b id="letterBalanceToPaySummary"><%= letterStats == null ? "0 nos. · ₹0" : letterStats.getOrDefault("balanceInvoiceCount", "0") + " nos. · " + letterStats.getOrDefault("balanceToPay", "₹0") %></b></div>
       </div>
       <div class="csr-dashboard-prime-item">
         <div class="csr-dashboard-label">Funds Received</div>
-        <div class="csr-dashboard-subline"><span>FRLs Raised</span><b id="letterFrlRaisedSummary"><%= letterStats == null ? "₹0.00 · 0 nos." : letterStats.getOrDefault("frlAmount", "₹0.00") + " · " + letterStats.getOrDefault("frlCount", "0") + " nos." %></b></div>
-        <div class="csr-dashboard-subline"><span>FRLs Received</span><b id="letterFrlReceivedSummary"><%= letterStats == null ? "₹0.00 · 0 nos." : letterStats.getOrDefault("frlReceivedAmount", "₹0.00") + " · " + letterStats.getOrDefault("frlReceivedCount", "0") + " nos." %></b></div>
-        <div class="csr-dashboard-balance">Balance to receive: <b id="letterFundsBalance"><%= letterStats == null ? "₹0.00" : letterStats.getOrDefault("fundsBalance", "₹0.00") %></b></div>
+        <div class="csr-dashboard-subline"><span>FRLs Raised</span><b id="letterFrlRaisedSummary"><%= letterStats == null ? "₹0 · 0 nos." : letterStats.getOrDefault("frlAmount", "₹0") + " · " + letterStats.getOrDefault("frlCount", "0") + " nos." %></b></div>
+        <div class="csr-dashboard-subline"><span>FRLs Received</span><b id="letterFrlReceivedSummary"><%= letterStats == null ? "₹0 · 0 nos." : letterStats.getOrDefault("frlReceivedAmount", "₹0") + " · " + letterStats.getOrDefault("frlReceivedCount", "0") + " nos." %></b></div>
+        <div class="csr-dashboard-balance">Balance to receive: <b id="letterFundsBalance"><%= letterStats == null ? "₹0" : letterStats.getOrDefault("fundsBalance", "₹0") %></b></div>
       </div>
     </div>
     <div id="letterPdfList" class="csr-pdf-list" aria-label="Approval PDFs"></div>

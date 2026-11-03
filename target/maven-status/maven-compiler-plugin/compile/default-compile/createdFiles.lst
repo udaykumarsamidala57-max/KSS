@@ -1,4 +1,5 @@
 com\Controller\ModuleFilter.class
+com\Controller\CsrPaymentServlet$FundLow.class
 com\Bean\DBUtil.class
 com\Controller\UpdateStatusServlet.class
 com\Bean\AppConfig.class
@@ -26,6 +27,7 @@ com\Controller\CsrPaymentProcedureServlet.class
 com\Controller\CsrFrlServlet.class
 com\Controller\ScholarshipDocumentUploadServlet.class
 com\Bean\ScholarshipBean.class
+com\Controller\CsrPaymentServlet$FundEvent.class
 com\Controller\ScholarshipDocumentDownloadServlet.class
 com\Controller\VerifyDocumentsServlet.class
 com\Bean\AuditUtil.class

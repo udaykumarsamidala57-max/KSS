@@ -190,12 +190,22 @@ public class CsrFundServlet extends HttpServlet {
 
         try (Connection con = DBUtil.getConnection()) {
             String action = request.getParameter("action");
-            if ("save".equals(action)) {
-                save(request, response, con, user);
-            } else if ("delete".equals(action)) {
-                delete(request, response, con);
-            } else {
-                sendJson(response, 400, fail("Unknown action."));
+            // one transaction, so the "received >= paid out" check and the change cannot be split by another user
+            con.setAutoCommit(false);
+            try {
+                if ("save".equals(action)) {
+                    save(request, response, con, user);
+                } else if ("delete".equals(action)) {
+                    delete(request, response, con);
+                } else {
+                    sendJson(response, 400, fail("Unknown action."));
+                }
+                con.commit();   // error responses return before any write
+            } catch (Exception e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
             }
         } catch (IllegalStateException tooBig) {
             sendJson(response, 400, fail("The attachment is too large (maximum 10 MB)."));
@@ -283,6 +293,12 @@ public class CsrFundServlet extends HttpServlet {
                     + pending.setScale(2, RoundingMode.HALF_UP).toPlainString() + " yet to be received against FRL " + frlNumber + "."));
             return;
         }
+        if (!isNew) {
+            Object[] old = lockReceipt(con, id);
+            if (old == null) { sendJson(response, 404, fail("Receipt not found. Please reload the page.")); return; }
+            String err = belowPaid(con, id, (Integer) old[0], (LocalDate) old[1], (BigDecimal) old[2], letterId, date, amount);
+            if (err != null) { sendJson(response, 400, fail(err)); return; }
+        }
 
         if (isNew) {
             try (PreparedStatement ps = con.prepareStatement(
@@ -357,6 +373,10 @@ public class CsrFundServlet extends HttpServlet {
             try (ResultSet rs = ps.executeQuery()) { if (rs.next()) info = rs.getString(1); }
         }
         if (info == null) { sendJson(response, 404, fail("Receipt not found. Please reload the page.")); return; }
+        Object[] old = lockReceipt(con, id);
+        if (old == null) { sendJson(response, 404, fail("Receipt not found. Please reload the page.")); return; }
+        String err = belowPaid(con, id, (Integer) old[0], (LocalDate) old[1], (BigDecimal) old[2], 0, null, null);
+        if (err != null) { sendJson(response, 409, fail("Cannot delete: " + err)); return; }
         try (PreparedStatement ps = con.prepareStatement("DELETE FROM kss_csr_fund_receipt WHERE id = ?")) {
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -369,6 +389,40 @@ public class CsrFundServlet extends HttpServlet {
     }
 
     // ================================================================== helpers
+    /** Locks a receipt row; returns { letter_id (Integer), receipt_date (LocalDate), amount (BigDecimal) } or null. */
+    private static Object[] lockReceipt(Connection con, int id) throws Exception {
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT letter_id, receipt_date, amount FROM kss_csr_fund_receipt WHERE id = ? FOR UPDATE")) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? new Object[] { rs.getInt(1), rs.getDate(2).toLocalDate(), rs.getBigDecimal(3) } : null;
+            }
+        }
+    }
+
+    /**
+     * Owner rule (2026-11-03): no payment to a vendor without funds. Editing (amount, date, FRL) or deleting a receipt
+     * must not leave any payment date of the approval(s) with more paid out than received up to that date
+     * (see CsrPaymentServlet.fundLow). newLetter = 0 means the receipt is deleted. Returns the error message, or null.
+     */
+    private static String belowPaid(Connection con, int rcptId, int oldLetter, LocalDate oldDate, BigDecimal oldAmt,
+                                    int newLetter, LocalDate newDate, BigDecimal newAmt) throws Exception {
+        java.util.TreeSet<Integer> letters = new java.util.TreeSet<>();   // ascending order: same lock order for everyone
+        letters.add(oldLetter);
+        if (newLetter > 0) letters.add(newLetter);
+        for (int l : letters) {
+            List<CsrPaymentServlet.FundEvent> ev = CsrPaymentServlet.fundEvents(con, l, 0, 0, rcptId);
+            if (ev == null) continue;
+            List<CsrPaymentServlet.FundEvent> before = new ArrayList<>(ev), after = new ArrayList<>(ev);
+            if (l == oldLetter) before.add(new CsrPaymentServlet.FundEvent(oldDate, oldAmt, false));
+            if (l == newLetter) after.add(new CsrPaymentServlet.FundEvent(newDate, newAmt, false));
+            String err = CsrPaymentServlet.fundsError(before, after, "Vendor payments already depend on this receipt.");
+            if (err != null) return err.replace("would be", "are").replace("Payments cannot be made before the funds are received.",
+                    "Correct the vendor payments first.");
+        }
+        return null;
+    }
+
     /** Approval letters with total received and number of receipts. */
     static List<Map<String, String>> loadLetters(Connection con) throws Exception {
         List<Map<String, String>> list = new ArrayList<>();

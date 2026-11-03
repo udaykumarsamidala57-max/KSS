@@ -28,6 +28,9 @@
     String monthlyFy = (String) request.getAttribute("monthlyFy");
     String monthlyOpening = (String) request.getAttribute("monthlyOpening");
     String instCodeD = com.Bean.AppConfig.code();
+    java.time.LocalDate todayD = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+    int fyYear = todayD.getMonthValue() >= 4 ? todayD.getYear() : todayD.getYear() - 1;   // financial year April to March
+    String fyLabel = fyYear + "-" + String.valueOf(fyYear + 1).substring(2);
 %>
 <%!
     /** An amount that opens the detail popup; "-" (nil) stays plain text. */
@@ -148,6 +151,12 @@
 .csr-co-table td.csr-cum-neg { background:#fde4d8; color:#b91c1c; }
 .csr-co-table a.dd-link { color:inherit; text-decoration:none; border-bottom:1px dashed #0f766e; }
 .csr-co-table a.dd-link:hover { color:#0f766e; background:#f0fdfa; }
+.csr-co-table tr.csr-co-group th[colspan] { text-align:center; letter-spacing:.5px; border-bottom:2px solid currentColor; }
+.csr-co-table th.csr-co-g1 { color:#0f766e; background:#f0fdfa; }
+.csr-co-table th.csr-co-g2 { color:#1d4ed8; background:#eff6ff; }
+.csr-co-table th.csr-co-g3 { color:#7c2d12; background:#fff7ed; }
+.csr-co-table .csr-co-g1s, .csr-co-table .csr-co-g2s, .csr-co-table .csr-co-g3s { border-left:2px solid #cbd5e1; }
+.csr-co-table td.csr-strong { font-weight:700; }
 .dd-modal { position:fixed; inset:0; z-index:2000; display:none; align-items:flex-start; justify-content:center; padding:60px 16px 20px; background:rgba(15,23,42,.45); }
 .dd-modal.open { display:flex; }
 .dd-box { width:min(1320px,100%); max-height:calc(100vh - 90px); display:flex; flex-direction:column; background:#fff; border-radius:7px; box-shadow:0 10px 30px rgba(15,23,42,.25); }
@@ -352,18 +361,28 @@ body.report-abstract #monthPosition {
     <div class="csr-table-wrap">
       <table class="csr-table csr-co-table">
         <thead>
+          <%-- owner layout (2026-11-03): 1. Budget  2. Invoicing  3. Received from Sponsor --%>
+          <tr class="csr-co-group">
+            <th rowspan="2"><%= pos[2] %></th>
+            <th rowspan="2" class="csr-num">Projects</th>
+            <th colspan="6" class="csr-co-g1">1. Budget</th>
+            <th colspan="4" class="csr-co-g2">2. Invoicing</th>
+            <th colspan="3" class="csr-co-g3">3. Received from Sponsor</th>
+          </tr>
           <tr>
-            <th><%= pos[2] %></th>
-            <th class="csr-num">Projects</th>
-            <th class="csr-num">Approved</th>
-            <th class="csr-num">Received</th>
+            <th class="csr-num csr-co-g1s">Approved</th>
+            <th class="csr-num">Received<br>Opening (till 31-03-<%= fyYear %>)</th>
+            <th class="csr-num">Received<br>Current Year <%= fyLabel %></th>
+            <th class="csr-num">Received<br>Total</th>
             <th class="csr-num">Yet to Receive</th>
-            <th class="csr-num">Utilised</th>
-            <th class="csr-num">Unspent with <%= escapeHtml(instCodeD) %></th>
-            <th class="csr-num">Retention Held</th>
-            <th class="csr-num">Bills Unpaid</th>
-            <th class="csr-num">Free Balance</th>
-            <th class="csr-num">Utilisation %</th>
+            <th class="csr-num">% to Receive</th>
+            <th class="csr-num csr-co-g2s">WO Amount</th>
+            <th class="csr-num">Invoice Received</th>
+            <th class="csr-num">Payment Made</th>
+            <th class="csr-num">Yet to be Paid</th>
+            <th class="csr-num csr-co-g3s">Total Received</th>
+            <th class="csr-num">Paid to Vendors</th>
+            <th class="csr-num">Balance</th>
           </tr>
         </thead>
         <tbody>
@@ -375,19 +394,23 @@ body.report-abstract #monthPosition {
           <tr class="<%= tot ? "csr-co-total" : "csr-row" %>">
             <td><% if (!tot && cid != null && !cid.isEmpty() && !"0".equals(c.get("projects"))) { %><a class="csr-open" href="CsrLetterServlet?companyId=<%= escapeHtml(cid) %>"><%= escapeHtml(c.get("name")) %></a><% } else { %><%= escapeHtml(c.get("name")) %><% } %></td>
             <td class="csr-num"><%= dl(c.get("projects"), vw, k, "projects", null) %></td>
-            <td class="csr-num"><%= dl(c.get("approved"), vw, k, "approved", null) %></td>
-            <td class="csr-num"><%= dl(c.get("received"), vw, k, "received", null) %></td>
+            <td class="csr-num csr-co-g1s"><%= dl(c.get("approved"), vw, k, "approved", null) %></td>
+            <td class="csr-num"><%= dl(c.get("receivedOpening"), vw, k, "receivedOpening", null) %></td>
+            <td class="csr-num"><%= dl(c.get("receivedCurrent"), vw, k, "receivedCurrent", null) %></td>
+            <td class="csr-num csr-strong"><%= dl(c.get("received"), vw, k, "received", null) %></td>
             <td class="csr-num"><%= dl(c.get("yetToReceive"), vw, k, "yetToReceive", null) %></td>
-            <td class="csr-num"><%= dl(c.get("utilised"), vw, k, "utilised", null) %></td>
-            <td class="csr-num <%= "1".equals(c.get("unspentNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("unspent"), vw, k, "unspent", null) %></td>
-            <td class="csr-num"><%= dl(c.get("retention"), vw, k, "retention", null) %></td>
+            <td class="csr-num"><%= escapeHtml(c.get("yetToReceivePct")) %></td>
+            <td class="csr-num csr-co-g2s"><%= dl(c.get("woAmount"), vw, k, "woAmount", null) %></td>
+            <td class="csr-num"><%= dl(c.get("invoiced"), vw, k, "invoiced", null) %></td>
+            <td class="csr-num"><%= dl(c.get("invoicePaid"), vw, k, "invoicePaid", null) %></td>
             <td class="csr-num"><%= dl(c.get("unpaid"), vw, k, "unpaid", null) %></td>
-            <td class="csr-num <%= "1".equals(c.get("freeNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("free"), vw, k, "free", null) %></td>
-            <td class="csr-num"><%= dl(c.get("utilisation"), vw, k, "utilisation", null) %></td>
+            <td class="csr-num csr-co-g3s"><%= dl(c.get("received"), vw, k, "received", null) %></td>
+            <td class="csr-num"><%= dl(c.get("utilised"), vw, k, "utilised", null) %></td>
+            <td class="csr-num csr-strong <%= "1".equals(c.get("unspentNeg")) ? "csr-co-neg" : "" %>"><%= dl(c.get("unspent"), vw, k, "unspent", null) %></td>
           </tr>
           <% } %>
           <% if (posRows.size() == 1) { %>
-          <tr><td colspan="11" class="csr-empty">No Management Approvals yet.</td></tr>
+          <tr><td colspan="15" class="csr-empty">No Management Approvals yet.</td></tr>
           <% } %>
         </tbody>
       </table>
