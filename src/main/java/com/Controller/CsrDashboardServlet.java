@@ -30,14 +30,6 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Font.FontFamily;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
 
 import com.Bean.DBUtil;
 import com.google.gson.Gson;
@@ -177,12 +169,12 @@ public class CsrDashboardServlet extends HttpServlet {
             sendLetterData(request, response);
             return;
         }
-        if ("exportExcel".equals(request.getParameter("action"))) {
-            exportDashboardToExcel(request, response);
+        if ("detailExcel".equals(request.getParameter("action"))) {
+            exportDetailToExcel(request, response);
             return;
         }
-        if ("exportPdf".equals(request.getParameter("action"))) {
-            exportDashboardToPdf(request, response);
+        if ("exportExcel".equals(request.getParameter("action"))) {
+            exportDashboardToExcel(request, response);
             return;
         }
 
@@ -493,18 +485,8 @@ public class CsrDashboardServlet extends HttpServlet {
         String view = request.getParameter("view"), key = request.getParameter("key"), col = request.getParameter("col");
         Map<String, Object> out = new LinkedHashMap<String, Object>();
         try (java.sql.Connection con = DBUtil.getConnection()) {
-            if (key == null || key.length() > 200) throw new IllegalArgumentException("Invalid selection.");
-            if ("month".equals(view)) {
-                if (!MONTH_COLS.contains(col)) throw new IllegalArgumentException("Invalid column.");
-                String fyParam = request.getParameter("fy");
-                if (fyParam == null || !fyParam.matches("\\d{4}")) throw new IllegalArgumentException("Invalid financial year.");
-                monthDetail(con, Integer.parseInt(fyParam), key, col, out);
-            } else if ("co".equals(view) || "unit".equals(view) || "proj".equals(view)) {
-                if (!POS_COLS.contains(col)) throw new IllegalArgumentException("Invalid column.");
-                positionDetail(con, view, key, col, out);
-            } else {
-                throw new IllegalArgumentException("Invalid view.");
-            }
+            buildDetail(con, request, out);
+            out.remove("ids");
             out.put("ok", true);
         } catch (IllegalArgumentException bad) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -515,6 +497,23 @@ public class CsrDashboardServlet extends HttpServlet {
             out.clear(); out.put("ok", false); out.put("message", "Details could not be loaded. Please try again.");
         }
         response.getWriter().write(new Gson().toJson(out));
+    }
+
+    /** Validates view / key / col [/ fy] and fills the pop-up table (shared by the JSON pop-up and its Excel download). */
+    private void buildDetail(java.sql.Connection con, HttpServletRequest request, Map<String, Object> out) throws Exception {
+        String view = request.getParameter("view"), key = request.getParameter("key"), col = request.getParameter("col");
+        if (key == null || key.length() > 200) throw new IllegalArgumentException("Invalid selection.");
+        if ("month".equals(view)) {
+            if (!MONTH_COLS.contains(col)) throw new IllegalArgumentException("Invalid column.");
+            String fyParam = request.getParameter("fy");
+            if (fyParam == null || !fyParam.matches("\\d{4}")) throw new IllegalArgumentException("Invalid financial year.");
+            monthDetail(con, Integer.parseInt(fyParam), key, col, out);
+        } else if ("co".equals(view) || "unit".equals(view) || "proj".equals(view)) {
+            if (!POS_COLS.contains(col)) throw new IllegalArgumentException("Invalid column.");
+            positionDetail(con, view, key, col, out);
+        } else {
+            throw new IllegalArgumentException("Invalid view.");
+        }
     }
 
     /** Approval ids of one company / unit (key "all" = every approval). */
@@ -560,7 +559,11 @@ public class CsrDashboardServlet extends HttpServlet {
         else if ("utilised".equals(col)) outflowTable(con, ids, from, to, "Utilised: " + group, false, out);
         else if ("retention".equals(col)) retentionTable(con, ids, "Retention Held: " + group, out);
         else if ("unpaid".equals(col)) unpaidTable(con, ids, "Bills Unpaid: " + group, out);
-        else approvalsTable(con, ids, group, out);
+        else {
+            approvalsTable(con, ids, group, out);
+            if ("woAmount".equals(col)) out.put("title", "2. Work Orders: " + group);
+            else if ("invoicePaid".equals(col)) out.put("title", "3. Payment: " + group);
+        }
     }
 
     private static String projectLabel(java.sql.Connection con, String key) throws Exception {
@@ -721,16 +724,36 @@ public class CsrDashboardServlet extends HttpServlet {
                 add(t, rs);
                 for (int k = 0; k < total.length; k++) total[k] = total[k].add(t[k]);
                 Map<String, String> r = positionRow("", "", t);
-                rows.add(new String[] { rs.getString("letter_number") + " - " + rs.getString("letter_name"), rs.getString("descr"), r.get("approved"), r.get("received"),
-                    r.get("receivedPct"), r.get("yetToReceive"), r.get("yetToReceivePct"), r.get("utilised"), r.get("unspent"), r.get("retention"), r.get("unpaid"), r.get("free"), r.get("utilisation") });
+                rows.add(positionCells(rs.getString("letter_number") + " - " + rs.getString("letter_name"), rs.getString("descr"), r));
             }
         }
         Map<String, String> t = positionRow("", "", total);
+        // same layout as the Company-wise / Unit-wise Position tables (owner request 2026-11-04)
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        int fyYear = today.getMonthValue() >= 4 ? today.getYear() : today.getYear() - 1;
+        String fyLabel = fyYear + "-" + String.valueOf(fyYear + 1).substring(2);
         put(out, "Management Approvals: " + group + " (" + total[0].toPlainString() + ")",
-            new String[] { "Management Approval", "Description", "Approved", "Received", "Received %", "Yet to Receive", "YTR %", "Utilised", "Unspent", "Retention", "Bills Unpaid", "Free Balance", "Utilisation %" },
-            new boolean[] { false, false, true, true, true, true, true, true, true, true, true, true, true }, rows,
-            new String[] { "Total", "", t.get("approved"), t.get("received"), t.get("receivedPct"), t.get("yetToReceive"), t.get("yetToReceivePct"), t.get("utilised"), t.get("unspent"),
-                t.get("retention"), t.get("unpaid"), t.get("free"), t.get("utilisation") });
+            new String[] { "Management Approval", "Description",
+                "Approved", "Received – Opening", "Received – Current", "Received", "Yet to Receive", "% to Receive",
+                "Work Order Amount", "Invoice Raised", "Balance to be Billed",
+                "Invoice Received", "Amount Paid", "Balance to Pay",
+                "Total Received", "Paid to Vendors", "Balance" },
+            new boolean[] { false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true }, rows,
+            positionCells("Total", "", t));
+        out.put("sub", new String[] { "", "", "", "till 31-03-" + fyYear, "FY " + fyLabel, "Total", "", "", "", "", "", "", "", "", "", "", "" });
+        // g = first column of a group (left rule), k = key column of a group (bold)
+        out.put("cls", new String[] { "", "", "g", "", "", "k", "", "", "g", "", "k", "g", "", "k", "g", "", "k" });
+        out.put("ids", ids);   // for the Excel download only (removed from the JSON reply)
+        out.put("groups", new Object[][] { { "", 1 }, { "1. Budget", 6 }, { "2. Work Orders", 3 }, { "3. Payment", 3 }, { "4. Received from Sponsor", 3 } });
+    }
+
+    /** One row of the approvals pop-up, in the column order of the position tables. */
+    private static String[] positionCells(String name, String descr, Map<String, String> r) {
+        return new String[] { name, descr,
+            r.get("approved"), r.get("receivedOpening"), r.get("receivedCurrent"), r.get("received"), r.get("yetToReceive"), r.get("yetToReceivePct"),
+            r.get("woAmount"), r.get("invoiced"), r.get("toBill"),
+            r.get("invoiced"), r.get("invoicePaid"), r.get("unpaid"),
+            r.get("received"), r.get("utilised"), r.get("unspent") };
     }
 
     /** Money in and out in the period, one line per entry. */
@@ -1031,172 +1054,393 @@ public class CsrDashboardServlet extends HttpServlet {
         return (v.signum() < 0 ? "-" : "") + "\u20B9" + indian(v.abs());
     }
 
-    private void exportDashboardToExcel(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment; filename=\"CSR-Dashboard-" + System.currentTimeMillis() + ".xlsx\"");
+    // =====================================================================================
+    // Excel downloads (owner request 2026-11-04): dashboard and every pop-up, with live Excel formulas.
+    // Raw amounts per Management Approval sit on the "Approvals" sheet; the Company-wise and Unit-wise
+    // tables add them up with SUMIFS, and every derived column (Received Total, Yet to Receive,
+    // % to Receive, Balance to be Billed, Balance to Pay, Balance) is a formula, as on the dashboard.
+    // =====================================================================================
 
-        try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Dashboard");
-            sheet.setColumnWidth(0, 6000);
-            for (int i = 1; i < 15; i++) sheet.setColumnWidth(i, 2000);
+    /** One Management Approval with the raw totals of POSITION_SQL (see zeros() for the index order). */
+    private static final class ApprovalRaw {
+        String name, descr, company, unit;
+        BigDecimal[] t;
+    }
 
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setFontHeightInPoints((short) 11);
-            headerStyle.setFont(headerFont);
-            headerStyle.setAlignment(HorizontalAlignment.CENTER);
-            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-
-            CellStyle dataStyle = workbook.createCellStyle();
-            dataStyle.setBorderTop(BorderStyle.THIN);
-            dataStyle.setBorderBottom(BorderStyle.THIN);
-            dataStyle.setBorderLeft(BorderStyle.THIN);
-            dataStyle.setBorderRight(BorderStyle.THIN);
-            dataStyle.setAlignment(HorizontalAlignment.RIGHT);
-
-            CellStyle textStyle = workbook.createCellStyle();
-            textStyle.setBorderTop(BorderStyle.THIN);
-            textStyle.setBorderBottom(BorderStyle.THIN);
-            textStyle.setBorderLeft(BorderStyle.THIN);
-            textStyle.setBorderRight(BorderStyle.THIN);
-            textStyle.setAlignment(HorizontalAlignment.LEFT);
-
-            int rowNum = 0;
-
-            // Title row
-            Row titleRow = sheet.createRow(rowNum++);
-            titleRow.setHeightInPoints(18);
-            Cell titleCell = titleRow.createCell(0);
-            titleCell.setCellValue(com.Bean.AppConfig.code() + " CSR Amount Spending Dashboard");
-            titleCell.setCellStyle(headerStyle);
-
-            // Key metrics section
-            rowNum++; // Empty row
-            Row metricsHeader = sheet.createRow(rowNum++);
-            metricsHeader.createCell(0).setCellValue("Approved Budget");
-            metricsHeader.createCell(1).setCellValue(request.getAttribute("stats") != null ?
-                ((Map<String, String>) request.getAttribute("stats")).get("approvedAmount") : "\u20B90");
-
-            // Company-wise Position Table
-            rowNum += 2;
-            Row tableHeader = sheet.createRow(rowNum++);
-            String[] headers = {"Company", "Projects", "Approved", "Received", "Received %", "Yet to Receive",
-                               "Yet to Receive %", "Utilised", "Unspent", "Retention Held", "Bills Unpaid", "Free Balance", "Utilisation %"};
-            for (int i = 0; i < headers.length; i++) {
-                Cell cell = tableHeader.createCell(i);
-                cell.setCellValue(headers[i]);
-                cell.setCellStyle(headerStyle);
+    /** Approvals with company / unit names grouped exactly as loadCompanyPosition / loadUnitPosition. */
+    private static List<ApprovalRaw> loadApprovalsRaw(java.sql.Connection con, String ids) throws Exception {
+        Map<Integer, String> companies = new LinkedHashMap<Integer, String>();
+        try (java.sql.PreparedStatement ps = con.prepareStatement(
+                "SELECT id, COALESCE(NULLIF(short_name, ''), company_name) AS name FROM kss_csr_company ORDER BY company_name");
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) companies.put(rs.getInt("id"), rs.getString("name"));
+        }
+        Map<String, String> unitNames = new LinkedHashMap<String, String>();            // key (lower case) -> name as first entered
+        List<ApprovalRaw> list = new ArrayList<ApprovalRaw>();
+        String sql = POSITION_SQL + (ids == null ? "" : " WHERE l.id IN (" + ids + ")") + " ORDER BY l.id";   // ids: integers only (letterIds)
+        try (java.sql.PreparedStatement ps = con.prepareStatement(sql); java.sql.ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ApprovalRaw a = new ApprovalRaw();
+                a.name = rs.getString("letter_number") + " - " + rs.getString("letter_name");
+                a.descr = rs.getString("descr");
+                int co = rs.getInt("company_id");
+                a.company = rs.wasNull() || !companies.containsKey(co) ? "Company not set" : companies.get(co);
+                String place = rs.getString("activity_kind");
+                place = place == null ? "" : place.replace(NBSP, ' ').trim().replaceAll("\\s+", " ");
+                if (place.isEmpty()) place = "Not given";
+                String k = place.toLowerCase(Locale.ROOT);
+                if (!unitNames.containsKey(k)) unitNames.put(k, place);
+                a.unit = unitNames.get(k);
+                a.t = zeros();
+                add(a.t, rs);
+                list.add(a);
             }
+        }
+        list.sort((x, y) -> String.valueOf(x.name).compareToIgnoreCase(String.valueOf(y.name)));
+        return list;
+    }
 
-            @SuppressWarnings("unchecked")
-            List<Map<String, String>> companyPosition = (List<Map<String, String>>) request.getAttribute("companyPosition");
-            if (companyPosition != null) {
-                for (Map<String, String> row : companyPosition) {
-                    Row dataRow = sheet.createRow(rowNum++);
-                    dataRow.createCell(0).setCellValue(row.getOrDefault("name", ""));
-                    dataRow.createCell(1).setCellValue(row.getOrDefault("projects", "0"));
-                    dataRow.createCell(2).setCellValue(row.getOrDefault("approved", "0"));
-                    dataRow.createCell(3).setCellValue(row.getOrDefault("received", "0"));
-                    dataRow.createCell(4).setCellValue(row.getOrDefault("receivedPct", "0%"));
-                    dataRow.createCell(5).setCellValue(row.getOrDefault("yetToReceive", "0"));
-                    dataRow.createCell(6).setCellValue(row.getOrDefault("yetToReceivePct", "0%"));
-                    dataRow.createCell(7).setCellValue(row.getOrDefault("utilised", "0"));
-                    dataRow.createCell(8).setCellValue(row.getOrDefault("unspent", "0"));
-                    dataRow.createCell(9).setCellValue(row.getOrDefault("retention", "0"));
-                    dataRow.createCell(10).setCellValue(row.getOrDefault("unpaid", "0"));
-                    dataRow.createCell(11).setCellValue(row.getOrDefault("free", "0"));
-                    dataRow.createCell(12).setCellValue(row.getOrDefault("utilisation", "0%"));
-                    for (int i = 0; i < 13; i++) {
-                        dataRow.getCell(i).setCellStyle(i == 0 ? textStyle : dataStyle);
-                    }
-                }
+    /** Cell styles shared by the downloads. */
+    private static final class XStyles {
+        CellStyle title, sub, group, head, text, textWrap, amt, amtNeg, amtZero, pct, totText, totAmt, totAmtNeg, totAmtZero, totPct, count, totCount;
+        XStyles(Workbook wb) {
+            org.apache.poi.ss.usermodel.DataFormat df = wb.createDataFormat();
+            // Indian grouping (12,34,56,789.00) whatever the PC's regional setting; negatives in brackets; nil as "-"
+            short pos = df.getFormat("[>=10000000]##\\,##\\,##\\,##0.00;[>=100000]##\\,##\\,##0.00;##,##0.00");
+            short neg = df.getFormat("[<=-10000000](##\\,##\\,##\\,##0.00);[<=-100000](##\\,##\\,##0.00);(##,##0.00)");
+            short nil = df.getFormat("\"-\"");
+            short pc = df.getFormat("0.0%;(0.0%);\"-\"");
+            Font bold = wb.createFont(); bold.setBold(true);
+            Font big = wb.createFont(); big.setBold(true); big.setFontHeightInPoints((short) 13);
+            Font muted = wb.createFont(); muted.setItalic(true); muted.setColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_50_PERCENT.getIndex());
+            Font red = wb.createFont(); red.setColor(org.apache.poi.ss.usermodel.IndexedColors.RED.getIndex());
+            Font redBold = wb.createFont(); redBold.setBold(true); redBold.setColor(org.apache.poi.ss.usermodel.IndexedColors.RED.getIndex());
+            title = wb.createCellStyle(); title.setFont(big);
+            sub = wb.createCellStyle(); sub.setFont(muted);
+            group = box(wb, bold, HorizontalAlignment.CENTER, true); group.setBorderBottom(BorderStyle.MEDIUM);
+            head = box(wb, bold, HorizontalAlignment.CENTER, true); head.setWrapText(true);
+            text = box(wb, null, HorizontalAlignment.LEFT, false);
+            textWrap = box(wb, null, HorizontalAlignment.LEFT, false); textWrap.setWrapText(true);
+            amt = box(wb, null, HorizontalAlignment.RIGHT, false); amt.setDataFormat(pos);
+            amtNeg = box(wb, red, HorizontalAlignment.RIGHT, false); amtNeg.setDataFormat(neg);
+            amtZero = box(wb, null, HorizontalAlignment.RIGHT, false); amtZero.setDataFormat(nil);
+            pct = box(wb, null, HorizontalAlignment.RIGHT, false); pct.setDataFormat(pc);
+            count = box(wb, null, HorizontalAlignment.RIGHT, false);
+            totText = total(wb, bold, HorizontalAlignment.LEFT);
+            totAmt = total(wb, bold, HorizontalAlignment.RIGHT); totAmt.setDataFormat(pos);
+            totAmtNeg = total(wb, redBold, HorizontalAlignment.RIGHT); totAmtNeg.setDataFormat(neg);
+            totAmtZero = total(wb, bold, HorizontalAlignment.RIGHT); totAmtZero.setDataFormat(nil);
+            totPct = total(wb, bold, HorizontalAlignment.RIGHT); totPct.setDataFormat(pc);
+            totCount = total(wb, bold, HorizontalAlignment.RIGHT);
+        }
+        private static CellStyle box(Workbook wb, Font f, HorizontalAlignment h, boolean shade) {
+            CellStyle s = wb.createCellStyle();
+            if (f != null) s.setFont(f);
+            s.setAlignment(h);
+            s.setVerticalAlignment(VerticalAlignment.TOP);
+            s.setBorderTop(BorderStyle.THIN); s.setBorderBottom(BorderStyle.THIN); s.setBorderLeft(BorderStyle.THIN); s.setBorderRight(BorderStyle.THIN);
+            if (shade) {
+                s.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+                s.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+                s.setVerticalAlignment(VerticalAlignment.CENTER);
             }
-
-            try (OutputStream out = response.getOutputStream()) {
-                workbook.write(out);
-            }
-        } catch (Exception e) {
-            getServletContext().log("Error exporting dashboard to Excel", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to export dashboard");
+            return s;
+        }
+        private static CellStyle total(Workbook wb, Font f, HorizontalAlignment h) {
+            CellStyle s = box(wb, f, h, false);
+            s.setBorderTop(BorderStyle.THIN); s.setBorderBottom(BorderStyle.DOUBLE);
+            return s;
+        }
+        /** Amount style chosen from the value Excel will show (whole rupees, as on the dashboard). */
+        CellStyle amount(BigDecimal v, boolean tot) {
+            int sg = v == null ? 0 : v.setScale(0, java.math.RoundingMode.HALF_UP).signum();
+            return sg == 0 ? (tot ? totAmtZero : amtZero) : sg < 0 ? (tot ? totAmtNeg : amtNeg) : (tot ? totAmt : amt);
         }
     }
 
-    private void exportDashboardToPdf(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "attachment; filename=\"CSR-Dashboard-" + System.currentTimeMillis() + ".pdf\"");
+    private static String colName(int c) { return org.apache.poi.ss.util.CellReference.convertNumToColString(c); }
 
-        try (OutputStream out = response.getOutputStream()) {
-            Document document = new Document(PageSize.A4, 10, 10, 10, 10);
-            PdfWriter.getInstance(document, out);
-            document.open();
+    private static Row row(Sheet s, int r) { Row x = s.getRow(r); return x == null ? s.createRow(r) : x; }
 
-            // Title
-            Paragraph title = new Paragraph(com.Bean.AppConfig.code() + " CSR Amount Spending Dashboard",
-                new com.itextpdf.text.Font(FontFamily.HELVETICA, 16, com.itextpdf.text.Font.BOLD));
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-            document.add(new Paragraph(" "));
+    private static void text(Sheet s, int r, int c, String v, CellStyle st) {
+        Cell cell = row(s, r).createCell(c);
+        cell.setCellValue(v == null ? "" : v);
+        if (st != null) cell.setCellStyle(st);
+    }
 
-            // Metrics
-            Paragraph metrics = new Paragraph("Dashboard Metrics",
-                new com.itextpdf.text.Font(FontFamily.HELVETICA, 12, com.itextpdf.text.Font.BOLD));
-            document.add(metrics);
+    private static void num(Sheet s, int r, int c, BigDecimal v, CellStyle st) {
+        Cell cell = row(s, r).createCell(c);
+        cell.setCellValue((v == null ? BigDecimal.ZERO : v).doubleValue());
+        cell.setCellStyle(st);
+    }
 
-            @SuppressWarnings("unchecked")
-            Map<String, String> stats = (Map<String, String>) request.getAttribute("stats");
-            if (stats != null) {
-                document.add(new Paragraph("Approved Budget: " + stats.getOrDefault("approvedAmount", "\u20B90")));
-                document.add(new Paragraph("Total Work Orders: " + stats.getOrDefault("workOrderAmount", "\u20B90")));
-                document.add(new Paragraph("Funds Received: " + stats.getOrDefault("frlReceivedAmount", "\u20B90")));
-            }
-            document.add(new Paragraph(" "));
+    private static void formula(Sheet s, int r, int c, String f, CellStyle st) {
+        Cell cell = row(s, r).createCell(c);
+        cell.setCellFormula(f);
+        cell.setCellStyle(st);
+    }
 
-            // Company-wise table
-            Paragraph tableTitle = new Paragraph("Company-wise Position",
-                new com.itextpdf.text.Font(FontFamily.HELVETICA, 11, com.itextpdf.text.Font.BOLD));
-            document.add(tableTitle);
-
-            PdfPTable table = new PdfPTable(13);
-            table.setWidthPercentage(100);
-            String[] headers = {"Company", "Projects", "Approved", "Received", "Rec %", "Yet to Receive",
-                               "YTR %", "Utilised", "Unspent", "Retention", "Bills Unpaid", "Free Balance", "Util %"};
-            for (String header : headers) {
-                table.addCell(new Phrase(header, new com.itextpdf.text.Font(FontFamily.HELVETICA, 9, com.itextpdf.text.Font.BOLD)));
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, String>> companyPosition = (List<Map<String, String>>) request.getAttribute("companyPosition");
-            if (companyPosition != null) {
-                for (Map<String, String> row : companyPosition) {
-                    table.addCell(row.getOrDefault("name", ""));
-                    table.addCell(row.getOrDefault("projects", ""));
-                    table.addCell(row.getOrDefault("approved", ""));
-                    table.addCell(row.getOrDefault("received", ""));
-                    table.addCell(row.getOrDefault("receivedPct", ""));
-                    table.addCell(row.getOrDefault("yetToReceive", ""));
-                    table.addCell(row.getOrDefault("yetToReceivePct", ""));
-                    table.addCell(row.getOrDefault("utilised", ""));
-                    table.addCell(row.getOrDefault("unspent", ""));
-                    table.addCell(row.getOrDefault("retention", ""));
-                    table.addCell(row.getOrDefault("unpaid", ""));
-                    table.addCell(row.getOrDefault("free", ""));
-                    table.addCell(row.getOrDefault("utilisation", ""));
-                }
-            }
-
-            document.add(table);
-            document.close();
-        } catch (Exception e) {
-            getServletContext().log("Error exporting dashboard to PDF", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to export dashboard");
+    /** Two header rows: 1. Budget | 2. Work Orders | 3. Payment | 4. Received from Sponsor, starting at column c0. */
+    private static void positionHeader(Sheet s, int r, int c0, String[] lead, String fyOpening, String fyCurrent, XStyles x) {
+        for (int i = 0; i < lead.length; i++) {
+            text(s, r, i, lead[i], x.head); text(s, r + 1, i, "", x.head);
+            s.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r, r + 1, i, i));
         }
+        String[][] groups = { { "1. Budget", "6" }, { "2. Work Orders", "3" }, { "3. Payment", "3" }, { "4. Received from Sponsor", "3" } };
+        int c = c0;
+        for (String[] g : groups) {
+            int n = Integer.parseInt(g[1]);
+            for (int i = 0; i < n; i++) text(s, r, c + i, i == 0 ? g[0] : "", x.group);
+            s.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r, r, c, c + n - 1));
+            c += n;
+        }
+        String[] cols = { "Approved", "Received – Opening\n" + fyOpening, "Received – Current\n" + fyCurrent, "Received\nTotal", "Yet to Receive", "% to Receive",
+            "Work Order Amount", "Invoice Raised", "Balance to be Billed", "Invoice Received", "Amount Paid", "Balance to Pay",
+            "Total Received", "Paid to Vendors", "Balance" };
+        for (int i = 0; i < cols.length; i++) text(s, r + 1, c0 + i, cols[i], x.head);
+        row(s, r + 1).setHeightInPoints(42);
+    }
+
+    /**
+     * The 15 position columns from c0 on row r. The 7 inputs (Approved, Received-Opening, Received-Current,
+     * Work Order Amount, Invoice Raised, Amount Paid, Paid to Vendors) are values, or formulas when inF != null.
+     */
+    private static void positionCells(Sheet s, int r, int c0, BigDecimal[] t, String[] inF, boolean tot, XStyles x) {
+        int R = r + 1;
+        String C = colName(c0), D = colName(c0 + 1), E = colName(c0 + 2), F = colName(c0 + 3), G = colName(c0 + 4),
+               I = colName(c0 + 6), J = colName(c0 + 7), L = colName(c0 + 9), M = colName(c0 + 10), O = colName(c0 + 12), P = colName(c0 + 13);
+        BigDecimal approved = t[1], received = t[2], utilised = t[3], unpaid = t[5], opening = t[6], wo = t[7], billed = t[8];
+        BigDecimal current = received.subtract(opening), paid = billed.subtract(unpaid);
+        BigDecimal[] inV = { approved, opening, current, wo, billed, paid, utilised };
+        int[] inCol = { 0, 1, 2, 6, 7, 10, 13 };
+        for (int i = 0; i < inCol.length; i++) {
+            if (inF != null) formula(s, r, c0 + inCol[i], inF[i], x.amount(inV[i], tot));
+            else num(s, r, c0 + inCol[i], inV[i], x.amount(inV[i], tot));
+        }
+        formula(s, r, c0 + 3, D + R + "+" + E + R, x.amount(received, tot));                                  // Received Total
+        formula(s, r, c0 + 4, C + R + "-" + F + R, x.amount(approved.subtract(received), tot));                // Yet to Receive
+        formula(s, r, c0 + 5, "IF(" + C + R + "=0,0," + G + R + "/" + C + R + ")", tot ? x.totPct : x.pct);  // % to Receive
+        formula(s, r, c0 + 8, I + R + "-" + J + R, x.amount(wo.subtract(billed), tot));                        // Balance to be Billed
+        formula(s, r, c0 + 9, J + R, x.amount(billed, tot));                                                   // Invoice Received
+        formula(s, r, c0 + 11, L + R + "-" + M + R, x.amount(unpaid, tot));                                    // Balance to Pay
+        formula(s, r, c0 + 12, F + R, x.amount(received, tot));                                                // Total Received
+        formula(s, r, c0 + 14, O + R + "-" + P + R, x.amount(received.subtract(utilised), tot));              // Balance
+    }
+
+    /** Total row: SUM of the rows above for the inputs; derived columns keep their formulas. */
+    private static void positionTotal(Sheet s, int r, int c0, int first, int last, BigDecimal[] t, XStyles x) {
+        String[] inF = new String[7];
+        int[] inCol = { 0, 1, 2, 6, 7, 10, 13 };
+        for (int i = 0; i < inCol.length; i++) {
+            String c = colName(c0 + inCol[i]);
+            inF[i] = last < first ? "0" : "SUM(" + c + (first + 1) + ":" + c + (last + 1) + ")";
+        }
+        positionCells(s, r, c0, t, inF, true, x);
+    }
+
+    private static String[] fyLabels() {
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        int fy = today.getMonthValue() >= 4 ? today.getYear() : today.getYear() - 1;
+        return new String[] { "till 31-03-" + fy, "FY " + fy + "-" + String.valueOf(fy + 1).substring(2),
+            today.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")) };
+    }
+
+    /**
+     * "Approvals" sheet: one row per Management Approval; inputs are values, derived columns are formulas.
+     * Columns: A Sl, B Management Approval, C Description, D Company, E Unit, F..T the 15 position columns.
+     * Returns {first data row, last data row} (0-based).
+     */
+    private static int[] writeApprovalsSheet(Sheet s, String title, List<ApprovalRaw> list, XStyles x) {
+        String[] fy = fyLabels();
+        text(s, 0, 0, title, x.title);
+        text(s, 1, 0, "Amounts in ₹ · generated " + fy[2] + " · inputs are values; totals and balances are Excel formulas", x.sub);
+        positionHeader(s, 3, 5, new String[] { "Sl.", "Management Approval", "Description", "Company", "Unit" }, fy[0], fy[1], x);
+        int r = 5, first = 5;
+        BigDecimal[] total = zeros();
+        for (ApprovalRaw a : list) {
+            Cell sl = row(s, r).createCell(0); sl.setCellValue(r - first + 1); sl.setCellStyle(x.count);
+            text(s, r, 1, a.name, x.textWrap);
+            text(s, r, 2, a.descr, x.textWrap);
+            text(s, r, 3, a.company, x.text);
+            text(s, r, 4, a.unit, x.text);
+            positionCells(s, r, 5, a.t, null, false, x);
+            for (int k = 0; k < total.length; k++) total[k] = total[k].add(a.t[k]);
+            r++;
+        }
+        int last = r - 1;
+        for (int c = 0; c < 5; c++) text(s, r, c, c == 1 ? "Total" : "", x.totText);
+        positionTotal(s, r, 5, first, last, total, x);
+        s.setColumnWidth(0, 5 * 256); s.setColumnWidth(1, 48 * 256); s.setColumnWidth(2, 30 * 256);
+        s.setColumnWidth(3, 16 * 256); s.setColumnWidth(4, 18 * 256);
+        for (int c = 5; c < 20; c++) s.setColumnWidth(c, 17 * 256);
+        s.createFreezePane(2, 5);
+        return new int[] { first, last };
+    }
+
+    /** Company-wise / Unit-wise table on the Dashboard sheet, summed from the Approvals sheet with SUMIFS / COUNTIFS (exact name match). */
+    private static int writeGroupTable(Sheet s, int r, String heading, String lead, List<String> names, List<ApprovalRaw> list,
+                                       boolean byCompany, int[] span, XStyles x) {
+        String[] fy = fyLabels();
+        text(s, r, 0, heading + " (₹)", x.title);
+        r += 1;
+        positionHeader(s, r, 2, new String[] { lead, "Projects" }, fy[0], fy[1], x);
+        r += 2;
+        int a1 = span[0] + 1, a2 = Math.max(span[1], span[0]) + 1;                    // Approvals rows, 1-based (one blank row if none)
+        String key = byCompany ? "D" : "E";
+        String[] src = { "F", "G", "H", "L", "M", "P", "S" };                           // Approvals columns of the 7 inputs
+        int first = r;
+        BigDecimal[] total = zeros();
+        for (String n : names) {
+            BigDecimal[] t = zeros();
+            for (ApprovalRaw a : list) if (n.equalsIgnoreCase(byCompany ? a.company : a.unit)) for (int k = 0; k < t.length; k++) t[k] = t[k].add(a.t[k]);
+            for (int k = 0; k < total.length; k++) total[k] = total[k].add(t[k]);
+            // exact, case-insensitive match: "=" prefix, and ~ * ? escaped so a name is never read as a wildcard
+            String crit = "\"=" + n.replace("~", "~~").replace("*", "~*").replace("?", "~?").replace("\"", "\"\"") + "\"";
+            String keyRange = "Approvals!$" + key + "$" + a1 + ":$" + key + "$" + a2;
+            text(s, r, 0, n, x.text);
+            formula(s, r, 1, "COUNTIFS(" + keyRange + "," + crit + ")", x.count);
+            String[] inF = new String[7];
+            for (int i = 0; i < 7; i++) inF[i] = "SUMIFS(Approvals!$" + src[i] + "$" + a1 + ":$" + src[i] + "$" + a2 + "," + keyRange + "," + crit + ")";
+            positionCells(s, r, 2, t, inF, false, x);
+            r++;
+        }
+        int last = r - 1;
+        text(s, r, 0, "TOTAL", x.totText);
+        formula(s, r, 1, last < first ? "0" : "SUM(B" + (first + 1) + ":B" + (last + 1) + ")", x.totCount);
+        positionTotal(s, r, 2, first, last, total, x);
+        return r + 3;
+    }
+
+    private static void sendWorkbook(HttpServletResponse response, Workbook wb, String fileName) throws IOException {
+        try {
+            wb.getCreationHelper().createFormulaEvaluator().evaluateAll();   // cached results, so viewers that do not recalculate still show figures
+        } catch (RuntimeException ignored) {
+            // Excel recalculates on open anyway
+        }
+        wb.setForceFormulaRecalculation(true);
+        java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        wb.write(buf);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName.replaceAll("[^A-Za-z0-9._-]", "_") + "\"");
+        response.setHeader("Cache-Control", "no-store");
+        response.setContentLength(buf.size());
+        try (OutputStream out = response.getOutputStream()) { buf.writeTo(out); }
+    }
+
+    private static String stamp() {
+        return java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    }
+
+    private void exportDashboardToExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try (java.sql.Connection con = DBUtil.getConnection(); Workbook wb = new XSSFWorkbook()) {
+            XStyles x = new XStyles(wb);
+            List<ApprovalRaw> list = loadApprovalsRaw(con, null);
+            Sheet dash = wb.createSheet("Dashboard");
+            Sheet appr = wb.createSheet("Approvals");
+            int[] span = writeApprovalsSheet(appr, com.Bean.AppConfig.code() + " CSR – Management Approval-wise Position", list, x);
+
+            // row names exactly as on the dashboard (companies incl. Active ones without approvals; units)
+            List<String> coNames = new ArrayList<String>(), unitNames = new ArrayList<String>();
+            for (Map<String, String> m : loadCompanyPosition(con)) if (!"1".equals(m.get("total"))) coNames.add(m.get("name"));
+            for (Map<String, String> m : loadUnitPosition(con)) if (!"1".equals(m.get("total"))) unitNames.add(m.get("name"));
+
+            text(dash, 0, 0, com.Bean.AppConfig.code() + " CSR Amount Spending Dashboard", x.title);
+            text(dash, 1, 0, "Amounts in ₹ · generated " + stamp() + " · figures are formulas on the Approvals sheet", x.sub);
+            int r = writeGroupTable(dash, 3, "Company-wise Position", "Company", coNames, list, true, span, x);
+            writeGroupTable(dash, r, "Unit / Institution-wise Position", "Unit", unitNames, list, false, span, x);
+            dash.setColumnWidth(0, 30 * 256); dash.setColumnWidth(1, 9 * 256);
+            for (int c = 2; c < 17; c++) dash.setColumnWidth(c, 17 * 256);
+            dash.createFreezePane(1, 0);
+            sendWorkbook(response, wb, "CSR-Dashboard-" + stamp() + ".xlsx");
+        } catch (Exception e) {
+            getServletContext().log("Error exporting dashboard to Excel", e);
+            if (!response.isCommitted()) response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to export dashboard");
+        }
+    }
+
+    /** Excel of one dashboard pop-up (same view / key / col [/ fy] and the same checks as the pop-up itself). */
+    private void exportDetailToExcel(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try (java.sql.Connection con = DBUtil.getConnection(); Workbook wb = new XSSFWorkbook()) {
+            Map<String, Object> out = new LinkedHashMap<String, Object>();
+            buildDetail(con, request, out);
+            XStyles x = new XStyles(wb);
+            String title = String.valueOf(out.get("title"));
+            if (out.get("groups") != null && out.get("ids") != null) {
+                // Management Approvals pop-up: raw inputs + formulas, same layout as the dashboard
+                writeApprovalsSheet(wb.createSheet("Approvals"), title, loadApprovalsRaw(con, (String) out.get("ids")), x);
+            } else {
+                writeDetailSheet(wb.createSheet("Details"), title, out, x);
+            }
+            sendWorkbook(response, wb, title.replaceAll("[^A-Za-z0-9]+", "-").replaceAll("^-|-$", "") + "-" + stamp() + ".xlsx");
+        } catch (IllegalArgumentException bad) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, bad.getMessage());
+        } catch (Exception e) {
+            getServletContext().log("Error exporting dashboard detail to Excel", e);
+            if (!response.isCommitted()) response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to export details");
+        }
+    }
+
+    /** Ledger-style pop-ups (receipts, payments, retention, bills unpaid, month-wise): amounts as numbers, totals as SUM where they add up. */
+    private static void writeDetailSheet(Sheet s, String title, Map<String, Object> out, XStyles x) {
+        String[] cols = (String[]) out.get("cols");
+        boolean[] numCol = (boolean[]) out.get("num");
+        @SuppressWarnings("unchecked")
+        List<String[]> rows = (List<String[]>) out.get("rows");
+        String[] foot = (String[]) out.get("foot");
+        text(s, 0, 0, title, x.title);
+        text(s, 1, 0, "Amounts in ₹ (whole rupees, as shown on the dashboard) · generated " + stamp(), x.sub);
+        for (int c = 0; c < cols.length; c++) {
+            text(s, 3, c, cols[c], x.head);
+            s.setColumnWidth(c, (numCol[c] ? 17 : ("Description".equals(cols[c]) || "Management Approval".equals(cols[c]) ? 40 : 18)) * 256);
+        }
+        int r = 4, first = 4;
+        BigDecimal[] sums = new BigDecimal[cols.length];
+        boolean[] summable = new boolean[cols.length];
+        for (int c = 0; c < cols.length; c++) { sums[c] = BigDecimal.ZERO; summable[c] = numCol[c]; }
+        if (rows != null) for (String[] v : rows) {
+            for (int c = 0; c < cols.length; c++) {
+                String cell = c < v.length ? v[c] : "";
+                if (numCol[c]) {
+                    BigDecimal n = parseShown(cell);
+                    if (n == null) { text(s, r, c, cell, x.text); summable[c] = false; continue; }
+                    if (cell.trim().endsWith("%")) { num(s, r, c, n, x.pct); summable[c] = false; }
+                    else { num(s, r, c, n, x.amount(n, false)); sums[c] = sums[c].add(n); }
+                } else text(s, r, c, cell, c < 2 || cell == null || cell.length() <= 30 ? x.text : x.textWrap);
+            }
+            r++;
+        }
+        int last = r - 1;
+        if (foot != null) {
+            for (int c = 0; c < cols.length; c++) {
+                String f = c < foot.length ? foot[c] : "";
+                if (!numCol[c] || f == null || f.isEmpty()) { text(s, r, c, f, x.totText); continue; }
+                BigDecimal n = parseShown(f);
+                if (n == null) { text(s, r, c, f, x.totText); continue; }
+                if (f.trim().endsWith("%")) { num(s, r, c, n, x.totPct); continue; }
+                // a running figure (e.g. Cumulative Unspent) is not the sum of its column: keep the value then
+                if (summable[c] && last >= first && sums[c].compareTo(n) == 0)
+                    formula(s, r, c, "SUM(" + colName(c) + (first + 1) + ":" + colName(c) + (last + 1) + ")", x.amount(n, true));
+                else num(s, r, c, n, x.amount(n, true));
+            }
+        }
+        s.createFreezePane(0, 4);
+    }
+
+    /** "12,34,567" -> 1234567; "(7,94,502)" -> -794502; "-" / "" -> 0; "42.9%" -> 0.429; anything else -> null. */
+    private static BigDecimal parseShown(String v) {
+        if (v == null) return BigDecimal.ZERO;
+        String s = v.trim();
+        if (s.isEmpty() || "-".equals(s)) return BigDecimal.ZERO;
+        boolean neg = s.startsWith("(") && s.endsWith(")");
+        if (neg) s = s.substring(1, s.length() - 1);
+        boolean pct = s.endsWith("%");
+        if (pct) s = s.substring(0, s.length() - 1);
+        s = s.replace(",", "").replace("₹", "").trim();
+        if (!s.matches("-?\\d+(\\.\\d+)?")) return null;
+        BigDecimal n = new BigDecimal(s);
+        if (pct) n = n.movePointLeft(2);
+        return neg ? n.negate() : n;
     }
 
 }

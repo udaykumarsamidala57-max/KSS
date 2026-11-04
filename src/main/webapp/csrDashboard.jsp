@@ -177,6 +177,8 @@
 .dd-box { width:min(1320px,100%); max-height:calc(100vh - 90px); display:flex; flex-direction:column; background:#fff; border-radius:7px; box-shadow:0 10px 30px rgba(15,23,42,.25); }
 .dd-head { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--fin-line); }
 .dd-title { font-size:14px; font-weight:600; color:var(--fin-ink); }
+.dd-actions { display:flex; gap:8px; flex:0 0 auto; }
+.dd-actions button[disabled] { opacity:.5; cursor:default; }
 .dd-body { overflow:auto; padding:0 0 6px; }
 .dd-body .csr-table td.n, .dd-body .csr-table th.n { text-align:right; white-space:nowrap; }
 .dd-body .csr-table tfoot td { font-weight:700; background:#f8fafc; border-top:2px solid #cbd5e1; }
@@ -403,6 +405,21 @@ body { background:#f3f4f6 !important; }
 .dd-modal .dd-body .csr-table th { background:#f7f8fa !important; color:#5f6b7a !important; text-transform:none !important; letter-spacing:0 !important; font-size:11.5px !important; }
 .dd-modal .dd-body .csr-table td, .dd-modal .dd-body .csr-table th { border-bottom:1px solid #eef0f3 !important; }
 .dd-modal .dd-body .csr-table tfoot td { font-weight:700; border-top:1px solid #1d2430 !important; border-bottom:3px double #1d2430 !important; }
+/* approvals pop-up in the position-table layout: 1. Budget | 2. Work Orders | 3. Payment | 4. Received from Sponsor */
+.dd-modal .dd-box:has(.dd-pos) { width:100%; }
+.dd-modal .dd-body .dd-pos { border-collapse:separate !important; border-spacing:0 !important; font-size:12.5px; }
+.dd-modal .dd-body .dd-pos thead th { vertical-align:bottom; line-height:1.3; border-bottom:1px solid #dde1e6 !important; }
+.dd-modal .dd-body .dd-pos tr.dd-grp th.grp { text-align:center; vertical-align:middle; background:#fff !important; color:#1d2430 !important; font-size:12px !important;
+  font-weight:600; border-bottom:2px solid #7a1f2b !important; }
+.dd-modal .dd-body .dd-pos th.g, .dd-modal .dd-body .dd-pos td.g { border-left:1px solid #dde1e6 !important; }
+.dd-modal .dd-body .dd-pos td.k { font-weight:600; }
+.dd-modal .dd-body .dd-pos th small { display:block; margin-top:2px; color:#5f6b7a; font-size:10.5px; font-weight:400; }
+.dd-modal .dd-body .dd-pos td.neg { color:#b42318; }
+.dd-modal .dd-body .dd-pos tr.dd-grp th:first-child, .dd-modal .dd-body .dd-pos tbody td:first-child, .dd-modal .dd-body .dd-pos tfoot td:first-child {
+  position:sticky; left:0; z-index:2; background:#fff; box-shadow:inset -1px 0 0 #dde1e6; }
+.dd-modal .dd-body .dd-pos tr.dd-grp th:first-child { background:#f7f8fa !important; }
+.dd-modal .dd-body .dd-pos tbody td, .dd-modal .dd-body .dd-pos tfoot td { background:#fff; }
+.dd-modal .dd-body .dd-pos tfoot td { background:#fff !important; }
 </style>
 </head>
 <body>
@@ -416,8 +433,6 @@ body { background:#f3f4f6 !important; }
 
   <div class="csr-export-toolbar">
     <button type="button" id="btnExcelExport" onclick="exportDashboardToExcel();">Export to Excel</button>
-    <button type="button" id="btnPdfExport" onclick="exportDashboardToPdf();">Export to PDF</button>
-    <button type="button" id="btnPrint" onclick="window.print();">Print</button>
     <span style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
       <label style="color: var(--fin-muted); font-size: 12px; font-weight: 600; margin: 0;">Report Type:</label>
       <select id="reportTypeSelect" onchange="switchReportType(this.value);" style="height: 34px; padding: 0 9px; border: 1px solid var(--fin-line); border-radius: 4px; color: var(--fin-ink); background: #fff; font: inherit; cursor: pointer;">
@@ -471,8 +486,8 @@ body { background:#f3f4f6 !important; }
             <th rowspan="2"><%= pos[2] %></th>
             <th rowspan="2" class="csr-num">Projects</th>
             <th colspan="6" class="csr-co-g1">1. Budget</th>
-            <th colspan="3" class="csr-co-g2">2. Work Orders</th>
-            <th colspan="3" class="csr-co-g3">3. Payment</th>
+            <th colspan="3" class="csr-co-g2"><%= dl("2. Work Orders", (String) pos[0], "all", "woAmount", null) %></th>
+            <th colspan="3" class="csr-co-g3"><%= dl("3. Payment", (String) pos[0], "all", "invoicePaid", null) %></th>
             <th colspan="3" class="csr-co-g4">4. Received from Sponsor</th>
           </tr>
           <tr>
@@ -621,7 +636,10 @@ body { background:#f3f4f6 !important; }
   <div class="dd-box">
     <div class="dd-head">
       <div class="dd-title" id="ddTitle"></div>
-      <button type="button" class="csr-btn csr-btn-sm csr-btn-outline" id="ddClose">Close</button>
+      <span class="dd-actions">
+        <button type="button" class="csr-btn csr-btn-sm csr-btn-outline" id="ddExcel" disabled>Download Excel</button>
+        <button type="button" class="csr-btn csr-btn-sm csr-btn-outline" id="ddClose">Close</button>
+      </span>
     </div>
     <div class="dd-body" id="ddBody"></div>
   </div>
@@ -696,6 +714,7 @@ body { background:#f3f4f6 !important; }
   // ---- amount popups: CsrDashboardServlet?action=detail&view=&key=&col=[&fy=]
   var modal = document.getElementById('ddModal'), ddTitle = document.getElementById('ddTitle'), ddBody = document.getElementById('ddBody');
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  var ddExcel = document.getElementById('ddExcel'), ddQuery = null;
   function closeDd() { modal.classList.remove('open'); }
   // n = amount (right, one line), d = date / month / short code (one line), t = text (wraps)
   function cellClass(d, i, v) {
@@ -709,8 +728,39 @@ body { background:#f3f4f6 !important; }
     // the Description column is shown as a second, smaller line under the Management Approval
     var di = d.cols.indexOf('Description'), ai = d.cols.indexOf('Management Approval');
     if (ai === -1) di = -1;
-    var t = el('table', 'csr-table'), th = el('thead'), hr = el('tr'), tb = el('tbody');
-    d.cols.forEach(function (c, i) { if (i !== di) hr.appendChild(el('th', d.num[i] ? 'n' : '', c)); });
+    // optional position-table layout: group header row (groups), small sub-labels (sub), per-column classes (cls: g = group start, k = key)
+    var grouped = !!(d.groups && d.groups.length);
+    function colCls(i) { var c = d.cls && d.cls[i]; return (c ? ' ' + c : ''); }
+    function numCell(tag, d, i, v) {
+      var c = cellClass(d, i, v) + colCls(i) + (d.num[i] && typeof v === 'string' && v.charAt(0) === '(' ? ' neg' : '');
+      return el(tag, c, v);
+    }
+    var t = el('table', 'csr-table' + (grouped ? ' dd-pos' : '')), th = el('thead'), hr = el('tr'), tb = el('tbody');
+    var spanned = {};                                   // visible columns covered by a rowspan=2 group cell
+    if (grouped) {
+      var gr = el('tr', 'dd-grp'), vis = [];
+      d.cols.forEach(function (c, i) { if (i !== di) vis.push(i); });
+      var p = 0;
+      d.groups.forEach(function (g) {
+        var label = g[0], span = g[1];
+        if (!label) {                                   // leading column(s): header spans both rows
+          for (var s = 0; s < span; s++) {
+            var ci = vis[p + s], h = el('th', (d.num[ci] ? 'n' : '') + colCls(ci), d.cols[ci]);
+            h.rowSpan = 2; gr.appendChild(h); spanned[ci] = true;
+          }
+        } else {
+          var gh = el('th', 'grp g', label); gh.colSpan = span; gr.appendChild(gh);
+        }
+        p += span;
+      });
+      th.appendChild(gr);
+    }
+    d.cols.forEach(function (c, i) {
+      if (i === di || spanned[i]) return;
+      var h = el('th', (d.num[i] ? 'n' : '') + colCls(i), c);
+      if (d.sub && d.sub[i]) h.appendChild(el('small', null, d.sub[i]));
+      hr.appendChild(h);
+    });
     th.appendChild(hr); t.appendChild(th);
     d.rows.forEach(function (r) {
       var tr = el('tr');
@@ -723,14 +773,14 @@ body { background:#f3f4f6 !important; }
           tr.appendChild(td);
           return;
         }
-        tr.appendChild(el('td', cellClass(d, i, v), v));
+        tr.appendChild(numCell('td', d, i, v));
       });
       tb.appendChild(tr);
     });
     t.appendChild(tb);
     if (d.foot) {
       var tf = el('tfoot'), fr = el('tr');
-      d.foot.forEach(function (v, i) { if (i !== di) fr.appendChild(el('td', i === ai ? 'ma' : cellClass(d, i, v), v)); });
+      d.foot.forEach(function (v, i) { if (i !== di) fr.appendChild(i === ai ? el('td', 'ma', v) : numCell('td', d, i, v)); });
       tf.appendChild(fr); t.appendChild(tf);
     }
     ddBody.appendChild(t);
@@ -743,16 +793,21 @@ body { background:#f3f4f6 !important; }
           + '&col=' + encodeURIComponent(a.dataset.col) + (a.dataset.fy ? '&fy=' + encodeURIComponent(a.dataset.fy) : '');
     ddTitle.textContent = 'Loading...';
     ddBody.replaceChildren();
+    ddQuery = null; ddExcel.disabled = true;
     modal.classList.add('open');
     fetch('CsrDashboardServlet?' + q, { headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) { ddTitle.textContent = 'Details'; ddBody.appendChild(el('div', 'dd-msg', d.message || 'Details could not be loaded.')); return; }
         showDd(d);
+        // same view / key / col / fy as the pop-up; the servlet repeats all its checks
+        ddQuery = q.replace(/^action=detail&/, 'action=detailExcel&');
+        ddExcel.disabled = !(d.rows && d.rows.length);
       })
       .catch(function () { ddTitle.textContent = 'Details'; ddBody.appendChild(el('div', 'dd-msg', 'Details could not be loaded. Please try again.')); });
   });
   document.getElementById('ddClose').addEventListener('click', closeDd);
+  ddExcel.addEventListener('click', function () { if (ddQuery) window.location.href = 'CsrDashboardServlet?' + ddQuery; });
   modal.addEventListener('click', function (e) { if (e.target === modal) closeDd(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDd(); });
   var fy = document.getElementById('fySelect');
@@ -773,33 +828,11 @@ body { background:#f3f4f6 !important; }
   };
 
   // Export functions
+  // GET (the servlet has no doPost); read-only download, Global role checked in doGet
   window.exportDashboardToExcel = function() {
-    var btn = document.getElementById('btnExcelExport');
-    btn.disabled = true;
-    btn.textContent = 'Exporting...';
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'CsrDashboardServlet?action=exportExcel';
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-    btn.disabled = false;
-    btn.textContent = 'Export to Excel';
+    window.location.href = 'CsrDashboardServlet?action=exportExcel';
   };
 
-  window.exportDashboardToPdf = function() {
-    var btn = document.getElementById('btnPdfExport');
-    btn.disabled = true;
-    btn.textContent = 'Exporting...';
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'CsrDashboardServlet?action=exportPdf';
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-    btn.disabled = false;
-    btn.textContent = 'Export to PDF';
-  };
 }());
 </script>
 </body>

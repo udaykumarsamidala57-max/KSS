@@ -1,5 +1,6 @@
 com\Controller\ModuleFilter.class
 com\Controller\CsrPaymentServlet$FundLow.class
+com\Controller\CsrDashboardServlet$ApprovalRaw.class
 com\Bean\DBUtil.class
 com\Controller\UpdateStatusServlet.class
 com\Bean\AppConfig.class
@@ -15,6 +16,7 @@ com\DAO\scholarshipListDAO.class
 com\Controller\CsrLetterServlet.class
 com\Controller\ApproveScholarshipServlet.class
 com\Controller\CsrWorkOrderServlet.class
+com\Controller\CsrDashboardServlet$XStyles.class
 com\Controller\CsrInvoiceServlet.class
 com\DAO\ScholarshipDocumentsDAO.class
 com\DAO\SholrarshipDAO.class
