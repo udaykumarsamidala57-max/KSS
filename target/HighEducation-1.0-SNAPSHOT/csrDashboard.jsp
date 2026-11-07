@@ -433,8 +433,6 @@ body { background:#f3f4f6 !important; }
 
   <div class="csr-export-toolbar">
     <button type="button" id="btnExcelExport" onclick="exportDashboardToExcel();">Export to Excel</button>
-    <button type="button" id="btnPdfExport" onclick="exportDashboardToPdf();">Export to PDF</button>
-    <button type="button" id="btnPrint" onclick="window.print();">Print</button>
     <span style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
       <label style="color: var(--fin-muted); font-size: 12px; font-weight: 600; margin: 0;">Report Type:</label>
       <select id="reportTypeSelect" onchange="switchReportType(this.value);" style="height: 34px; padding: 0 9px; border: 1px solid var(--fin-line); border-radius: 4px; color: var(--fin-ink); background: #fff; font: inherit; cursor: pointer;">
@@ -835,19 +833,6 @@ body { background:#f3f4f6 !important; }
     window.location.href = 'CsrDashboardServlet?action=exportExcel';
   };
 
-  window.exportDashboardToPdf = function() {
-    var btn = document.getElementById('btnPdfExport');
-    btn.disabled = true;
-    btn.textContent = 'Exporting...';
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'CsrDashboardServlet?action=exportPdf';
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-    btn.disabled = false;
-    btn.textContent = 'Export to PDF';
-  };
 }());
 </script>
 </body>

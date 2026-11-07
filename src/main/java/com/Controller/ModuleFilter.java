@@ -38,7 +38,7 @@ public class ModuleFilter implements Filter {
 
     /** Pages that work before an institution is chosen. */
     private static final Set<String> NO_CHOICE_NEEDED = new HashSet<>(Arrays.asList(
-            "/login.jsp", "/LoginServlet", "/Logout.jsp", "/InstitutionServlet", "/selectInstitution.jsp"));
+            "/login.jsp", "/LoginServlet", "/Logout.jsp", "/InstitutionServlet", "/selectInstitution.jsp", "/sso/director"));
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {

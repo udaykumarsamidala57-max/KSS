@@ -148,20 +148,32 @@ public class ApproveScholarshipServlet extends HttpServlet {
         }
 
         String user = (String) sess.getAttribute("username");
-        String idParam = request.getParameter("id");
-        String decision = request.getParameter("decision");     // Approved / Rejected / Pending (revert)
-        String amountParam = request.getParameter("amount");
-        String remarks = request.getParameter("remarks");
+        Decision d = decide(user, request.getParameter("id"), request.getParameter("decision"),
+                request.getParameter("amount"), request.getParameter("remarks"));
+        sendJson(response, d.status, d.json);
+    }
+
+    /** Result of a Step 3 decision: HTTP status and the JSON answer {ok, message, ...}. */
+    static final class Decision {
+        final int status;
+        final JsonObject json;
+        Decision(int status, JsonObject json) { this.status = status; this.json = json; }
+    }
+
+    /**
+     * Step 3 decision (Approved with amount / Rejected with reason / Pending = revert) by a Global user.
+     * Used by this page and by DirectorScholarshipApiServlet (Director Portal), so both follow the same rules.
+     */
+    static Decision decide(String user, String idParam, String decision, String amountParam, String remarks) {
+        // decision: Approved / Rejected / Pending (revert)
         remarks = remarks == null ? "" : remarks.trim();
         if (remarks.length() > 500) remarks = remarks.substring(0, 500);
 
         if (idParam == null || !idParam.trim().matches("\\d+")) {
-            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, fail("Invalid application."));
-            return;
+            return new Decision(HttpServletResponse.SC_BAD_REQUEST, fail("Invalid application."));
         }
         if (!"Approved".equals(decision) && !"Rejected".equals(decision) && !"Pending".equals(decision)) {
-            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, fail("Invalid decision."));
-            return;
+            return new Decision(HttpServletResponse.SC_BAD_REQUEST, fail("Invalid decision."));
         }
 
         BigDecimal amount = null;
@@ -172,14 +184,12 @@ public class ApproveScholarshipServlet extends HttpServlet {
                 amount = null;
             }
             if (amount == null || amount.signum() <= 0 || amount.compareTo(new BigDecimal("9999999999")) > 0) {
-                sendJson(response, HttpServletResponse.SC_BAD_REQUEST, fail("Please enter a valid approved amount."));
-                return;
+                return new Decision(HttpServletResponse.SC_BAD_REQUEST, fail("Please enter a valid approved amount."));
             }
             amount = amount.setScale(2, java.math.RoundingMode.HALF_UP);
         }
         if ("Rejected".equals(decision) && remarks.isEmpty()) {
-            sendJson(response, HttpServletResponse.SC_BAD_REQUEST, fail("Please enter a reason for rejecting."));
-            return;
+            return new Decision(HttpServletResponse.SC_BAD_REQUEST, fail("Please enter a reason for rejecting."));
         }
 
         int id = Integer.parseInt(idParam.trim());
@@ -209,19 +219,16 @@ public class ApproveScholarshipServlet extends HttpServlet {
             }
 
             if (!found) {
-                sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                return new Decision(HttpServletResponse.SC_BAD_REQUEST,
                         fail("Application not found or not all documents are verified (Step 2)."));
-                return;
             }
             if ("Reimbursed".equalsIgnoreCase(reimb)) {
-                sendJson(response, HttpServletResponse.SC_CONFLICT,
+                return new Decision(HttpServletResponse.SC_CONFLICT,
                         fail("This scholarship is already reimbursed and cannot be changed."));
-                return;
             }
             if (!"Pending".equals(decision) && !"Pending".equalsIgnoreCase(oldStatus)) {
-                sendJson(response, HttpServletResponse.SC_CONFLICT,
+                return new Decision(HttpServletResponse.SC_CONFLICT,
                         fail("This application is already " + oldStatus + ". Revert it first to change the decision."));
-                return;
             }
 
             Timestamp nowIst = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
@@ -262,11 +269,11 @@ public class ApproveScholarshipServlet extends HttpServlet {
             json.addProperty("at", "Pending".equals(decision) ? null
                     : LocalDateTime.now(ZoneId.of("Asia/Kolkata")).format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
             json.addProperty("reimbursementStatus", "Approved".equals(decision) ? "Pending" : "Not Started");
-            sendJson(response, HttpServletResponse.SC_OK, json);
+            return new Decision(HttpServletResponse.SC_OK, json);
 
         } catch (Exception e) {
             e.printStackTrace();
-            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fail("Database error: " + e.getMessage()));
+            return new Decision(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fail("Database error: " + e.getMessage()));
         }
     }
 
