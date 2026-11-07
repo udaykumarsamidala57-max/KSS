@@ -1,4 +1,5 @@
 com\Controller\ModuleFilter.class
+com\Controller\ApproveScholarshipServlet$Decision.class
 com\Controller\CsrPaymentServlet$FundLow.class
 com\Controller\CsrDashboardServlet$ApprovalRaw.class
 com\Bean\DBUtil.class
@@ -11,6 +12,7 @@ com\Controller\InstitutionServlet.class
 com\Controller\ScholarshipViewServlet.class
 com\DAO\scholarshipViewDAO.class
 com\Controller\CsrCompanyServlet.class
+com\Controller\DirectorSsoServlet.class
 com\Controller\SholarshipServelt.class
 com\DAO\scholarshipListDAO.class
 com\Controller\CsrLetterServlet.class
@@ -23,6 +25,7 @@ com\DAO\SholrarshipDAO.class
 com\Controller\ScholarshipListServelt.class
 com\Controller\KssCourseMasterServlet.class
 com\Controller\LoginServlet.class
+com\Controller\DirectorScholarshipApiServlet.class
 com\Controller\CsrFundServlet.class
 com\Controller\CsrPaymentServlet.class
 com\Controller\CsrPaymentProcedureServlet.class
